@@ -1,0 +1,5 @@
+#define FLAG
+#define INTEGER 21
+#define INTEGER_TWO 42
+#define FLOAT 81.0
+#define FLOAT_TWO 162.0

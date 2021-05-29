@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "allowJs": true,
+    "outDir": "ts-out",
+    "target": "ES2015",
+    "lib": ["esnext", "webworker", "dom"]
+  },
+  
+  "include": [
+    "./sw.ts"
+  ],
+
+  "ignore": ["node_modules/**/*"]
+}

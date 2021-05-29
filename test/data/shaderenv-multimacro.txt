@@ -1,0 +1,2 @@
+#define INTEGER_VALUE 15
+#define FLOAT_VALUE 89.55

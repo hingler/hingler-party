@@ -1,0 +1,53 @@
+{
+  "name": "hingler-online",
+  "description": "the last knock off i can muster before i am overtaken by sewage",
+  "version": "1.0.0",
+  "main": "index.js",
+  "engines": {
+    "node": "12.x",
+    "npm": "7.x"
+  },
+  "scripts": {
+    "build": "npm run clean && rm -rf ./client/js && rm -rf ./ts-out && bash ./updatevernum.sh && tsc && npx webpack && cp node_modules/mocha/mocha.js test/browser/js/mocha.js && cp node_modules/chai/chai.js test/browser/js/chai.js && cp node_modules/mocha/mocha.css test/browser/mocha.css && cp node_modules/mocha/mocha.js.map test/browser/js/mocha.js.map && cp -r client/glsl ts-out/client",
+    "build-debug": "rm -rf ./client/js && rm -rf ./ts-out && tsc && npx webpack",
+    "tsc-only": "rm -rf ./ts-out && rm -rf ./client/js && tsc && npx webpack",
+    "test": "nyc --reporter=text mocha ts-out/test/*",
+    "start": "node ./ts-out/server/index.js",
+    "start-test-server": "node ./ts-out/server/index.js ./test",
+    "test:cypress": "start-server-and-test start-test-server http://localhost:8080 cypress",
+    "cypress": "cypress run",
+    "clean": "rm -rf test/browser/js && rm -rf client/js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamieboy1337/hingler-online.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jamieboy1337/hingler-online/issues"
+  },
+  "homepage": "https://github.com/jamieboy1337/hingler-online#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "gl-matrix": "^3.3.0",
+    "ws": "^7.4.6"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.18",
+    "@types/draco3d": "^1.4.0",
+    "@types/express": "^4.17.12",
+    "@types/mocha": "^8.2.2",
+    "@types/ws": "^7.4.4",
+    "chai": "^4.3.4",
+    "cypress": "^7.5.0",
+    "draco3d": "^1.4.1",
+    "mocha": "^8.4.0",
+    "nyc": "^15.1.0",
+    "start-server-and-test": "^1.12.5",
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.2.4",
+    "webpack": "^5.37.1",
+    "webpack-cli": "^4.7.0"
+  }
+}

@@ -1,0 +1,1 @@
+#define HEALING_BY_PRAYER 21.25

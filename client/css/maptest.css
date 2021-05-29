@@ -1,0 +1,351 @@
+@font-face {
+  font-family: "Open Sans";
+  src: url("../res/font/WorkSans-VariableFont_wght.ttf") format("truetype"),
+  url("../res/font/WorkSans-VariableFont_wght.ttf") format("embedded-opentype"),
+  url("../res/font/WorkSans-VariableFont_wght.ttf") format("woff");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../res/font/JetBrainsMono-Italic-VariableFont_wght.ttf") format("truetype"),
+  url("../res/font/JetBrainsMono-Italic-VariableFont_wght.ttf") format("embedded-opentype");
+}
+
+:root {
+  --brass-color: #F7C968;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+  touch-action: none;
+}
+
+#info {
+  font-family: sans-serif; 
+  font-weight: 900;
+  color: white;
+  text-shadow: -8px 8px 0px rgba(0.2, 0.2, 0.2, 1.0);
+  font-size: 48pt;
+  position: absolute;
+  left: 16px;
+  top: 16px;
+}
+
+#stats-view {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  font-family: "JetBrains Mono";
+  font-size: 32px;
+}
+
+.start-text {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  font-size: 128px;
+  z-index: 1001;
+}
+
+.splash-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+}
+
+
+.start-text, #stats-view p {
+  font-family: "JetBrains Mono";
+  background: linear-gradient(90deg, rgba(226,39,14,1) 0%, rgba(217,100,15,1) 25%, rgba(255,231,0,1) 100%);
+  background: -webkit-linear-gradient(90deg, rgba(226,39,14,1) 0%, rgba(217,100,15,1) 25%, rgba(255,231,0,1) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-variation-settings: 'wght' 800, 'grad' 88;
+  -webkit-text-stroke: 0.8px black;
+}
+
+.stats-add {
+  position: absolute;
+  top: 24px;
+  font-size: 12px;
+  background: linear-gradient(0deg, rgba(98,86,187,1) 0%, rgba(120,175,255,1) 100%);
+  background: -webkit-linear-gradient(0deg, rgba(98,86,187,1) 0%, rgba(120,175,255,1) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-variation-settings: 'wght' 800, 'grad' 88;
+  -webkit-text-stroke: 0.4px black;
+}
+
+.stat-contents {
+  position: relative;
+}
+
+#stats-view p {
+  margin-bottom: 8px;
+  font-size: 20px;
+  margin-top: 8px;
+}
+
+#score {  
+  margin-bottom: 4px;
+}
+
+#score-counter-screen {
+  top: 0;
+  left: 50%;
+  position: absolute;
+  transform: translate(-50%, 0);
+  font-size: 3vh;
+  font-weight: 900;
+  
+}
+
+#score-counter-screen div.img-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#field-fg {
+  z-index: 10;
+}
+
+#walk-image {
+  z-index: 9;
+  bottom: -8px;
+}
+
+#score-counter-screen img {
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  position: absolute;
+  right: -16px;
+}
+
+#field-bg {
+  z-index: 8;
+}
+
+#field-fg, #field-bg {
+  bottom: -12px;
+}
+
+#time {
+  margin-top: 4px;
+  font-size: 24pt;
+  text-shadow: -4px 4px 0px rgba(0.2, 0.2, 0.2, 1.0);
+}
+
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#loading {
+  color: #49b6ff;
+
+  font-family: "Open Sans";
+  font-size: 96pt;
+  text-shadow: 4px 4px 0 #FFFFFF, -4px 4px 0 #FFFFFF, -4px -4px 0 #FFFFFF, 4px -4px 0 #FFFFFF;
+  z-index: 1000;
+
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#touch-controls img, body, canvas {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#touch-controls {
+  z-index: 999;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#touch-direction {
+  position: absolute;
+  left: 32px;
+  bottom: 32px;
+  width: 25%;
+  max-width: 512px;
+  height: auto;
+}
+
+#touch-bomb {
+  position: absolute;
+  right: 96px;
+  bottom: 32px;
+  width: 20%;
+  max-width: 384px;
+  height: auto;
+}
+
+#touch-detonate {
+  position: absolute;
+  right: 32px;
+  bottom: calc(32px + 20vw - 16px);
+  width: 10%;
+  max-width: 192px;
+  height: auto;
+}
+
+#final-score {
+  border-radius: 12px;
+  border: 5px solid white;
+  color: white;
+  font-family: sans-serif;
+  box-shadow: 0px 0px 25px 10px rgba(0.0, 0.0, 0.0, 0.8);
+
+  padding: 32px;
+  background-color: #404040;
+
+  font-size: 48pt;
+}
+
+#dist {
+  font-size: 120pt;
+  font-weight: 900;
+}
+
+#replay {
+  padding: 16px;
+  border: 3px solid white;
+  background-color: green;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
+}
+
+#score-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 16px;
+  background-image: url("../res/woodworld.png");
+  overflow: hidden;
+  box-shadow: 0px 0px 12px 2px #000000;
+  font-weight: 700;
+}
+
+
+#score-counter {
+  border: 12px solid var(--brass-color);
+  border-radius: 4px 4px 0px 4px;
+  font-size: 0;
+  right: 0;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+#score-display {
+  margin: 16px;
+  margin-bottom: 72px;
+  position: relative;
+  left: 0;
+}
+
+#background-bar {
+  position: absolute;
+  background-color: var(--brass-color);
+  width: calc(100% + 32px);
+  left: -16px;
+  height: 32px;
+  top: 50%;
+  border-radius: 16px;
+  transform: translate(0%, -50%);
+  display: inline-block;
+  z-index: -25;
+}
+
+#score-meters {
+  margin: 0;
+  text-align: right;
+  background-color: var(--brass-color);
+  position: absolute;
+  right: 0;
+  border: 4px solid var(--brass-color);
+  font-size: 24px;
+  font-weight: 700;
+  border-radius: 0px 0px 4px 4px;
+}
+
+.score-button {
+  padding: 9px;
+  background-color: var(--brass-color);
+  font-size: 24px;
+  display: inline-block;
+}
+
+#enemy-info {
+  margin-bottom: 24px;
+}
+
+.enemy-counter {
+  display: inline-block;
+  border: 4px solid var(--brass-color);
+  font-size: 0;
+}
+
+.enemy-counter .counter {
+  font-size: 38px;
+}
+
+.enemy img {
+  width: 48px;
+  height: 48px;
+  box-shadow: inset 0px 0px 4px #000000;
+  margin-right: 12px;
+  border: 4px solid var(--brass-color);
+
+  position: relative;
+  top: 4px;
+}
+
+#score-counter .counter {
+  font-size: 42pt;
+}
+
+/* counter code */
+
+.counter {
+  display: inline-block;
+  border: 2px solid black;
+  background-color: #404040;
+  padding: 0px 4px;
+  color: rgba(0, 0, 0, 0);
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8); 
+  position: relative;
+}
+
+.counter-container {
+  position: absolute;
+  font-family: "Times New Roman", serif;
+  color: white;
+  /* padding: 0px 4px; */
+}
