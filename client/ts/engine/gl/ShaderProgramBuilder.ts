@@ -38,7 +38,7 @@ export class ShaderProgramBuilder {
     this.vertPath = null;
     this.fragPath = null;
     this.ctx = ctx;
-    this.fileParser = new ShaderFileParser(this.ctx.getFileLoader());
+    this.fileParser = new ShaderFileParser(this.ctx);
 
   }
 

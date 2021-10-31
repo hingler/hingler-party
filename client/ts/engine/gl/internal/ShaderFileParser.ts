@@ -1,14 +1,21 @@
 import { ShaderFileLoader } from "./loaders/ShaderFileLoader";
 import { FileLoader } from "../../loaders/FileLoader";
+import { GameContext } from "../../GameContext";
 
 const eol = /\r?\n/;
 
+const DEFAULT_INCLUDES = [
+  "env"
+]
+
 export class ShaderFileParser {
   private loader: FileLoader;
+  private ctx: GameContext;
   private pathRecord: Set<string>;
 
-  constructor(loader: FileLoader) {
-    this.loader = loader;
+  constructor(ctx: GameContext) {
+    this.loader = ctx.getFileLoader();
+    this.ctx = ctx;
   }
 
   async parseShaderFile(path: string) {
@@ -36,8 +43,19 @@ export class ShaderFileParser {
         console.info("Encountered new include: " + line);
         let match = includeExtract.exec(line);
         if (match !== null) {
-          let relativePath = folder + match[1];
-          output.push(await this.parseShaderFile(relativePath));
+          const name = match[1];
+          if (DEFAULT_INCLUDES.includes(name)) {
+            switch (name) {
+              case "env":
+                output.push(this.ctx.getShaderEnv());
+                break;
+            }
+
+            continue;
+          } else {
+            let relativePath = folder + match[1];
+            output.push(await this.parseShaderFile(relativePath));
+          }
           continue;
         }
       }
