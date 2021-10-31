@@ -2,6 +2,7 @@ import { mat4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
+import { getEnginePath } from "../internal/getEnginePath";
 import { InstancedModel } from "../model/InstancedModel";
 import { AttributeType } from "../model/Model";
 import { RenderContext } from "../render/RenderContext";
@@ -31,9 +32,10 @@ export class InstancedShadowMaterial implements InstancedMaterial {
     this.progWrap = null;
 
     this.shadow_matrix = mat4.identity(mat4.create());
+    // revise engine paths to use "engine"
     new ShaderProgramBuilder(ctx)
-      .withVertexShader("../glsl/shadownotexture/shadownotexture_instanced.vert")
-      .withFragmentShader("../glsl/shadownotexture/shadownotexture.frag")
+      .withVertexShader(getEnginePath("engine/glsl/shadownotexture/shadownotexture_instanced.vert"))
+      .withFragmentShader(getEnginePath("engine/glsl/shadownotexture/shadownotexture.frag"))
       .build()
       .then(this.configureProgram.bind(this))
       .catch(console.error.bind(console));

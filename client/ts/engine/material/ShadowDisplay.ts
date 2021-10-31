@@ -1,4 +1,5 @@
 import { GameContext } from "../GameContext";
+import { getEnginePath } from "../internal/getEnginePath";
 import { ShadowCastingLight } from "../object/game/light/ShadowCastingLight";
 import { SpotLight } from "../object/game/light/SpotLight";
 import { TextureDisplay } from "./TextureDisplay";
@@ -15,7 +16,7 @@ export class ShadowDisplay extends TextureDisplay {
   };
 
   constructor(ctx: GameContext, light: ShadowCastingLight) {
-    super(ctx, "../glsl/debug/shadowdebug.vert", "../glsl/debug/shadowdebug.frag", light.getShadowTexture());
+    super(ctx, getEnginePath("engine/glsl/debug/shadowdebug.vert"), getEnginePath("engine/glsl/debug/shadowdebug.frag"), light.getShadowTexture());
     this.near = light.near;
     this.far = light.far;
     this.locsShadow = null;

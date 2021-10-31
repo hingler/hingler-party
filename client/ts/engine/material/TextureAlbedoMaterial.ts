@@ -4,6 +4,7 @@ import { Texture } from "../gl/Texture";
 import { GameContext } from "../GameContext";
 import { AttributeType, Model } from "../model/Model";
 import { Material } from "./Material";
+import { getEnginePath } from "../internal/getEnginePath";
 
 export class TextureAlbedoMaterial implements Material {
   private prog: WebGLProgram;
@@ -33,8 +34,8 @@ export class TextureAlbedoMaterial implements Material {
     this.tex = null;
 
     new ShaderProgramBuilder(ctx)
-      .withVertexShader("../glsl/debug/texturetest.vert")
-      .withFragmentShader("../glsl/debug/texturetest.frag")
+      .withVertexShader(getEnginePath("engine/glsl/debug/texturetest.vert"))
+      .withFragmentShader(getEnginePath("engine/glsl/debug/texturetest.frag"))
       .build()
       .then(this.bindUniforms.bind(this));
   }

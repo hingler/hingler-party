@@ -9,6 +9,7 @@ import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { Texture } from "../gl/Texture";
+import { getEnginePath } from "../internal/getEnginePath";
 import { InstancedModel } from "../model/InstancedModel";
 import { AttributeType, Model } from "../model/Model";
 import { RenderContext } from "../render/RenderContext";
@@ -135,8 +136,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     mat4.identity(this.modelMat);
 
     new ShaderProgramBuilder(ctx)
-      .withVertexShader("../glsl/pbr/pbr.vert")
-      .withFragmentShader("../glsl/pbr/pbr.frag")
+      .withVertexShader(getEnginePath("engine/glsl/pbr/pbr.vert"))
+      .withFragmentShader(getEnginePath("engine/glsl/pbr/pbr.frag"))
       .build()
       .then(this.configureProgram.bind(this))
       .catch(console.error.bind(console));

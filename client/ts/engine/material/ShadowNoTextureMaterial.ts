@@ -3,6 +3,7 @@ import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { GameContext } from "../GameContext";
 import { AttributeType, Model } from "../model/Model";
 import { Material } from "./Material";
+import { getEnginePath } from "../internal/getEnginePath";
 
 export class ShadowNoTextureMaterial implements Material {
   private prog: WebGLProgram;
@@ -34,8 +35,8 @@ export class ShadowNoTextureMaterial implements Material {
     this.shadowMat = shadowMat;
 
     new ShaderProgramBuilder(ctx)
-      .withVertexShader("../glsl/shadownotexture/shadownotexture.vert")
-      .withFragmentShader("../glsl/shadownotexture/shadownotexture.frag")
+      .withVertexShader(getEnginePath("engine/glsl/shadownotexture/shadownotexture.vert"))
+      .withFragmentShader(getEnginePath("engine/glsl/shadownotexture/shadownotexture.frag"))
       .build()
       .then((prog) => {
         this.prog = prog;

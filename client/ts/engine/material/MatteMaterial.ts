@@ -5,6 +5,7 @@ import { GameContext } from "../GameContext";
 import { AttributeType, Model } from "../model/Model";
 import { Material } from "./Material";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
+import { getEnginePath } from "../internal/getEnginePath";
 
 // temp
 export interface Light {
@@ -56,8 +57,8 @@ export class MatteMaterial implements Material {
     this.cameraPos = vec3.create();
 
     new ShaderProgramBuilder(ctx)
-      .withVertexShader("../glsl/matteshader/matteshader.vert")
-      .withFragmentShader("../glsl/matteshader/matteshader.frag")
+      .withVertexShader(getEnginePath("engine/glsl/matteshader/matteshader.vert"))
+      .withFragmentShader(getEnginePath("engine/glsl/matteshader/matteshader.frag"))
       .build()
       .then((prog) => {
         this.prog = prog;
