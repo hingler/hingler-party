@@ -1,11 +1,21 @@
 import { ShaderFileLoader } from "./loaders/ShaderFileLoader";
 import { FileLoader } from "../../loaders/FileLoader";
 import { GameContext } from "../../GameContext";
+import { getEnginePath } from "../../internal/getEnginePath";
 
 const eol = /\r?\n/;
 
 const DEFAULT_INCLUDES = [
-  "env"
+  "env",
+  "attenuation",
+  "spotlight",
+  "ambient",
+  "constants",
+  "gradient",
+  "opensimplex",
+  "perlin",
+  "pbr",
+  "radialblur"
 ]
 
 export class ShaderFileParser {
@@ -48,6 +58,33 @@ export class ShaderFileParser {
             switch (name) {
               case "env":
                 output.push(this.ctx.getShaderEnv());
+                break;
+              case "attenuation":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl")));
+                break;
+              case "spotlight":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl")));
+                break;
+              case "ambient":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/ambient.inc.glsl")));
+                break;
+              case "constants":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/constants.inc.glsl")));
+                break;
+              case "gradient":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/gradient.inc.glsl")));
+                break;
+              case "opensimplex":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl")));
+                break;
+              case "perlin":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/perlin.inc.glsl")));
+                break;
+              case "pbr":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/pbr.inc.glsl")));
+                break;
+              case "radialblur":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/radialblur.inc.glsl")));
                 break;
             }
 
