@@ -54,8 +54,9 @@ export interface GameContext {
    *  Stores a variable in this context's environment
    *  @param key - the key used to identify the desired environment variable.
    *  @param value - the value associated with key.
+   *  @param opts - optional params affecting some vars.
    */ 
-  setContextVar(key: string, value: any) : void;
+  setContextVar(key: string, value: any, opts?: {shaderInteger: boolean}) : void;
 
   /**
    *  Fetches a variable from this context.

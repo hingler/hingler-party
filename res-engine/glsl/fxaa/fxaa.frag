@@ -16,10 +16,10 @@ uniform vec2 resolution;
   #define FXAA_QUALITY 2
 #endif
 
-#if FXAA_QUALITY == 2
+#if (FXAA_QUALITY == 2)
   #define FXAA_TRIM 0.03125
   #define FXAA_TRIM_LOCAL 0.125
-#elif FXAA_QUALITY == 1
+#elif (FXAA_QUALITY == 1)
   #define FXAA_TRIM 0.0625
   #define FXAA_TRIM_LOCAL 0.1866
 #endif
@@ -36,7 +36,7 @@ float getEdgeStep(int i) {
 }
 
 // https://catlikecoding.com/unity/tutorials/custom-srp/fxaa/
-#if FXAA_QUALITY > 0
+#if (FXAA_QUALITY > 0)
   vec4 fxaa(vec2 m) {
     vec2 o = vec2(1.0, 1.0) / resolution;
     

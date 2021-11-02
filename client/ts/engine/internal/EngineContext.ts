@@ -65,6 +65,7 @@ export class EngineContext implements GameContext {
     this.lastDelta = 0; 
     this.lastTimePoint = perf.now();
     this.loader = new FileLoader();
+    this.varMap = new Map();
     
     // copy over env???
     // nah we'll standardize its initialization
@@ -178,11 +179,11 @@ export class EngineContext implements GameContext {
     return swap;
   }
 
-  setContextVar(key: string, value: any) {
+  setContextVar(key: string, value: any, opts?: { shaderInteger: boolean }) {
     const SHADER_VAR_PREFIX = "SHADER_";
     const ind = key.indexOf(SHADER_VAR_PREFIX);
     if (ind !== -1) {
-      this.shaderCache.setShaderVar(key.substring(ind + SHADER_VAR_PREFIX.length), value);
+      this.shaderCache.setShaderVar(key.substring(ind + SHADER_VAR_PREFIX.length), value, (opts ? !!opts.shaderInteger : false));
     }
 
     this.varMap.set(key, value);
