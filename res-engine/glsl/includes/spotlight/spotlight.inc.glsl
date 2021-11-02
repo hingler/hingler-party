@@ -46,6 +46,20 @@ vec4 getSpotLightColor(SpotLight, vec3);
 vec4 getSpotLightColor(SpotLight, vec3, vec4, in sampler2D);
 
 /**
+ *  Alternative pipeline which implements a simpler shading model for performance.
+ *  @param s- the spotlight which lights the scene.
+ *  @param cam_pos - the position of the camera
+ *  @param geom_pos - the position in world space of the fragment being lit.
+ *  @param shadow_tex_pos - (optional) the position of the fragment wrt the light's shadow texture coords
+ *  @param albedo - the color of the surface.
+ *  @param norm - the normal at the given fragment.
+ *  @param rough - the roughness of the surface.
+ *  @aram shadow_tex - (optional) if shadow_tex_pos is defined, this must contain the sampler which represents the shadow map.
+ */ 
+// vec4 getSpotLightColorSimple(in SpotLight s, vec3 cam_pos, vec3 geom_pos,                      vec3 albedo, vec3 norm, float rough, float metal);
+// vec4 getSpotLightColorSimple(in SpotLight s, vec3 cam_pos, vec3 geom_pos, vec4 shadow_tex_pos, vec3 albedo, vec3 norm, float rough, float metal, in sampler2D shadow_tex);
+
+/**
  *  Uses PBR pipeline to get spotlight color.
  *  @param s - the spotlight which lights the scene.
  *  @param cam_pos - the position of the camera.
@@ -81,6 +95,11 @@ vec4 getSpotLightColor(SpotLight s, vec3 pos, vec4 light_pos, in sampler2D shado
 
   return shadowprop * final_color;
 }
+
+// vec4 getSpotLightColorSimple(in SpotLight s, vec3 cam_pos, vec3 geom_pos, vec3 albedo, vec3 norm, float rough) {
+
+// }
+
 
 vec4 getSpotLightColorPBR(SpotLight s, vec3 cam_pos, vec3 geom_pos, vec3 albedo, vec3 norm, float rough, float metal) {
   vec3 col = pbr(geom_pos, cam_pos, s.position.xyz, s.color.rgb, albedo, norm, rough, metal) * s.intensity;
