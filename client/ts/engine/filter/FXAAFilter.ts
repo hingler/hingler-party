@@ -29,6 +29,10 @@ export class FXAAFilter extends PostProcessingFilter {
   constructor(ctx: GameContext) {
     super(ctx);
     this.lumaFramebuffer = new ColorFramebuffer(ctx, ctx.getScreenDims());
+
+    this.aaShader = null;
+    this.lumaShader = null;
+
     new ShaderProgramBuilder(ctx)
       .withVertexShader(getEnginePath("engine/glsl/fxaa/fxaa.vert"))
       .withFragmentShader(getEnginePath("engine/glsl/fxaa/fxaa.frag"))
