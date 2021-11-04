@@ -9,12 +9,7 @@ module.exports = [{
   ],
   
   entry: {
-    client: "./client/index",
-    drawtest2: "./client/ts/drawtest2",
-    maptest: "./client/ts/maptest",
-    countertest: "./client/ts/countertest",
-    swaptest: "./client/ts/swaptest",
-    watertest: "./client/ts/watertest"
+    client: "./client/index"
   },
 
   mode: "development",
@@ -78,7 +73,8 @@ module.exports = [{
     drawtest: "./test/browser/drawtest",
     simpletest: "./test/browser/simpletest",
     shadertest: "./test/browser/shadertest",
-    modeltest: "./test/browser/modeltest"
+    modeltest: "./test/browser/modeltest",
+    hdrtest: "./test/browser/hdrtest"
   },
 
   mode: "development",

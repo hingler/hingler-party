@@ -119,7 +119,7 @@ export class Renderer {
       let vp = mat4.create();
       let pos = vec3.create();
       
-      console.log("no active cam found");
+      console.info("no active cam found");
       
       mat4.identity(view);
       let rat = this.ctx.getScreenDims();
