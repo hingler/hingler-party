@@ -29,6 +29,19 @@ export interface GameContext {
   getGLTFLoader() : GLTFLoader;
 
   /**
+   * Grabs a GL extension from the GL context, if available. Otherwise, returns null.
+   * @param name - name of desired GL extension.
+   * @returns the extension if available, or null.
+   */
+  getGLExtension<T>(name: string) : T;
+
+  // common shortcuts
+  getGLExtension(name: "OES_texture_float")               : OES_texture_float         | null;
+  getGLExtension(name: "OES_texture_float_linear")        : OES_texture_float_linear  | null;
+  getGLExtension(name: "OES_element_index_uint")          : OES_element_index_uint    | null;
+  getGLExtension(name: "WEBGL_depth_texture")             : WEBGL_depth_texture       | null;
+  getGLExtension(name: "ANGLE_instanced_arrays")          : ANGLE_instanced_arrays    | null;
+  /**
    * @returns the present GL rendering context.
    */
   getGLContext() : WebGLRenderingContext;

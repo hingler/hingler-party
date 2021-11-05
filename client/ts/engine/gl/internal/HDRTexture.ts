@@ -3,9 +3,6 @@ import {GameContext} from "../../GameContext";
 import {FileLike} from "../../loaders/FileLike";
 import {Texture, TextureFormat} from "../Texture";
 
-let floatExtension : OES_texture_float = undefined;
-let filterExtension: OES_texture_float_linear = undefined;
-
 // todo: come up with a better system for managing gl extensions
 // might be a global that our engine pulls
 // then we can look them up on the fly instead of storing them all over the place ;(
@@ -14,26 +11,34 @@ export class HDRTexture extends Texture {
   private dims_: [number, number];
   private tex: WebGLTexture;
   private ctx: GameContext;
+
+  readonly uintTexture: boolean;
   
-  private loadTask: Task<Float32Array>;
+  private loadTask: Task<void>;
 
   constructor(ctx: GameContext, path: string) {
     super();
     this.tex = null;
     this.ctx = ctx;
     const gl = this.ctx.getGLContext();
-    if (floatExtension === undefined) {
-      floatExtension  = gl.getExtension("OES_texture_float");
-      filterExtension = gl.getExtension('OES_texture_float_linear');
-    }
+    
+    this.uintTexture = !(ctx.getGLExtension("OES_texture_float") && ctx.getGLExtension("OES_texture_float_linear"));
+
     this.loadTask = new Task();
-    this.ctx.getFileLoader().open(path).then(HDRTexture.loadHDRImageFromFile).then(this.finalizeImageTexture.bind(this));
+    this.ctx.getFileLoader().open(path)
+      .then(HDRTexture.loadHDRImageFromFile)
+      .then(this.finalizeImageTexture.bind(this))
+      .then(() => this.loadTask.resolve());
     // load file from file loader
     // write a method to parse its contents
   }
 
   get dims() : [number, number] {
     return [this.dims_[0], this.dims_[1]];
+  }
+
+  async waitUntilUploaded() {
+    await this.loadTask.getFuture().wait();
   }
 
   getTextureFormat() {
@@ -59,7 +64,7 @@ export class HDRTexture extends Texture {
 
   private finalizeImageTexture(res: [Float32Array, [number, number]]) {
     // if float textures arent supported, we need to convert res back to a float
-    if (floatExtension === null || filterExtension === null) {
+    if (this.uintTexture) {
       console.warn("Platform does not support floating point textures. Converting to uint...");
       // this does nothing right now im just going to ignore it while i try to get this working
     }
