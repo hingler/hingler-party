@@ -10,8 +10,9 @@ varying vec2 vCoord;
 // i think thats fine :(
 
 // avoid this on lower spec platforms probably :(
+// todo: encode steps programatically based on spec ibl size
 #define STEPS_PHI 96
-#define STEPS_THETA 384
+#define STEPS_THETA 288
 
 uniform vec3 up;
 uniform vec3 right;
