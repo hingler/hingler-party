@@ -1,9 +1,11 @@
 import { vec3 } from "gl-matrix";
+import { GameContext } from "../../GameContext";
 import { Texture } from "../../gl/Texture";
 import { getEnginePath } from "../../internal/getEnginePath";
 import { TextureDisplay } from "../TextureDisplay";
+import { CubemapCoords } from "./CubemapCoords";
 
-export class HDRToCubemapDisplay extends TextureDisplay {
+export class HDRToCubemapDisplay extends TextureDisplay implements CubemapCoords {
 
   center: vec3;
   right: vec3;
@@ -15,11 +17,11 @@ export class HDRToCubemapDisplay extends TextureDisplay {
     up: WebGLUniformLocation
   };
 
-  constructor(ctx, hdr: Texture) {
+  constructor(ctx: GameContext, hdr: Texture) {
     super(ctx, getEnginePath("engine/glsl/hdr-to-skybox/hdr-to-skybox.vert"), getEnginePath("engine/glsl/hdr-to-skybox/hdr-to-skybox.frag"), hdr);
   }
 
-  configureProgram(prog: WebGLProgram) {
+  protected configureProgram(prog: WebGLProgram) {
     const gl = this.getContext().getGLContext();
     this.unifs = {
       center: gl.getUniformLocation(prog, "center"),
@@ -28,7 +30,7 @@ export class HDRToCubemapDisplay extends TextureDisplay {
     };
   }
 
-  prepareUniforms() {
+  protected prepareUniforms() {
     if (this.getShaderFuture().valid()) {
       const gl = this.getContext().getGLContext();
       gl.uniform3fv(this.unifs.center, this.center);

@@ -1,5 +1,6 @@
 import { vec3 } from "gl-matrix";
 import {GameContext} from "../../GameContext";
+import { ColorCubemap } from "../../gl/ColorCubemap";
 import { Cubemap } from "../../gl/Cubemap";
 import { Framebuffer } from "../../gl/Framebuffer";
 import { ColorFramebuffer } from "../../gl/internal/ColorFramebuffer";
@@ -10,6 +11,8 @@ import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
 import { HDRTexture } from "../../gl/internal/HDRTexture";
 import { SkyboxFramebuffer } from "../../gl/internal/SkyboxFramebuffer";
 import { ModelImpl, ModelInstance } from "../../loaders/internal/ModelImpl";
+import { CubemapCoords } from "../../material/internal/CubemapCoords";
+import { CubemapToDiffuseIBLDisplay } from "../../material/internal/CubemapToDiffuseIBLDisplay";
 import { HDRToCubemapDisplay } from "../../material/internal/HDRToCubemapDisplay";
 import { SkyboxMaterial } from "../../material/SkyboxMaterial";
 import { Model } from "../../model/Model";
@@ -21,10 +24,12 @@ import {GameObject} from "./GameObject";
 export class SkyboxObject extends GameObject {
   private hdr: HDRTexture;
   private hdrProg: HDRToCubemapDisplay;
-  private cubemap: Cubemap;
+  private cubemap: ColorCubemap;
+  private cubemapDiffuse: Cubemap;
   private model: Model;
   private mat: SkyboxMaterial;
 
+  // how can we tell the engine that we're rendering our skybox?
   constructor(ctx: GameContext, path: string) {
     super(ctx);
     this.hdr = new HDRTexture(ctx, path);
@@ -35,11 +40,20 @@ export class SkyboxObject extends GameObject {
     
     this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);
     this.cubemap = null;
+    this.cubemapDiffuse = null;
 
     this.model = SkyboxObject.createSkyboxCube(ctx.getGLContext());
 
     const hdrPromise = this.hdr.waitUntilUploaded(); 
     hdrPromise.then(this.prepareSkybox.bind(this));
+  }
+
+  getCubemap() {
+    return this.cubemap;
+  }
+
+  getCubemapDiffuse() {
+    return this.cubemapDiffuse;
   }
 
   private static createSkyboxCube(gl: WebGLRenderingContext) {
@@ -81,11 +95,28 @@ export class SkyboxObject extends GameObject {
   private async prepareSkybox() {
     const dim = this.hdr.dims.reduce((prev, cur) => Math.min(prev, cur)) / 2;
     const cubeBuffer = new SkyboxFramebuffer(this.getContext(), dim);
+    const diffuseBuffer = new SkyboxFramebuffer(this.getContext(), 32);
     await this.hdrProg.getShaderFuture().wait();
-    this.renderSkybox(cubeBuffer);
+    await this.renderSkybox(cubeBuffer, diffuseBuffer);
   }
 
-  private renderSkybox(cubeBuffer: SkyboxFramebuffer) {
+  private configureCubemapCoords(i: number, mat: CubemapCoords) {
+    mat.center[0] = 0;
+    mat.center[1] = 0;
+    mat.center[2] = 0;
+
+    mat.center[Math.floor(i / 2)] = (1 - (i % 2)) * 2 - 1;
+
+    // right:  [0, 0, 1], [0, 0, -1], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0]
+    mat.right[0] = (i < 2 ? 0 : (i === 5 ? 1 : -1));
+    mat.right[2] = (i < 2 ? (1 - (i % 2)) * 2 - 1 : 0);
+    // up:     [0, 1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [0, 1, 0], [0, 1, 0]
+    mat.up[2] = (i === 2 || i === 3 ? (i % 2) * 2 - 1 : 0);
+    mat.up[1] = (i === 2 || i === 3 ? 0 : 1);
+
+  }
+
+  private async renderSkybox(cubeBuffer: SkyboxFramebuffer, diffuseBuffer: SkyboxFramebuffer) {
     // draw our HDR onto each side of the texture
     // use some SkyboxDisplay function to blast our HDR onto the side of the cubemap
     const gl = this.getContext().getGLContext();
@@ -96,28 +127,26 @@ export class SkyboxObject extends GameObject {
       cubeBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
       gl.viewport(0, 0, cubeBuffer.dim, cubeBuffer.dim);
 
-      // handling directions :(
-      // center: [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]
-      this.hdrProg.center[0] = 0;
-      this.hdrProg.center[1] = 0;
-      this.hdrProg.center[2] = 0;
-
-      this.hdrProg.center[Math.floor(i / 2)] = (1 - (i % 2)) * 2 - 1;
-
-      // right:  [0, 0, 1], [0, 0, -1], [-1, 0, 0], [-1, 0, 0], [-1, 0, 0], [1, 0, 0]
-      this.hdrProg.right[0] = (i < 2 ? 0 : (i === 5 ? 1 : -1));
-      this.hdrProg.right[2] = (i < 2 ? (1 - (i % 2)) * 2 - 1 : 0);
-      // up:     [0, 1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1], [0, 1, 0], [0, 1, 0]
-      this.hdrProg.up[2] = (i === 2 || i === 3 ? (i % 2) * 2 - 1 : 0);
-      this.hdrProg.up[1] = (i === 2 || i === 3 ? 0 : 1);
-
-      console.log(this.hdrProg.center);
-      console.log(this.hdrProg.right);
-      console.log(this.hdrProg.up);
+      this.configureCubemapCoords(i, this.hdrProg);
       this.hdrProg.drawTexture();
     }
 
     this.cubemap = cubeBuffer.getCubemap();
+    this.cubemap.generateMipmaps();
+
+    const diffuseMat = new CubemapToDiffuseIBLDisplay(this.getContext(), this.cubemap);
+    await diffuseMat.waitUntilCompiled();
+
+    // render diffuse buffer
+    for (let i = 0; i < 6; i++) {
+      diffuseBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
+      gl.viewport(0, 0, diffuseBuffer.dim, diffuseBuffer.dim);
+
+      this.configureCubemapCoords(i, diffuseMat);
+      diffuseMat.draw();
+    }
+
+    this.cubemapDiffuse = diffuseBuffer.getCubemap();
   }
 
   renderMaterial(rc: RenderContext) {
