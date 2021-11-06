@@ -25,7 +25,7 @@ export class SkyboxObject extends GameObject {
   private hdr: HDRTexture;
   private hdrProg: HDRToCubemapDisplay;
   private cubemap: ColorCubemap;
-  private cubemapDiffuse: Cubemap;
+  private cubemapDiffuse: ColorCubemap;
   private model: Model;
   private mat: SkyboxMaterial;
 
@@ -150,6 +150,7 @@ export class SkyboxObject extends GameObject {
     }
 
     this.cubemapDiffuse = diffuseBuffer.getCubemap();
+    this.cubemapDiffuse.generateMipmaps();
   }
 
   renderMaterial(rc: RenderContext) {
