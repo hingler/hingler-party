@@ -125,6 +125,7 @@ export class SkyboxObject extends GameObject {
     this.hdrProg.center = vec3.create();
     this.hdrProg.right = vec3.create();
     this.hdrProg.up = vec3.create();
+    // cubeBuffer.setMipLevel(0);
     for (let i = 0; i < 6; i++) {
       cubeBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
       gl.viewport(0, 0, cubeBuffer.dim, cubeBuffer.dim);
@@ -153,11 +154,14 @@ export class SkyboxObject extends GameObject {
 
   renderMaterial(rc: RenderContext) {
     if (this.cubemap !== null) {
+      const gl = this.getContext().getGLContext();
+      gl.disable(gl.CULL_FACE);
       const cam = rc.getActiveCameraInfo();
       this.mat.persp = cam.perspectiveMatrix;
       this.mat.view = cam.viewMatrix;
       this.mat.cube = this.cubemap;
       this.mat.drawMaterial(this.model);
+      gl.enable(gl.CULL_FACE);
     }
   }
 }

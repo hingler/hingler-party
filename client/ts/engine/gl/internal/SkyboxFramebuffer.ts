@@ -9,36 +9,39 @@ import { DepthStencilRenderbuffer } from "./DepthStencilRenderbuffer";
 // this one is new!
 export class SkyboxFramebuffer {
   private ctx: GameContext;
-  private fb: Array<WebGLFramebuffer>;
-  private rb: Array<DepthStencilRenderbuffer>;
+  private fb: WebGLFramebuffer;
+  private rb: DepthStencilRenderbuffer;
   private cubemap: ColorCubemap;
+
+  private mipLevel: number;
   
- readonly dim: number;
+  readonly dim_: number;
 
   constructor(ctx: GameContext, dim: number) {
+    this.mipLevel = -1;
+    this.dim_ = dim;
     this.cubemap = new ColorCubemap(ctx, dim);
-    this.fb = [];
-    this.rb = [];
-    this.dim = dim;
+    this.cubemap.generateMipmaps();
+    const gl = ctx.getGLContext();
+    this.fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.fb);
+    this.rb = new DepthStencilRenderbuffer(ctx, [dim, dim]);
+    this.rb.attachToFramebuffer(this.fb);
     this.ctx = ctx;
-
-    this.createFramebuffers();
+    this.setMipLevel(0);
   }
 
-  private createFramebuffers() {
-    const gl = this.ctx.getGLContext();
-    for (let i = 0; i < 6; i++) {
-      const fb = gl.createFramebuffer();
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-      const rb = new DepthStencilRenderbuffer(this.ctx, [this.dim, this.dim]);
-      this.cubemap.attachToFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, fb, gl.COLOR_ATTACHMENT0);
-      rb.attachToFramebuffer(fb);
-      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
-        console.log("SKYBOX FRAMEBUFFER INCOMPLETE");
-      }
+  get dim() {
+    return Math.round(Math.pow(0.5, this.mipLevel) * this.dim_);
+  }
 
-      this.fb.push(fb);
-      this.rb.push(rb);
+  setMipLevel(mip: number) {
+    const newMip = Math.round(mip);
+    if (newMip !== this.mipLevel) {
+      this.mipLevel = newMip;
+      const mipRes = Math.round(this.dim);
+      this.rb.setDimensions(mipRes, mipRes);
+      this.rb.attachToFramebuffer(this.fb);
     }
   }
 
@@ -46,8 +49,8 @@ export class SkyboxFramebuffer {
 
   bindFramebuffer(face: number, target?: number) {
     const gl = this.ctx.getGLContext();
-    let targ = target;
 
+    let targ = target;
     if (!targ) {
       targ = gl.FRAMEBUFFER;
     }
@@ -59,7 +62,8 @@ export class SkyboxFramebuffer {
       return;
     }
 
-    gl.bindFramebuffer(targ, this.fb[face - gl.TEXTURE_CUBE_MAP_POSITIVE_X]);
+    gl.bindFramebuffer(targ, this.fb);
+    this.cubemap.attachToFramebuffer(face, this.fb, this.mipLevel, gl.COLOR_ATTACHMENT0);
   }
 
   // get cubemap: return cubemap obj

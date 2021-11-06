@@ -46,9 +46,15 @@ export class ColorCubemap implements Cubemap {
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
   }
 
-  attachToFramebuffer(face: number, framebuffer: WebGLFramebuffer, target?: number) {
+  attachToFramebuffer(face: number, framebuffer: WebGLFramebuffer, mipLevel?: number, target?: number) {
+    let mip = mipLevel;
     let targ = target;
     const gl = this.ctx.getGLContext();
+
+    if (mip === undefined) {
+      mip = 0;
+    }
+
     if (targ === undefined) {
       targ = gl.COLOR_ATTACHMENT0;
     }
@@ -61,7 +67,7 @@ export class ColorCubemap implements Cubemap {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, targ, face, this.cube, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, targ, face, this.cube, mip);
   }
 
   bindToUniform(location: WebGLUniformLocation, index: number) {
