@@ -22,7 +22,7 @@ export class HDRTexture extends Texture {
     this.ctx = ctx;
     const gl = this.ctx.getGLContext();
     
-    this.uintTexture = !(ctx.getGLExtension("OES_texture_float") && ctx.getGLExtension("OES_texture_float_linear"));
+    this.uintTexture = !(ctx.getGLExtension("OES_texture_float") !== null && ctx.getGLExtension("OES_texture_float_linear") !== null);
 
     this.loadTask = new Task();
     this.ctx.getFileLoader().open(path)
@@ -85,6 +85,7 @@ export class HDRTexture extends Texture {
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
   }
 
   private static loadHDRImageFromFile(img: FileLike) : [Float32Array, [number, number]] {

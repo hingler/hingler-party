@@ -53,7 +53,6 @@ export class SkyboxMaterial implements Material {
   drawMaterial(model: Model) {
     const gl = this.ctx.getGLContext();
     if (this.prog !== null && this.cube !== null) {
-      gl.disable(gl.CULL_FACE);
       gl.useProgram(this.prog);
       const strip = mat4.copy(mat4.create(), this.view);
       // equiv to mat4 -> mat3 -> mat4
@@ -70,7 +69,6 @@ export class SkyboxMaterial implements Material {
   
       model.bindAttribute(AttributeType.POSITION, this.posLoc);
       model.draw();
-      gl.enable(gl.CULL_FACE);
     }
   }
 }

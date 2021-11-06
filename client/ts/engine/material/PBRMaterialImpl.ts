@@ -265,7 +265,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
           if (this.spot[i].hasShadow() && shadowSpot < 4) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 8);
+            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
@@ -377,7 +377,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
           if (this.spot[i].hasShadow() && shadowSpot < 4) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 8);
+            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
