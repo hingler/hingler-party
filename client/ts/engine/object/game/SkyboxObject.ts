@@ -30,6 +30,8 @@ export class SkyboxObject extends GameObject {
   private mat: SkyboxMaterial;
 
   // how can we tell the engine that we're rendering our skybox?
+  // add skybox construction as a context feature so we can pass in an engine context
+  // use the engine context to notify client that we're compiling a skybox
   constructor(ctx: GameContext, path: string) {
     super(ctx);
     this.hdr = new HDRTexture(ctx, path);

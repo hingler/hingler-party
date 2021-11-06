@@ -45,6 +45,9 @@ uniform float metal_factor;
 // add sampler for this if necc.
 uniform vec4 emission_factor;
 
+uniform samplerCube irridance;
+uniform int useIrridance;
+
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;
   vec4 colAlpha = texture2D(tex_albedo, v_tex);
@@ -96,6 +99,11 @@ void main() {
     }
 
     col += vec4(C, 1.0) * getAmbientColor(ambient[i]);
+  }
+
+  vec4 skybox = textureCube(irridance, N);
+  if (useIrridance > 0) { 
+    col += vec4(C * skybox.rgb, 0.0);
   }
 
   if (use_emission == 0) {

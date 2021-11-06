@@ -14,8 +14,9 @@ import { GameObject } from "../object/game/GameObject";
 import { AmbientLightObject } from "../object/game/light/AmbientLightObject";
 import { SpotLight } from "../object/game/light/SpotLight";
 import { SpotLightObject } from "../object/game/light/SpotLightObject";
+import { SkyboxObject } from "../object/game/SkyboxObject";
 import { Scene } from "../object/scene/Scene";
-import { RenderContext, RenderPass } from "../render/RenderContext";
+import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { EngineContext } from "./EngineContext";
 
 class SpotLightRenderContext implements RenderContext {
@@ -39,6 +40,10 @@ class SpotLightRenderContext implements RenderContext {
 
   getAmbientLightInfo() {
     return [];
+  }
+
+  getSkybox() {
+    return null;
   }
 }
 
@@ -135,6 +140,14 @@ export class Renderer {
       };
     }
 
+    const skybox = this.findSkybox(this.scene.getGameObjectRoot());
+    let skyboxInfo : SkyboxInfo = null;
+    if (skybox !== null) {
+      skyboxInfo = {
+        irridance: skybox.getCubemapDiffuse()
+      };
+    }
+
     let rc : RenderContext = {
       getRenderPass() {
         return RenderPass.FINAL;
@@ -150,6 +163,10 @@ export class Renderer {
 
       getAmbientLightInfo() {
         return ambLightInfo;
+      },
+
+      getSkybox() {
+        return skyboxInfo;
       }
     }
 
@@ -259,6 +276,21 @@ export class Renderer {
         let activeCamera = this.findActiveCamera(child);
         if (activeCamera !== null) {
           return activeCamera;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private findSkybox(root: GameObject) : SkyboxObject {
+    for (let child of root.getChildren()) {
+      if (child instanceof SkyboxObject) {
+        return child;
+      } else {
+        const skybox = this.findSkybox(child);
+        if (skybox !== null) {
+          return skybox;
         }
       }
     }

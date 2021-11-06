@@ -2,6 +2,8 @@
 
 import { mat3, mat4, vec3, vec4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
+import { ColorCubemap } from "../gl/ColorCubemap";
+import { Cubemap } from "../gl/Cubemap";
 import { GLBuffer, GLBufferReadOnly } from "../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../gl/internal/GLBufferImpl";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
@@ -50,6 +52,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   private spotLightUniforms: Array<SpotLightUniform>;
   private spotLightUniformsNoShadow: Array<SpotLightUniform>;
+
+  private placeholderCube: Cubemap;
    
   vpMat: mat4;
   modelMat: mat4;
@@ -63,6 +67,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   emission: Texture;
   emissionFactor: vec4;
+
+  irridance: Cubemap;
 
   // use a flag to indicate whether the model matrix should be used as an attribute
   // probably use a step func to snag the right one
@@ -93,7 +99,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     metalDef: WebGLUniformLocation,
     emissionFactor: WebGLUniformLocation,
 
-    useAttribute: WebGLUniformLocation
+    useAttribute: WebGLUniformLocation,
+    irridance: WebGLUniformLocation,
+    useIrridance: WebGLUniformLocation
   };
 
   private attribs: {
@@ -115,12 +123,14 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.modelMat = mat4.create();
     this.normal = null;
     this.color = null;
+    this.irridance = null;
     this.colorFactor = vec4.create();
     this.metalRough = null;
     this.metalFactor = 1.0;
     this.roughFactor = 1.0;
     this.emissionFactor = vec4.create();
     this.emission = null;
+    this.placeholderCube = new ColorCubemap(ctx, 8);
     vec4.zero(this.emissionFactor);
 
     this.spotLightUniforms = [];
@@ -167,7 +177,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       roughDef: gl.getUniformLocation(prog, "rough_factor"),
       metalDef: gl.getUniformLocation(prog, "metal_factor"),
       emissionFactor: gl.getUniformLocation(prog, "emission_factor"),
-      useAttribute: gl.getUniformLocation(prog, "is_instanced")
+      useAttribute: gl.getUniformLocation(prog, "is_instanced"),
+      irridance: gl.getUniformLocation(prog, "irridance"),
+      useIrridance: gl.getUniformLocation(prog, "useIrridance")
     };
 
     this.attribs = {
@@ -264,7 +276,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       let noShadowSpot = 0;
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
-          if (this.spot[i].hasShadow() && shadowSpot < 4) {
+          if (this.spot[i].hasShadow() && shadowSpot < 3) {
             this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
@@ -331,6 +343,15 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform1f(this.locs.metalDef, this.metalFactor);
       gl.uniform4fv(this.locs.emissionFactor, this.emissionFactor);
 
+      const skybox = rc.getSkybox();
+      if (skybox !== null) {
+        skybox.irridance.bindToUniform(this.locs.irridance, 8);
+        gl.uniform1i(this.locs.useIrridance, 1);
+      } else {
+        this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        gl.uniform1i(this.locs.useIrridance, 0);
+      }
+
       model.bindAttribute(AttributeType.POSITION, this.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, this.attribs.norm);
       model.bindAttribute(AttributeType.TEXCOORD, this.attribs.tex);
@@ -376,7 +397,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       let noShadowSpot = 0;
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
-          if (this.spot[i].hasShadow() && shadowSpot < 4) {
+          if (this.spot[i].hasShadow() && shadowSpot < 3) {
             this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
@@ -423,6 +444,14 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform4fv(this.locs.emissionFactor, this.emissionFactor);
 
       gl.uniform1i(this.locs.useAttribute, 0);
+
+      if (this.irridance !== null) {
+        this.irridance.bindToUniform(this.locs.irridance, 8);
+        gl.uniform1i(this.locs.useIrridance, 1);
+      } else {
+        this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        gl.uniform1i(this.locs.useIrridance, 0);
+      }
 
       model.bindAttribute(AttributeType.POSITION, this.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, this.attribs.norm);

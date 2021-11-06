@@ -19,6 +19,9 @@ export class ColorCubemap implements Cubemap {
     const gl = this.ctx.getGLContext();
     this.cube = gl.createTexture();
 
+    ctx.getGLExtension("OES_texture_float");
+    ctx.getGLExtension("OES_texture_float_linear");
+
     this.dims = dim;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
