@@ -34,29 +34,31 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
   return normalize(TBN * h);
 }
 
-vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic) {
-  vec3 N = normalize(normal);
-  vec3 V = normalize(cam_pos - pos);
-  float NdotV = max(dot(N, V), 0.0);
+#ifndef REMOVE_SKYBOX_PBR
+  vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic) {
+    vec3 N = normalize(normal);
+    vec3 V = normalize(cam_pos - pos);
+    float NdotV = max(dot(N, V), 0.0);
 
-  vec3 R = reflect(-V, N);
+    vec3 R = reflect(-V, N);
 
-  vec3 specSample = textureCubeLodEXT(specCube, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec3 specSample = textureCubeLodEXT(specCube, R, roughness * MAX_REFLECTION_LOD).rgb;
 
-  vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
-  vec3 F = fresnelRough(NdotV, F0, roughness);
+    vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
+    vec3 F = fresnelRough(NdotV, F0, roughness);
 
-  vec3 ks = F;
-  float rad = (1.0 - metallic);
-  vec3 kd = vec3(rad) - ks * rad;
+    vec3 ks = F;
+    float rad = (1.0 - metallic);
+    vec3 kd = vec3(rad) - ks * rad;
 
-  vec3 diffuse = textureCube(diffCube, N).rgb * albedo;
+    vec3 diffuse = textureCube(diffCube, N).rgb * albedo;
 
-  vec2 brdfTex = texture2D(brdfTexture, vec2(NdotV, roughness)).rg;
-  vec3 specResult = specSample * (F * brdfTex.x + brdfTex.y);
+    vec2 brdfTex = texture2D(brdfTexture, vec2(NdotV, roughness)).rg;
+    vec3 specResult = specSample * (F * brdfTex.x + brdfTex.y);
 
-  return kd * diffuse + specResult;
-}
+    return kd * diffuse + specResult;
+  }
+#endif
 
 vec3 pbr(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, vec3 normal, float roughness, float metallic) {
   vec3 N = normalize(normal);
