@@ -142,9 +142,12 @@ export class Renderer {
 
     const skybox = this.findSkybox(this.scene.getGameObjectRoot());
     let skyboxInfo : SkyboxInfo = null;
-    if (skybox !== null) {
+    // do not include until completely convolved
+    if (skybox !== null && skybox.getCubemapDiffuse() !== null && skybox.getCubemapSpecular() !== null && skybox.getBRDF() !== null) {
       skyboxInfo = {
-        irridance: skybox.getCubemapDiffuse()
+        irridance: skybox.getCubemapDiffuse(),
+        specular: skybox.getCubemapSpecular(),
+        brdf: skybox.getBRDF()
       };
     }
 

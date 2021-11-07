@@ -69,6 +69,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   emissionFactor: vec4;
 
   irridance: Cubemap;
+  specular: Cubemap;
+  brdf: Texture;
 
   // use a flag to indicate whether the model matrix should be used as an attribute
   // probably use a step func to snag the right one
@@ -101,6 +103,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
     useAttribute: WebGLUniformLocation,
     irridance: WebGLUniformLocation,
+    specular: WebGLUniformLocation,
+    brdf: WebGLUniformLocation,
     useIrridance: WebGLUniformLocation
   };
 
@@ -124,6 +128,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.normal = null;
     this.color = null;
     this.irridance = null;
+    this.specular = null;
+    this.brdf = null;
     this.colorFactor = vec4.create();
     this.metalRough = null;
     this.metalFactor = 1.0;
@@ -179,6 +185,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       emissionFactor: gl.getUniformLocation(prog, "emission_factor"),
       useAttribute: gl.getUniformLocation(prog, "is_instanced"),
       irridance: gl.getUniformLocation(prog, "irridance"),
+      specular: gl.getUniformLocation(prog, "specular"),
+      brdf: gl.getUniformLocation(prog, "brdf"),
       useIrridance: gl.getUniformLocation(prog, "useIrridance")
     };
 
@@ -346,8 +354,11 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       const skybox = rc.getSkybox();
       if (skybox !== null) {
         skybox.irridance.bindToUniform(this.locs.irridance, 8);
+        skybox.specular[0].bindToUniform(this.locs.specular, 9);
+        skybox.brdf.bindToUniform(this.locs.brdf, 10);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
+        // need more cubes!!!!!
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);
         gl.uniform1i(this.locs.useIrridance, 0);
       }
@@ -445,8 +456,10 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
       gl.uniform1i(this.locs.useAttribute, 0);
 
-      if (this.irridance !== null) {
+      if (this.irridance !== null && this.specular !== null && this.brdf !== null) {
         this.irridance.bindToUniform(this.locs.irridance, 8);
+        this.specular.bindToUniform(this.locs.specular, 9);
+        this.brdf.bindToUniform(this.locs.brdf, 10);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);

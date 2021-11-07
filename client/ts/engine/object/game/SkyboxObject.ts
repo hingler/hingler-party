@@ -1,9 +1,8 @@
 import { vec3 } from "gl-matrix";
 import {GameContext} from "../../GameContext";
 import { ColorCubemap } from "../../gl/ColorCubemap";
-import { Cubemap } from "../../gl/Cubemap";
-import { Framebuffer } from "../../gl/Framebuffer";
-import { ColorFramebuffer } from "../../gl/internal/ColorFramebuffer";
+import { DepthStencilRenderbuffer } from "../../gl/internal/DepthStencilRenderbuffer";
+import { FloatColorTexture } from "../../gl/internal/FloatColorTexture";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";
 import { DataType } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
@@ -11,8 +10,10 @@ import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
 import { HDRTexture } from "../../gl/internal/HDRTexture";
 import { SkyboxFramebuffer } from "../../gl/internal/SkyboxFramebuffer";
 import { ModelImpl, ModelInstance } from "../../loaders/internal/ModelImpl";
+import { BRDFLutDisplay } from "../../material/internal/BRDFLutDisplay";
 import { CubemapCoords } from "../../material/internal/CubemapCoords";
 import { CubemapToDiffuseIBLDisplay } from "../../material/internal/CubemapToDiffuseIBLDisplay";
+import { CubemapToSpecularIBLDisplay } from "../../material/internal/CubemapToSpecularIBLDisplay";
 import { HDRToCubemapDisplay } from "../../material/internal/HDRToCubemapDisplay";
 import { SkyboxMaterial } from "../../material/SkyboxMaterial";
 import { Model } from "../../model/Model";
@@ -26,8 +27,13 @@ export class SkyboxObject extends GameObject {
   private hdrProg: HDRToCubemapDisplay;
   private cubemap: ColorCubemap;
   private cubemapDiffuse: ColorCubemap;
+  private cubemapSpecular: Array<ColorCubemap>;
+  private iblBRDF: FloatColorTexture;
   private model: Model;
   private mat: SkyboxMaterial;
+
+  private extMipmapRender: boolean;
+  private extLodTexture: boolean;
 
   // how can we tell the engine that we're rendering our skybox?
   // add skybox construction as a context feature so we can pass in an engine context
@@ -37,12 +43,18 @@ export class SkyboxObject extends GameObject {
     this.hdr = new HDRTexture(ctx, path);
     this.mat = new SkyboxMaterial(ctx);
 
-    
+    this.extLodTexture =    !!(ctx.getGLExtension("EXT_shader_texture_lod"));
+    this.extMipmapRender =  !!(ctx.getGLExtension("OES_fbo_render_mipmap"));
+
+    console.log(ctx.getGLExtension("EXT_shader_texture_lod"));
+    console.log(ctx.getGLExtension("OES_fbo_render_mipmap"));
     // can't know size of cubemap until hdrpromise is done
     
     this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);
     this.cubemap = null;
     this.cubemapDiffuse = null;
+    this.cubemapSpecular = null;
+    this.iblBRDF = null;
 
     this.model = SkyboxObject.createSkyboxCube(ctx.getGLContext());
 
@@ -56,6 +68,16 @@ export class SkyboxObject extends GameObject {
 
   getCubemapDiffuse() {
     return this.cubemapDiffuse;
+  }
+
+  getCubemapSpecular() {
+    // uh oh!!! funky business :)
+    // i'll figure it out later :nerd:
+    return this.cubemapSpecular;
+  }
+
+  getBRDF() {
+    return this.iblBRDF;
   }
 
   private static createSkyboxCube(gl: WebGLRenderingContext) {
@@ -98,8 +120,9 @@ export class SkyboxObject extends GameObject {
     const dim = this.hdr.dims.reduce((prev, cur) => Math.min(prev, cur)) / 2;
     const cubeBuffer = new SkyboxFramebuffer(this.getContext(), dim);
     const diffuseBuffer = new SkyboxFramebuffer(this.getContext(), 32);
+    const specBuffer = new SkyboxFramebuffer(this.getContext(), dim / 2);
     await this.hdrProg.getShaderFuture().wait();
-    await this.renderSkybox(cubeBuffer, diffuseBuffer);
+    await this.renderSkybox(cubeBuffer, diffuseBuffer, specBuffer);
   }
 
   private configureCubemapCoords(i: number, mat: CubemapCoords) {
@@ -118,7 +141,7 @@ export class SkyboxObject extends GameObject {
 
   }
 
-  private async renderSkybox(cubeBuffer: SkyboxFramebuffer, diffuseBuffer: SkyboxFramebuffer) {
+  private async renderSkybox(cubeBuffer: SkyboxFramebuffer, diffuseBuffer: SkyboxFramebuffer, specBuffer: SkyboxFramebuffer) {
     // draw our HDR onto each side of the texture
     // use some SkyboxDisplay function to blast our HDR onto the side of the cubemap
     const gl = this.getContext().getGLContext();
@@ -151,6 +174,50 @@ export class SkyboxObject extends GameObject {
 
     this.cubemapDiffuse = diffuseBuffer.getCubemap();
     this.cubemapDiffuse.generateMipmaps();
+
+    await this.renderSpecularIBL(this.cubemap, specBuffer);
+  }
+
+  private async renderSpecularIBL(cube: ColorCubemap, specBuffer: SkyboxFramebuffer) {
+    const gl = this.getContext().getGLContext();
+    const specMat = new CubemapToSpecularIBLDisplay(this.getContext(), this.cubemap);
+    await specMat.waitUntilCompiled();
+
+    specMat.cubemapRes = cube.dims;
+
+    const mipLevels = 5;
+    let dim = specBuffer.dim;
+    for (let i = 0; i < 5; i++) {
+      specMat.roughness = i / (mipLevels - 1);
+      specBuffer.setMipLevel(i);
+      gl.viewport(0, 0, specBuffer.dim, specBuffer.dim);
+      for (let j = 0; j < 6; j++) {
+        specBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j);
+        this.configureCubemapCoords(j, specMat);
+        specMat.draw();
+      }
+    }
+
+    // if this is avail: we can use cubelod to fetch
+    // if not: we have to create several textures, and render to each one!
+    this.cubemapSpecular = [specBuffer.getCubemap()];
+
+    await this.createBRDF();
+  }
+
+  private async createBRDF() {
+    const gl = this.getContext().getGLContext();
+    const mat = new BRDFLutDisplay(this.getContext());
+    await mat.waitUntilCompiled();
+    const tex = new FloatColorTexture(this.getContext(), [512, 512]);
+    const fb = gl.createFramebuffer();
+    const rb = new DepthStencilRenderbuffer(this.getContext(), [512, 512]);
+    rb.attachToFramebuffer(fb);
+    tex.attachToFramebuffer(fb, gl.COLOR_ATTACHMENT0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    mat.draw();
+
+    this.iblBRDF = tex;
   }
 
   renderMaterial(rc: RenderContext) {

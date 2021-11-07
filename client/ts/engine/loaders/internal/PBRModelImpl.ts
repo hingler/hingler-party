@@ -59,6 +59,8 @@ export class PBRModelImpl implements PBRModel {
       const skybox = rc.getSkybox();
       if (skybox !== null) {
         mat.irridance = skybox.irridance;
+        mat.specular = skybox.specular[0];
+        mat.brdf = skybox.brdf;
       }
       
       mat.drawMaterial(mod);

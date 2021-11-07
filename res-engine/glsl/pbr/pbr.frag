@@ -46,6 +46,8 @@ uniform float metal_factor;
 uniform vec4 emission_factor;
 
 uniform samplerCube irridance;
+uniform samplerCube specular;
+uniform sampler2D brdf;
 uniform int useIrridance;
 
 void main() {

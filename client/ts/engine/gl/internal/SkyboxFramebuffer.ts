@@ -14,6 +14,8 @@ export class SkyboxFramebuffer {
   private cubemap: ColorCubemap;
 
   private mipLevel: number;
+
+  private fboMipmap: boolean;
   
   readonly dim_: number;
 
@@ -29,20 +31,33 @@ export class SkyboxFramebuffer {
     this.rb.attachToFramebuffer(this.fb);
     this.ctx = ctx;
     this.setMipLevel(0);
+    this.fboMipmap = !!(this.ctx.getGLExtension("OES_fbo_render_mipmap"));
   }
 
   get dim() {
     return Math.round(Math.pow(0.5, this.mipLevel) * this.dim_);
   }
 
-  setMipLevel(mip: number) {
+  /**
+   * Sets the mip level of this framebuffer
+   * @param mip - the desired mip level
+   * @returns 
+   */
+  setMipLevel(mip: number) : boolean {
     const newMip = Math.round(mip);
+    if (!this.fboMipmap && newMip !== 0) {
+      // ensure we can load our mip0
+      return false;
+    }
+
     if (newMip !== this.mipLevel) {
       this.mipLevel = newMip;
       const mipRes = Math.round(this.dim);
       this.rb.setDimensions(mipRes, mipRes);
       this.rb.attachToFramebuffer(this.fb);
     }
+
+    return true;
   }
 
   // bind framebuffer: specify face

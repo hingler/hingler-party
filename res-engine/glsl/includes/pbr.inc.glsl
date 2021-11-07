@@ -3,9 +3,34 @@
 #include <constants.inc.glsl>
 
 float distributionGGX(float, float);
+vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness);
+vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN);
 float schlick(float, float);
 float schlickSmith(float, float, float);
+float schlickSmithIBL(float, float, float);
 vec3 fresnel(float, vec3);
+
+// https://learnopengl.com/PBR/IBL/Specular-IBL
+vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
+  vec3 up = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+  vec3 tangent = normalize(cross(up, N));
+  vec3 bitangent = normalize(cross(N, tangent));
+  mat3 TBN = mat3(tangent, bitangent, N);
+  return importanceSampleGGX(Xi, N, roughness, TBN);
+}
+vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
+  float a = roughness * roughness;
+  float a2 = a * a;
+
+  float phi = 2.0 * PI * Xi.x;
+  float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a2 - 1.0) * Xi.y));
+  float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+
+  // turns our randomly sampled value into a halfway vector spherical
+  vec3 h = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
+  // tangent op
+  return normalize(TBN * h);
+}
 
 vec3 pbr(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, vec3 normal, float roughness, float metallic) {
   vec3 N = normalize(normal);
@@ -54,6 +79,11 @@ float schlickSmith(float NdotV, float NdotL, float alpha) {
   float schlickSubL = schlick(NdotL, K);
 
   return schlickSubV * schlickSubL;
+}
+
+float schlickSmithIBL(float NdotV, float NdotL, float alpha) {
+  float K = (alpha * alpha) / 2.0;
+  return schlick(NdotV, K) * schlick(NdotL, K);
 }
 
 vec3 fresnel(float HdotV, vec3 F0) {

@@ -12,4 +12,6 @@ export interface PBRInterface {
   emission: Texture,
   emissionFactor: vec4,
   irridance: Cubemap;
+  specular: Cubemap;
+  brdf: Texture;
 };

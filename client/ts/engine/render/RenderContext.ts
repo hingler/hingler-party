@@ -4,6 +4,7 @@
  */
 
 import { Cubemap } from "../gl/Cubemap";
+import { FloatColorTexture } from "../gl/internal/FloatColorTexture";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { CameraInfo } from "../object/game/Camera";
@@ -17,7 +18,9 @@ export enum RenderPass {
 }
 
 export interface SkyboxInfo {
-  irridance: Cubemap
+  irridance: Cubemap,
+  specular: Array<Cubemap>,
+  brdf: FloatColorTexture
 };
 
 export interface RenderContext {

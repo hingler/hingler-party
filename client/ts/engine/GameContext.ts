@@ -2,7 +2,6 @@ import { FileLoader } from "./loaders/FileLoader";
 import { GLTFLoader } from "./loaders/GLTFLoader";
 import type { Scene } from "./object/scene/Scene";
 import { SceneSwap } from "./object/scene/SceneSwap";
-
 /**
  * A Context aims to provide consistent information to all components on the state of execution.
  */
@@ -35,12 +34,15 @@ export interface GameContext {
    */
   getGLExtension<T>(name: string) : T;
 
+  // kick it into gear
+
   // common shortcuts
   getGLExtension(name: "OES_texture_float")               : OES_texture_float         | null;
   getGLExtension(name: "OES_texture_float_linear")        : OES_texture_float_linear  | null;
   getGLExtension(name: "OES_element_index_uint")          : OES_element_index_uint    | null;
   getGLExtension(name: "WEBGL_depth_texture")             : WEBGL_depth_texture       | null;
   getGLExtension(name: "ANGLE_instanced_arrays")          : ANGLE_instanced_arrays    | null;
+  getGLExtension(name: "EXT_shader_texture_lod")          : EXT_shader_texture_lod    | null;
   /**
    * @returns the present GL rendering context.
    */

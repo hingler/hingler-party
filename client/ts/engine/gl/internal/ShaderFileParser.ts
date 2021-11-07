@@ -15,8 +15,9 @@ const DEFAULT_INCLUDES = [
   "opensimplex",
   "perlin",
   "pbr",
-  "radialblur"
-]
+  "radialblur",
+  "random"
+];
 
 export class ShaderFileParser {
   private loader: FileLoader;
@@ -85,6 +86,9 @@ export class ShaderFileParser {
                 break;
               case "radialblur":
                 output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/radialblur.inc.glsl")));
+                break;
+              case "random":
+                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/random.inc.glsl")));
                 break;
             }
 
