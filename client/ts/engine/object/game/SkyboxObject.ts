@@ -117,7 +117,7 @@ export class SkyboxObject extends GameObject {
   }
 
   private async prepareSkybox() {
-    const dim = this.hdr.dims.reduce((prev, cur) => Math.min(prev, cur)) / 2;
+    const dim = this.hdr.dims.reduce((prev, cur) => Math.min(prev, cur));
     const cubeBuffer = new SkyboxFramebuffer(this.getContext(), dim);
     const diffuseBuffer = new SkyboxFramebuffer(this.getContext(), 32);
     const specBuffer = new SkyboxFramebuffer(this.getContext(), dim / 2);
