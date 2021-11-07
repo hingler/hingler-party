@@ -1,6 +1,5 @@
 // definitions pertaining to spotlights
 // TODO: including these engine components vs from external?
-
 #include <attenuation.inc.glsl>
 struct SpotLight {
   // position of spot

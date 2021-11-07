@@ -1,6 +1,7 @@
 // thank you https://learnopengl.com/PBR/Theory
-
 #include <constants.inc.glsl>
+
+#define MAX_REFLECTION_LOD 4.0
 
 float distributionGGX(float, float);
 vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness);
@@ -9,6 +10,7 @@ float schlick(float, float);
 float schlickSmith(float, float, float);
 float schlickSmithIBL(float, float, float);
 vec3 fresnel(float, vec3);
+vec3 fresnelRough(float, vec3, float);
 
 // https://learnopengl.com/PBR/IBL/Specular-IBL
 vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness) {
@@ -30,6 +32,30 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
   vec3 h = vec3(cos(phi) * sinTheta, sin(phi) * sinTheta, cosTheta);
   // tangent op
   return normalize(TBN * h);
+}
+
+vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic) {
+  vec3 N = normalize(normal);
+  vec3 V = normalize(cam_pos - pos);
+  float NdotV = max(dot(N, V), 0.0);
+
+  vec3 R = reflect(-V, N);
+
+  vec3 specSample = textureCubeLodEXT(specCube, R, roughness * MAX_REFLECTION_LOD).rgb;
+
+  vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
+  vec3 F = fresnelRough(NdotV, F0, roughness);
+
+  vec3 ks = F;
+  float rad = (1.0 - metallic);
+  vec3 kd = vec3(rad) - ks * rad;
+
+  vec3 diffuse = textureCube(diffCube, N).rgb * albedo;
+
+  vec2 brdfTex = texture2D(brdfTexture, vec2(NdotV, roughness)).rg;
+  vec3 specResult = specSample * (F * brdfTex.x + brdfTex.y);
+
+  return kd * diffuse + specResult;
 }
 
 vec3 pbr(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, vec3 normal, float roughness, float metallic) {
@@ -89,5 +115,10 @@ float schlickSmithIBL(float NdotV, float NdotL, float alpha) {
 vec3 fresnel(float HdotV, vec3 F0) {
   float one_minus_hv = (1.0 - HdotV);
   return mix(F0, vec3(1.0), pow(one_minus_hv, 5.0));
+}
+
+vec3 fresnelRough(float cosTheta, vec3 F0, float rough) {
+  float cosClamp = max(min(1.0 - cosTheta, 1.0), 0.0);
+  return mix(F0, max(vec3(1.0 - rough), F0), pow(cosClamp, 5.0));
 }
 

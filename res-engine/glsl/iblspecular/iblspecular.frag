@@ -1,10 +1,12 @@
 #version 100
 
+#extension GL_EXT_shader_texture_lod : enable
 precision highp float;
 
+#include <pbr>
 #include <constants>
 #include <random>
-#include <pbr>
+
 
 #define SAMPLE_COUNT 2048
 

@@ -54,6 +54,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   private spotLightUniformsNoShadow: Array<SpotLightUniform>;
 
   private placeholderCube: Cubemap;
+  private placeholderCubeSpec: Cubemap;
+  private placeholderBRDF: Texture;
    
   vpMat: mat4;
   modelMat: mat4;
@@ -137,6 +139,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.emissionFactor = vec4.create();
     this.emission = null;
     this.placeholderCube = new ColorCubemap(ctx, 8);
+    this.placeholderCubeSpec = new ColorCubemap(ctx, 8);
+    this.placeholderBRDF = new TextureDummy(ctx);
     vec4.zero(this.emissionFactor);
 
     this.spotLightUniforms = [];
@@ -155,8 +159,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       .withVertexShader(getEnginePath("engine/glsl/pbr/pbr.vert"))
       .withFragmentShader(getEnginePath("engine/glsl/pbr/pbr.frag"))
       .build()
-      .then(this.configureProgram.bind(this))
-      .catch(console.error.bind(console));
+      .then(this.configureProgram.bind(this));
   }
 
   private configureProgram(prog: WebGLProgram) {
@@ -360,6 +363,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       } else {
         // need more cubes!!!!!
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
+        this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
         gl.uniform1i(this.locs.useIrridance, 0);
       }
 
@@ -463,6 +468,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
+        this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
         gl.uniform1i(this.locs.useIrridance, 0);
       }
 

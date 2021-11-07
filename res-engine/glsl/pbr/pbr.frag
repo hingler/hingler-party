@@ -1,8 +1,10 @@
 #version 100
+#extension GL_EXT_shader_texture_lod : enable
 
 precision highp float;
 precision highp int;
 precision highp sampler2D;
+
 
 #include <../includes/ambient.inc.glsl>
 #include <../includes/spotlight/spotlight.inc.glsl>
@@ -105,7 +107,7 @@ void main() {
 
   vec4 skybox = textureCube(irridance, N);
   if (useIrridance > 0) { 
-    col += vec4(C * skybox.rgb, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal).rgb, 0.0);
   }
 
   if (use_emission == 0) {

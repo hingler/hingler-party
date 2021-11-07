@@ -1,5 +1,7 @@
 #version 100
 
+#extension GL_EXT_shader_texture_lod : enable
+
 precision highp float;
 
 #include <pbr>
