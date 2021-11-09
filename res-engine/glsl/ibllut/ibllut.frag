@@ -23,11 +23,12 @@ vec2 integrateBRDF(float NdotV, float roughness) {
   for (int i = 0; i < SAMPLE_COUNT; i++) {
     vec2 Xi = HammersleyNoBits(i, SAMPLE_COUNT);
     vec3 H  = importanceSampleGGX(Xi, N, roughness);
-    vec3 L  = normalize(2.0 * dot(V, H) * H - V);
+
+    float VdotH = max(dot(V, H), 0.0);
+    vec3 L  = normalize(2.0 * VdotH * H - V);
 
     float NdotL = max(L.z, 0.0);
     float NdotH = max(H.z, 0.0);
-    float VdotH = max(dot(V, H), 0.0);
     float NdotV = max(dot(N, V), 0.0);
 
     if (NdotL > 0.0) {

@@ -8,7 +8,7 @@ precision highp float;
 #include <random>
 
 
-#define SAMPLE_COUNT 2048
+#define SAMPLE_COUNT 4096
 
 varying vec2 vCoord;
 
@@ -43,8 +43,11 @@ void main() {
 
     // HdotV = NdotH by our assumption :)
     float D = distributionGGX(NdotH, roughness);
-    float pdf = (D * NdotH / (4.0 * NdotH)) + 0.0001;
-    float saTexel = 4.0 * PI / (6.0 * cubemapRes * cubemapRes);
+    // pdf iirc is D * ndoth / 4.0 * hdotv but since N = V = R we can remove the dot mul
+    
+    float pdf = (D) + 0.0001;
+    // 4.0 * PI, factor 4.0 our of PDF and out of saTexel to reduce a couple ops :)
+    float saTexel = PI / (6.0 * cubemapRes * cubemapRes);
     float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
     // need texturelod here :(
     // i'll just use bias here!

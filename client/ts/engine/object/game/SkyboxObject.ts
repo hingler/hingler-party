@@ -45,10 +45,6 @@ export class SkyboxObject extends GameObject {
 
     this.extLodTexture =    !!(ctx.getGLExtension("EXT_shader_texture_lod"));
     this.extMipmapRender =  !!(ctx.getGLExtension("OES_fbo_render_mipmap"));
-
-    console.log(ctx.getGLExtension("EXT_shader_texture_lod"));
-    console.log(ctx.getGLExtension("OES_fbo_render_mipmap"));
-    // can't know size of cubemap until hdrpromise is done
     
     this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);
     this.cubemap = null;
