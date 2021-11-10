@@ -180,14 +180,27 @@ export class SkyboxObject extends GameObject {
     await specMat.waitUntilCompiled();
 
     specMat.cubemapRes = cube.dims;
-
+    
     const mipLevels = 5;
     let dim = specBuffer.dim;
     for (let i = 0; i < 5; i++) {
+      specMat.destRes = specBuffer.dim;
       specMat.roughness = i / (mipLevels - 1);
       specBuffer.setMipLevel(i);
       gl.viewport(0, 0, specBuffer.dim, specBuffer.dim);
       for (let j = 0; j < 6; j++) {
+        // note: if fb mipmap draw isnt supported: these will have to be separate textures
+        // managing it inside this cubemap fb isnt too bad
+        // binding it might be
+
+        // implementer will need some way to see each mipmap level and bind them individually
+        // we can use skyboxinfo for this
+        // add some faculty for checking how our textures are bound
+        // put into the skybox info struct accordingly
+        // single texture, or 5 (per roughness)
+
+        // wrap all of those textures in a single "skyboxinfo" struct and then have the mat accept it
+        // mat will figure out how to bind it based on compilation options
         specBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j);
         this.configureCubemapCoords(j, specMat);
         specMat.draw();

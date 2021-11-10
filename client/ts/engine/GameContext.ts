@@ -43,6 +43,7 @@ export interface GameContext {
   getGLExtension(name: "WEBGL_depth_texture")             : WEBGL_depth_texture       | null;
   getGLExtension(name: "ANGLE_instanced_arrays")          : ANGLE_instanced_arrays    | null;
   getGLExtension(name: "EXT_shader_texture_lod")          : EXT_shader_texture_lod    | null;
+  getGLExtension(name: "OES_standard_derivatives")        : OES_standard_derivatives  | null;
   /**
    * @returns the present GL rendering context.
    */

@@ -35,14 +35,29 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
 }
 
 #ifndef REMOVE_SKYBOX_PBR
-  vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic) {
+  vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic, float specRes) {
     vec3 N = normalize(normal);
     vec3 V = normalize(cam_pos - pos);
     float NdotV = max(dot(N, V), 0.0);
 
     vec3 R = reflect(-V, N);
 
-    vec3 specSample = textureCubeLodEXT(specCube, R, roughness * MAX_REFLECTION_LOD).rgb;
+    float lod = roughness * MAX_REFLECTION_LOD;
+    #ifdef GL_EXT_shader_texture_lod
+      vec3 specSample = textureCubeLodEXT(specCube, R, lod).rgb;
+    #else
+      // mipmap lookup from OGL 4.6 spec
+      vec3 Rx = dFdx(R) * specRes;
+      vec3 Ry = dFdy(R) * specRes;
+      float dRx = dot(Rx, Rx);
+      float dRy = dot(Ry, Ry);
+      float dMaxSquared = max(dRx, dRy);
+      float mipGuess = 0.5 * log2(dMaxSquared);
+      // lod is desired mip
+      // mipguess is estimated current mipmap level
+      // lod - mipguess should mimic textureCubeLod behavior
+      vec3 specSample = textureCube(specCube, R, lod - mipGuess).rgb;
+    #endif
 
     vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
     vec3 F = fresnelRough(NdotV, F0, roughness);

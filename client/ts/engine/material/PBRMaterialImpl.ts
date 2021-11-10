@@ -107,6 +107,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     irridance: WebGLUniformLocation,
     specular: WebGLUniformLocation,
     brdf: WebGLUniformLocation,
+    specSize: WebGLUniformLocation,
     useIrridance: WebGLUniformLocation
   };
 
@@ -147,6 +148,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.spotLightUniformsNoShadow = [];
 
     this.cameraPos = vec3.create();
+
+    ctx.getGLExtension("EXT_shader_texture_lod");
+    ctx.getGLExtension("OES_standard_derivatives");
 
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();
@@ -190,6 +194,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       irridance: gl.getUniformLocation(prog, "irridance"),
       specular: gl.getUniformLocation(prog, "specular"),
       brdf: gl.getUniformLocation(prog, "brdf"),
+      specSize: gl.getUniformLocation(prog, "specSize"),
       useIrridance: gl.getUniformLocation(prog, "useIrridance")
     };
 
@@ -359,6 +364,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         skybox.irridance.bindToUniform(this.locs.irridance, 8);
         skybox.specular[0].bindToUniform(this.locs.specular, 9);
         skybox.brdf.bindToUniform(this.locs.brdf, 10);
+
+        gl.uniform1f(this.locs.specSize, skybox.specular[0].dims);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         // need more cubes!!!!!
@@ -465,6 +472,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         this.irridance.bindToUniform(this.locs.irridance, 8);
         this.specular.bindToUniform(this.locs.specular, 9);
         this.brdf.bindToUniform(this.locs.brdf, 10);
+        gl.uniform1f(this.locs.specSize, this.specular.dims);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);

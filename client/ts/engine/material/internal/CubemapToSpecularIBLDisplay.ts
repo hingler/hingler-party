@@ -12,6 +12,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
   up: vec3;
   roughness: number;
   cubemapRes: number;
+  destRes: number;
 
   private posLoc: number;
   private ctx: GameContext;
@@ -26,7 +27,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
     up: WebGLUniformLocation,
     skybox: WebGLUniformLocation,
     roughness: WebGLUniformLocation,
-    cubemapRes: WebGLUniformLocation
+    sourceDestRes: WebGLUniformLocation
   };
 
   constructor(ctx: GameContext, cubemap: ColorCubemap) {
@@ -63,7 +64,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
       up: gl.getUniformLocation(res, "up"),
       skybox: gl.getUniformLocation(res, "skybox"),
       roughness: gl.getUniformLocation(res, "roughness"),
-      cubemapRes: gl.getUniformLocation(res, "cubemapRes")
+      sourceDestRes: gl.getUniformLocation(res, "sourceDestRes")
     };
 
     this.buf = gl.createBuffer();
@@ -84,7 +85,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
       gl.uniform3fv(this.unifs.right, this.right);
       gl.uniform3fv(this.unifs.up, this.up);
       gl.uniform1f(this.unifs.roughness, this.roughness);
-      gl.uniform1f(this.unifs.cubemapRes, this.cubemapRes);
+      gl.uniform2f(this.unifs.sourceDestRes, this.cubemapRes, this.destRes);
       this.tex.bindToUniform(this.unifs.skybox, 1);
 
       gl.vertexAttribPointer(this.posLoc, 2, gl.FLOAT, false, 0, 0);

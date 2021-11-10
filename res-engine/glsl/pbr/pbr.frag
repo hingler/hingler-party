@@ -1,5 +1,6 @@
 #version 100
 #extension GL_EXT_shader_texture_lod : enable
+#extension GL_OES_standard_derivatives : enable
 
 precision highp float;
 precision highp int;
@@ -50,6 +51,7 @@ uniform vec4 emission_factor;
 uniform samplerCube irridance;
 uniform samplerCube specular;
 uniform sampler2D brdf;
+uniform float specSize;
 uniform int useIrridance;
 
 void main() {
@@ -107,7 +109,7 @@ void main() {
 
   vec4 skybox = textureCube(irridance, N);
   if (useIrridance > 0) { 
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal).rgb, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb, 0.0);
   }
 
   if (use_emission == 0) {

@@ -14,11 +14,15 @@ export class BRDFLutDisplay {
   constructor(ctx: GameContext) {
     this.prog = null;
     this.ctx = ctx;
+    
+    ctx.getGLExtension("OES_standard_derivatives");
+
     this.compilePromise = new ShaderProgramBuilder(ctx)
       .withVertexShader(getEnginePath("engine/glsl/ibllut/ibllut.vert"))
       .withFragmentShader(getEnginePath("engine/glsl/ibllut/ibllut.frag"))
       .build()
       .then(this.configureProgram.bind(this));
+
   }
 
   async waitUntilCompiled() {

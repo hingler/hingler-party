@@ -3,6 +3,8 @@
 #extension GL_EXT_shader_texture_lod : enable
 precision highp float;
 
+#define REMOVE_SKYBOX_PBR
+
 #include <pbr>
 #include <constants>
 #include <random>
@@ -19,7 +21,7 @@ uniform vec3 up;
 uniform samplerCube skybox;
 uniform float roughness;
 
-uniform float cubemapRes;
+uniform vec2 sourceDestRes;
 
 void main() {
   // fwd
@@ -47,15 +49,31 @@ void main() {
     
     float pdf = (D) + 0.0001;
     // 4.0 * PI, factor 4.0 our of PDF and out of saTexel to reduce a couple ops :)
-    float saTexel = PI / (6.0 * cubemapRes * cubemapRes);
+    float saTexel = PI / (6.0 * sourceDestRes.x * sourceDestRes.x);
     float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
     // need texturelod here :(
     // i'll just use bias here!
     float mipLevel = (roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel));
 
     if (NdotL > 0.0) {
-
-      col += textureCube(skybox, L, mipLevel).rgb * NdotL;
+      #ifdef GL_EXT_shader_texture_lod
+        col += textureCubeLodEXT(skybox, L, mipLevel).rgb * NdotL;
+      #else
+        // *should* work -- need to test :(
+        // est default mip level for texture cube
+        // mipmap lookup from OGL 4.6 spec
+        // todo: factor out into function and include? (also in pbr.inc.glsl)
+        vec3 Lx = dFdx(L) * sourceRes.x;
+        vec3 Ly = dFdy(L) * sourceRes.x;
+        float dLx = dot(Lx, Ly);
+        float dLy = dot(Lx, Ly);
+        float dMaxSquared = max(dLx, dLy);
+        float mipGuess = 0.5 * log2(dMaxSquared);
+        // lod is desired mip
+        // mipguess is estimated current mipmap level
+        // lod - mipguess should mimic textureCubeLod behavior
+        vec3 specSample = textureCube(skybox, L, lod - mipGuess).rgb;
+      #endif
       totalWeight += NdotL;
     }
   }
