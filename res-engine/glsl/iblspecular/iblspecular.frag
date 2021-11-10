@@ -1,10 +1,14 @@
 #version 100
 
 #extension GL_EXT_shader_texture_lod : enable
+#extension GL_OES_standard_derivates : enable
+
 precision highp float;
 
 #define REMOVE_SKYBOX_PBR
 
+// todo: shader command for including something after ver decl?
+// "preinclude" for includes which also require extensions
 #include <pbr>
 #include <constants>
 #include <random>
