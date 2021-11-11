@@ -19,7 +19,7 @@ export enum RenderPass {
 
 export interface SkyboxInfo {
   irridance: Cubemap,
-  specular: Array<Cubemap>,
+  specular: Cubemap,
   brdf: FloatColorTexture
 };
 

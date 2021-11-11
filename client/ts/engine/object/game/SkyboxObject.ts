@@ -27,7 +27,7 @@ export class SkyboxObject extends GameObject {
   private hdrProg: HDRToCubemapDisplay;
   private cubemap: ColorCubemap;
   private cubemapDiffuse: ColorCubemap;
-  private cubemapSpecular: Array<ColorCubemap>;
+  private cubemapSpecular: ColorCubemap;
   private iblBRDF: FloatColorTexture;
   private model: Model;
   private mat: SkyboxMaterial;
@@ -156,22 +156,25 @@ export class SkyboxObject extends GameObject {
     this.cubemap = cubeBuffer.getCubemap();
     this.cubemap.generateMipmaps();
 
-    const diffuseMat = new CubemapToDiffuseIBLDisplay(this.getContext(), this.cubemap);
-    await diffuseMat.waitUntilCompiled();
-
-    // render diffuse buffer
-    for (let i = 0; i < 6; i++) {
-      diffuseBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
-      gl.viewport(0, 0, diffuseBuffer.dim, diffuseBuffer.dim);
-
-      this.configureCubemapCoords(i, diffuseMat);
-      diffuseMat.draw();
+    // for now: if we can't render to a mipmap, ignore it!
+    if (this.extMipmapRender) {
+      const diffuseMat = new CubemapToDiffuseIBLDisplay(this.getContext(), this.cubemap);
+      await diffuseMat.waitUntilCompiled();
+  
+      // render diffuse buffer
+      for (let i = 0; i < 6; i++) {
+        diffuseBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
+        gl.viewport(0, 0, diffuseBuffer.dim, diffuseBuffer.dim);
+  
+        this.configureCubemapCoords(i, diffuseMat);
+        diffuseMat.draw();
+      }
+  
+      this.cubemapDiffuse = diffuseBuffer.getCubemap();
+      this.cubemapDiffuse.generateMipmaps();
+  
+      await this.renderSpecularIBL(this.cubemap, specBuffer);
     }
-
-    this.cubemapDiffuse = diffuseBuffer.getCubemap();
-    this.cubemapDiffuse.generateMipmaps();
-
-    await this.renderSpecularIBL(this.cubemap, specBuffer);
   }
 
   private async renderSpecularIBL(cube: ColorCubemap, specBuffer: SkyboxFramebuffer) {
@@ -209,7 +212,7 @@ export class SkyboxObject extends GameObject {
 
     // if this is avail: we can use cubelod to fetch
     // if not: we have to create several textures, and render to each one!
-    this.cubemapSpecular = [specBuffer.getCubemap()];
+    this.cubemapSpecular = specBuffer.getCubemap();
 
     await this.createBRDF();
   }
