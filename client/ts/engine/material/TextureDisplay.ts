@@ -115,11 +115,11 @@ export abstract class TextureDisplay {
       gl.disableVertexAttribArray(this.attribs.pos);
     } else {
       if (this.prog === null) {
-        console.warn("TextureDisplay program was null!");
+        console.debug("TextureDisplay program was null!");
       }
 
       if (this.tex === null) {
-        console.warn("TextureDisplay texture was null!");
+        console.debug("TextureDisplay texture was null!");
       }
     }
   }

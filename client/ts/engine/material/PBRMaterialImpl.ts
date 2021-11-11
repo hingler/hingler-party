@@ -272,10 +272,6 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   prepareAttributes(model: InstancedModel, instances: number, rc: RenderContext) {
     let gl = this.ctx.getGLContext();
-    if (this.prog === null) {
-      const err = "Program is not yet compiled -- cannot bind attributes";
-      throw Error(err);
-    }
 
     // there's some setup that happens here which breaks the shadow renderer, when the prog fails
     // to compile the shadow view looks just fine so i will have to investigate further :(
