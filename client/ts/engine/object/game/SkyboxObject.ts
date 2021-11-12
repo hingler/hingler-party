@@ -81,7 +81,7 @@ export class SkyboxObject extends GameObject {
     return this.iblBRDF;
   }
 
-  private static createSkyboxCube(gl: WebGLRenderingContext) {
+  public static createSkyboxCube(gl: WebGLRenderingContext) {
     const vertexBuf = new GLBufferImpl(gl);
     const indexBuf = new GLBufferImpl(gl);
     for (let i = 0; i < 8; i++) {
@@ -237,17 +237,19 @@ export class SkyboxObject extends GameObject {
     this.iblBRDF = tex;
   }
 
-  renderMaterial(rc: RenderContext) {
-    if (this.cubemap !== null) {
-      const gl = this.getContext().getGLContext();
-      gl.disable(gl.CULL_FACE);
-      const cam = rc.getActiveCameraInfo();
-      this.mat.persp = cam.perspectiveMatrix;
-      this.mat.view = cam.viewMatrix;
-      this.mat.cube = this.cubemap;
-      this.mat.intensity = this.intensity;
-      this.mat.drawMaterial(this.model);
-      gl.enable(gl.CULL_FACE);
-    }
-  }
+  // skybox shouldnt render itself
+  // instead, the renderer should handle it
+//   renderMaterial(rc: RenderContext) {
+//     if (this.cubemap !== null) {
+//       const gl = this.getContext().getGLContext();
+//       gl.disable(gl.CULL_FACE);
+//       const cam = rc.getActiveCameraInfo();
+//       this.mat.persp = cam.perspectiveMatrix;
+//       this.mat.view = cam.viewMatrix;
+//       this.mat.cube = this.cubemap;
+//       this.mat.intensity = this.intensity;
+//       this.mat.drawMaterial(this.model);
+//       gl.enable(gl.CULL_FACE);
+//     }
+//   }
 }

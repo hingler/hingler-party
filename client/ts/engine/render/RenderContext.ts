@@ -21,6 +21,7 @@ export interface SkyboxInfo {
   irridance: Cubemap,
   specular: Cubemap,
   brdf: FloatColorTexture,
+  color: Cubemap,
   intensity: number;
 };
 
@@ -36,5 +37,5 @@ export interface RenderContext {
 
   getAmbientLightInfo() : Array<AmbientLightStruct>; 
 
-  getSkybox() : SkyboxInfo;
+  getSkybox() : Array<SkyboxInfo>;
 };

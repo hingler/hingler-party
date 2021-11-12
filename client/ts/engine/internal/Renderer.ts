@@ -7,7 +7,9 @@ import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { ColorDisplay } from "../material/ColorDisplay";
 import { PostProcessingFilter } from "../material/PostProcessingFilter";
 import { ShadowDisplay } from "../material/ShadowDisplay";
+import { SkyboxMaterial } from "../material/SkyboxMaterial";
 import { TextureDisplay } from "../material/TextureDisplay";
+import { Model } from "../model/Model";
 import { CameraInfo } from "../object/game/Camera";
 import { GameCamera } from "../object/game/GameCamera";
 import { GameObject } from "../object/game/GameObject";
@@ -57,6 +59,9 @@ export class Renderer {
   private primaryFB: Framebuffer;
   private swapFB: Framebuffer;
 
+  private skyboxMat: SkyboxMaterial;
+  private cube: Model;
+
   // tracks rendered textures
   private renderPasses: Array<TextureDisplay>;
   constructor(ctx: EngineContext, scene: Scene) {
@@ -65,6 +70,8 @@ export class Renderer {
     this.scene = scene;
     this.primaryFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
     this.swapFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
+    this.skyboxMat = new SkyboxMaterial(ctx);
+    this.cube = SkyboxObject.createSkyboxCube(this.gl);
   }
 
   renderScene() {
@@ -140,17 +147,23 @@ export class Renderer {
       };
     }
 
-    const skybox = this.findSkybox(this.scene.getGameObjectRoot());
-    let skyboxInfo : SkyboxInfo = null;
+    const skyboxes = this.findSkybox(this.scene.getGameObjectRoot());
+    const skyboxList : Array<SkyboxInfo> = [];
     // do not include until completely convolved
-    if (skybox !== null && skybox.getCubemapDiffuse() !== null && skybox.getCubemapSpecular() !== null && skybox.getBRDF() !== null) {
-      skyboxInfo = {
-        irridance: skybox.getCubemapDiffuse(),
-        specular: skybox.getCubemapSpecular(),
-        brdf: skybox.getBRDF(),
-        intensity: skybox.intensity
-      };
+    for (let skybox of skyboxes) {
+      if (skybox !== null && skybox.getCubemapDiffuse() !== null && skybox.getCubemapSpecular() !== null && skybox.getBRDF() !== null) {
+        skyboxList.push({
+          irridance: skybox.getCubemapDiffuse(),
+          specular: skybox.getCubemapSpecular(),
+          brdf: skybox.getBRDF(),
+          intensity: skybox.intensity,
+          color: skybox.getCubemap()
+        });
+      }
     }
+
+    // desc wrt intensity
+    skyboxes.sort((a, b) => (b.intensity - a.intensity));
 
     let rc : RenderContext = {
       getRenderPass() {
@@ -170,7 +183,7 @@ export class Renderer {
       },
 
       getSkybox() {
-        return skyboxInfo;
+        return skyboxList;
       }
     }
 
@@ -183,14 +196,19 @@ export class Renderer {
       model.flush(rc);
     }
 
+    // draw skybox
+    this.gl.disable(gl.CULL_FACE);
+    this.skyboxMat.skyboxes = skyboxList;
+    this.skyboxMat.persp = info.perspectiveMatrix;
+    this.skyboxMat.view = info.viewMatrix;
+    this.skyboxMat.drawMaterial(this.cube);
+
     // run our post processing passes
     let filters : Array<PostProcessingFilter> = [];
     
     if (cam) {
       filters = cam.getFilters();
     }
-    
-    gl.disable(gl.CULL_FACE);
     
     let usePrimaryAsSource = true;
     let src : Framebuffer = this.swapFB;
@@ -287,18 +305,19 @@ export class Renderer {
     return null;
   }
 
-  private findSkybox(root: GameObject) : SkyboxObject {
+  private findSkybox(root: GameObject) : Array<SkyboxObject> {
+    let res = [];
     for (let child of root.getChildren()) {
       if (child instanceof SkyboxObject) {
-        return child;
+        res.push(child);
       } else {
         const skybox = this.findSkybox(child);
-        if (skybox !== null) {
-          return skybox;
+        if (skybox.length !== 0) {
+          res = res.concat(skybox);
         }
       }
     }
 
-    return null;
+    return res;
   }
 }

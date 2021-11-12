@@ -58,6 +58,13 @@ uniform float specSize;
 uniform float skyboxIntensity;
 uniform int useIrridance;
 
+uniform samplerCube irridance_l;
+uniform samplerCube specular_l;
+// no need to bind a second brdf cube
+uniform float specSize_l;
+uniform float skyboxIntensity_l;
+uniform int useIrridance_l;
+
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;
   vec4 colAlpha = texture2D(tex_albedo, v_tex);
@@ -111,9 +118,12 @@ void main() {
     col += vec4(C, 1.0) * getAmbientColor(ambient[i]);
   }
 
-  vec4 skybox = textureCube(irridance, N);
   if (useIrridance > 0) { 
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0);
+  }
+
+  if (useIrridance_l > 0) {
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance_l, specular_l, brdf, C, N, rough, metal, specSize_l).rgb * skyboxIntensity_l, 0.0);
   }
 
   if (use_emission == 0) {

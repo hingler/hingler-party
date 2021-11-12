@@ -2,6 +2,7 @@ import { mat4, ReadonlyMat4, vec3, vec4 } from "gl-matrix";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { Texture } from "../gl/Texture";
 import { Model } from "../model/Model";
+import { SkyboxInfo } from "../render/RenderContext";
 import { Material } from "./Material";
 import { PBRInterface } from "./PBRInterface";
 
@@ -24,6 +25,8 @@ export interface PBRMaterial extends Material, PBRInterface {
   cameraPos: vec3;
 
   setSpotLight(light: Array<SpotLightStruct>) : void;
+
+  setSkybox(skybox: Array<SkyboxInfo>) : void;
 
   drawMaterial(model: Model) : void;
 }
