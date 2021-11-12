@@ -147,7 +147,8 @@ export class Renderer {
       skyboxInfo = {
         irridance: skybox.getCubemapDiffuse(),
         specular: skybox.getCubemapSpecular(),
-        brdf: skybox.getBRDF()
+        brdf: skybox.getBRDF(),
+        intensity: skybox.intensity
       };
     }
 

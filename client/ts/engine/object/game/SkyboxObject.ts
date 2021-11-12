@@ -35,6 +35,8 @@ export class SkyboxObject extends GameObject {
   private extMipmapRender: boolean;
   private extLodTexture: boolean;
 
+  intensity: number;
+
   // how can we tell the engine that we're rendering our skybox?
   // add skybox construction as a context feature so we can pass in an engine context
   // use the engine context to notify client that we're compiling a skybox
@@ -43,7 +45,8 @@ export class SkyboxObject extends GameObject {
     this.hdr = new HDRTexture(ctx, path);
     this.mat = new SkyboxMaterial(ctx);
 
-    this.extLodTexture =    !!(ctx.getGLExtension("EXT_shader_texture_lod"));
+    // ensure this extension is loaded if avail -- we dont "need" it but it helps
+    ctx.getGLExtension("EXT_shader_texture_lod");
     this.extMipmapRender =  !!(ctx.getGLExtension("OES_fbo_render_mipmap"));
     
     this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);
@@ -51,6 +54,8 @@ export class SkyboxObject extends GameObject {
     this.cubemapDiffuse = null;
     this.cubemapSpecular = null;
     this.iblBRDF = null;
+
+    this.intensity = 1.0;
 
     this.model = SkyboxObject.createSkyboxCube(ctx.getGLContext());
 
@@ -240,6 +245,7 @@ export class SkyboxObject extends GameObject {
       this.mat.persp = cam.perspectiveMatrix;
       this.mat.view = cam.viewMatrix;
       this.mat.cube = this.cubemap;
+      this.mat.intensity = this.intensity;
       this.mat.drawMaterial(this.model);
       gl.enable(gl.CULL_FACE);
     }

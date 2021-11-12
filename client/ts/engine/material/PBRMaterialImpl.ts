@@ -73,6 +73,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   irridance: Cubemap;
   specular: Cubemap;
   brdf: Texture;
+  skyboxIntensity: number;
 
   // use a flag to indicate whether the model matrix should be used as an attribute
   // probably use a step func to snag the right one
@@ -107,6 +108,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     irridance: WebGLUniformLocation,
     specular: WebGLUniformLocation,
     brdf: WebGLUniformLocation,
+    skyboxIntensity: WebGLUniformLocation,
     specSize: WebGLUniformLocation,
     useIrridance: WebGLUniformLocation
   };
@@ -194,6 +196,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       irridance: gl.getUniformLocation(prog, "irridance"),
       specular: gl.getUniformLocation(prog, "specular"),
       brdf: gl.getUniformLocation(prog, "brdf"),
+      skyboxIntensity: gl.getUniformLocation(prog, "skyboxIntensity"),
       specSize: gl.getUniformLocation(prog, "specSize"),
       useIrridance: gl.getUniformLocation(prog, "useIrridance")
     };
@@ -358,16 +361,18 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       const skybox = rc.getSkybox();
       if (skybox !== null) {
         skybox.irridance.bindToUniform(this.locs.irridance, 8);
-        skybox.specular[0].bindToUniform(this.locs.specular, 9);
+        skybox.specular.bindToUniform(this.locs.specular, 9);
         skybox.brdf.bindToUniform(this.locs.brdf, 10);
 
-        gl.uniform1f(this.locs.specSize, skybox.specular[0].dims);
+        gl.uniform1f(this.locs.specSize, skybox.specular.dims);
+        gl.uniform1f(this.locs.skyboxIntensity, skybox.intensity);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         // need more cubes!!!!!
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);
         this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
         this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
+        gl.uniform1f(this.locs.skyboxIntensity, 0.0);
         gl.uniform1i(this.locs.useIrridance, 0);
       }
 
@@ -469,11 +474,13 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         this.specular.bindToUniform(this.locs.specular, 9);
         this.brdf.bindToUniform(this.locs.brdf, 10);
         gl.uniform1f(this.locs.specSize, this.specular.dims);
+        gl.uniform1f(this.locs.skyboxIntensity, this.skyboxIntensity);
         gl.uniform1i(this.locs.useIrridance, 1);
       } else {
         this.placeholderCube.bindToUniform(this.locs.irridance, 8);
         this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
         this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
+        gl.uniform1f(this.locs.skyboxIntensity, 0.0);
         gl.uniform1i(this.locs.useIrridance, 0);
       }
 

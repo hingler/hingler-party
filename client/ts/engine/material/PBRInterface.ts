@@ -14,4 +14,5 @@ export interface PBRInterface {
   irridance: Cubemap;
   specular: Cubemap;
   brdf: Texture;
+  skyboxIntensity: number;
 };

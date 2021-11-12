@@ -48,10 +48,14 @@ uniform float metal_factor;
 // add sampler for this if necc.
 uniform vec4 emission_factor;
 
+// fattest shader so far
+// 224 uniforms, 16 texture units seems like a reasonable limit
+// we'll query for those on launch and omit clients which fall below them
 uniform samplerCube irridance;
 uniform samplerCube specular;
 uniform sampler2D brdf;
 uniform float specSize;
+uniform float skyboxIntensity;
 uniform int useIrridance;
 
 void main() {

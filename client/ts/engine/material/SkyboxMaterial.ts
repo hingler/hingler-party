@@ -14,13 +14,15 @@ export class SkyboxMaterial implements Material {
   view: ReadonlyMat4;
   persp: ReadonlyMat4;
   cube: Cubemap;
+  intensity: number;
 
   private posLoc: number;
 
   private unifs: {
     uViewmat: WebGLUniformLocation,
     uPersmat: WebGLUniformLocation,
-    uCubemap: WebGLUniformLocation
+    uCubemap: WebGLUniformLocation,
+    skyboxIntensity: WebGLUniformLocation
   };
 
   constructor(ctx: GameContext) {
@@ -46,7 +48,8 @@ export class SkyboxMaterial implements Material {
     this.unifs = {
       uViewmat: gl.getUniformLocation(res, "uViewmat"),
       uPersmat: gl.getUniformLocation(res, "uPersmat"),
-      uCubemap: gl.getUniformLocation(res, "uCubemap")
+      uCubemap: gl.getUniformLocation(res, "uCubemap"),
+      skyboxIntensity: gl.getUniformLocation(res, "skyboxIntensity")
     };
   }
 
@@ -65,6 +68,7 @@ export class SkyboxMaterial implements Material {
       strip[15] = 1;
       gl.uniformMatrix4fv(this.unifs.uViewmat, false, strip);
       gl.uniformMatrix4fv(this.unifs.uPersmat, false, this.persp);
+      gl.uniform1f(this.unifs.skyboxIntensity, this.intensity);
       this.cube.bindToUniform(this.unifs.uCubemap, 1);
   
       model.bindAttribute(AttributeType.POSITION, this.posLoc);
