@@ -17,7 +17,6 @@ import { CubemapToSpecularIBLDisplay } from "../../material/internal/CubemapToSp
 import { HDRToCubemapDisplay } from "../../material/internal/HDRToCubemapDisplay";
 import { SkyboxMaterial } from "../../material/SkyboxMaterial";
 import { Model } from "../../model/Model";
-import { RenderContext } from "../../render/RenderContext";
 import {GameObject} from "./GameObject";
 
 // todo2: cubemap wrapper?
@@ -161,25 +160,22 @@ export class SkyboxObject extends GameObject {
     this.cubemap = cubeBuffer.getCubemap();
     this.cubemap.generateMipmaps();
 
-    // for now: if we can't render to a mipmap, ignore it!
-    if (this.extMipmapRender) {
-      const diffuseMat = new CubemapToDiffuseIBLDisplay(this.getContext(), this.cubemap);
-      await diffuseMat.waitUntilCompiled();
-  
-      // render diffuse buffer
-      for (let i = 0; i < 6; i++) {
-        diffuseBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
-        gl.viewport(0, 0, diffuseBuffer.dim, diffuseBuffer.dim);
-  
-        this.configureCubemapCoords(i, diffuseMat);
-        diffuseMat.draw();
-      }
-  
-      this.cubemapDiffuse = diffuseBuffer.getCubemap();
-      this.cubemapDiffuse.generateMipmaps();
-  
-      await this.renderSpecularIBL(this.cubemap, specBuffer);
+    const diffuseMat = new CubemapToDiffuseIBLDisplay(this.getContext(), this.cubemap);
+    await diffuseMat.waitUntilCompiled();
+
+    // render diffuse buffer
+    for (let i = 0; i < 6; i++) {
+      diffuseBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i);
+      gl.viewport(0, 0, diffuseBuffer.dim, diffuseBuffer.dim);
+
+      this.configureCubemapCoords(i, diffuseMat);
+      diffuseMat.draw();
     }
+
+    this.cubemapDiffuse = diffuseBuffer.getCubemap();
+    this.cubemapDiffuse.generateMipmaps();
+
+    await this.renderSpecularIBL(this.cubemap, specBuffer);
   }
 
   private async renderSpecularIBL(cube: ColorCubemap, specBuffer: SkyboxFramebuffer) {
@@ -191,28 +187,38 @@ export class SkyboxObject extends GameObject {
     
     const mipLevels = 5;
     let dim = specBuffer.dim;
+
+    let targ = specBuffer;
     for (let i = 0; i < 5; i++) {
-      specMat.destRes = specBuffer.dim;
+      specMat.destRes = dim;
       specMat.roughness = i / (mipLevels - 1);
-      specBuffer.setMipLevel(i);
-      gl.viewport(0, 0, specBuffer.dim, specBuffer.dim);
+
+      if (!this.extMipmapRender) {
+        // draw to temp fb (a bit dumb but for now its whatever)
+        targ = new SkyboxFramebuffer(this.getContext(), dim);
+      } else {
+        targ = specBuffer;
+        targ.setMipLevel(i);
+      }
+
+      gl.viewport(0, 0, dim, dim);
       for (let j = 0; j < 6; j++) {
-        // note: if fb mipmap draw isnt supported: these will have to be separate textures
-        // managing it inside this cubemap fb isnt too bad
-        // binding it might be
-
-        // implementer will need some way to see each mipmap level and bind them individually
-        // we can use skyboxinfo for this
-        // add some faculty for checking how our textures are bound
-        // put into the skybox info struct accordingly
-        // single texture, or 5 (per roughness)
-
-        // wrap all of those textures in a single "skyboxinfo" struct and then have the mat accept it
-        // mat will figure out how to bind it based on compilation options
-        specBuffer.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j);
+        targ.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j);
         this.configureCubemapCoords(j, specMat);
         specMat.draw();
       }
+
+      if (!this.extMipmapRender) {
+        // copy from targ over to specbuffer
+        const col = specBuffer.getCubemap();
+        for (let j = 0; j < 6; j++) {
+          targ.bindFramebuffer(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j);
+          col.bindCubemap(gl.TEXTURE_CUBE_MAP, 0);
+          gl.copyTexSubImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + j, i, 0, 0, 0, 0, dim, dim);
+        }
+      }
+
+      dim = Math.round(dim / 2);
     }
 
     // if this is avail: we can use cubelod to fetch

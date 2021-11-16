@@ -76,7 +76,7 @@ export class EngineContext implements GameContext {
       this.glContext = init.glContext;
     } else {
       this.canvas = init;
-      this.glContext = init.getContext("webgl");
+      this.glContext = this.getGLProxy(init.getContext("webgl"));
     }
 
     this.gltfLoader = new GLTFLoaderImpl(this.loader, this);

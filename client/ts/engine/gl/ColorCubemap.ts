@@ -83,6 +83,26 @@ export class ColorCubemap implements Cubemap {
     gl.uniform1i(location, index);
   }
 
+  bindCubemap(location?: number, index?: number) {
+    const gl = this.ctx.getGLContext();
+    let loc : number;
+    let slot: number;
+    if (location === undefined) {
+      loc = gl.TEXTURE_CUBE_MAP;
+    } else {
+      loc = location;
+    }
+
+    if (index === undefined || (index < 0 || index >= 32)) {
+      slot = gl.TEXTURE0;
+    } else {
+      slot = gl.TEXTURE0 + index;
+    }
+
+    gl.activeTexture(slot);
+    gl.bindTexture(loc, this.cube);
+  }
+
   getTextureFormat() {
     return TextureFormat.RGBA;
   }

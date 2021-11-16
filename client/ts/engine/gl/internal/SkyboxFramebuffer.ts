@@ -41,7 +41,7 @@ export class SkyboxFramebuffer {
   /**
    * Sets the mip level of this framebuffer
    * @param mip - the desired mip level
-   * @returns 
+   * @returns true if the fb mipmap level could be set -- false otherwise.
    */
   setMipLevel(mip: number) : boolean {
     const newMip = Math.round(mip);
@@ -61,7 +61,6 @@ export class SkyboxFramebuffer {
   }
 
   // bind framebuffer: specify face
-
   bindFramebuffer(face: number, target?: number) {
     const gl = this.ctx.getGLContext();
 
