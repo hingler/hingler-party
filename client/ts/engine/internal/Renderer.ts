@@ -163,7 +163,7 @@ export class Renderer {
     }
 
     // desc wrt intensity
-    skyboxes.sort((a, b) => (b.intensity - a.intensity));
+    skyboxList.sort((a, b) => (b.intensity - a.intensity));
 
     let rc : RenderContext = {
       getRenderPass() {
