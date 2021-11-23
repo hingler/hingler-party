@@ -1,5 +1,22 @@
 // thank you https://learnopengl.com/PBR/Theory
 #include <constants.inc.glsl>
+#include <env>
+
+// SHADER_QUALITY:
+// 2: high
+// 1: med
+// 0: low
+
+// high: current full fat pbr shader
+// medium: use an approximation of some values
+//         there was an article i read at some point covering a few but i dont remember it :(
+// low: phys inaccurate
+//      ignore some components, simple matte lighting
+//      diffuse is a quick lookup for ibl
+//      specular i think is a quick lookup? we'll just use a naive ver and make it look good enough :D
+#ifndef SHADER_QUALITY
+  #define SHADER_QUALITY 2
+#endif
 
 #define MAX_REFLECTION_LOD 4.0
 
@@ -35,6 +52,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
 }
 
 #ifndef REMOVE_SKYBOX_PBR
+// texture lookup can cause issues if acc included in vert shader
   vec3 pbr(vec3 pos, vec3 cam_pos, in samplerCube diffCube, in samplerCube specCube, in sampler2D brdfTexture, vec3 albedo, vec3 normal, float roughness, float metallic, float specRes) {
     vec3 N = normalize(normal);
     vec3 V = normalize(cam_pos - pos);
@@ -75,6 +93,37 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
   }
 #endif
 
+vec3 _pbrHigh(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, vec3 normal, float roughness, float metallic) {
+  vec3 N = normalize(normal);
+  vec3 V = normalize(cam_pos - pos);
+  vec3 L = normalize(light_pos - pos);
+  vec3 H = normalize(L + V);
+
+  float NdotL = max(dot(N, L), 0.0);
+  float NdotV = max(dot(N, V), 0.0);
+  float NdotH = max(dot(N, H), 0.0);
+  float HdotV = max(dot(H, V), 0.0);
+  
+  // light distro
+  // if low: pow(NdotH, (some fudge of roughness to a power st low rough = high pow))
+  // if med: use a function which doesn't cost as much :D
+  float NDF = distributionGGX(NdotH, roughness);
+  float G = schlickSmith(NdotV, NdotL, roughness);
+  vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
+  vec3 F = fresnel(HdotV, F0);
+
+  vec3 ks = F;
+  float rad = (1.0 - metallic);
+  vec3 kd = vec3(rad) - ks * rad;
+
+  vec3 num = NDF * G * F;
+  float denom = 4.0 * NdotV * NdotL;
+  vec3 specular = num / max(denom, 0.0001);
+
+  vec3 diffuse = albedo * kd / PI;
+  return (specular + diffuse) * light_color * NdotL;
+}
+
 vec3 pbr(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, vec3 normal, float roughness, float metallic) {
   vec3 N = normalize(normal);
   vec3 V = normalize(cam_pos - pos);
@@ -85,7 +134,10 @@ vec3 pbr(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 albedo, 
   float NdotV = max(dot(N, V), 0.0);
   float NdotH = max(dot(N, H), 0.0);
   float HdotV = max(dot(H, V), 0.0);
-
+  
+  // light distro
+  // if low: pow(NdotH, (some fudge of roughness to a power st low rough = high pow))
+  // if med: use a function which doesn't cost as much :D
   float NDF = distributionGGX(NdotH, roughness);
   float G = schlickSmith(NdotV, NdotL, roughness);
   vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
@@ -109,6 +161,20 @@ float distributionGGX(float NdotH, float alpha) {
 
   return a2 / (PI * denom_term * denom_term);
 }
+
+#define BLINN_PHONG_LOWER 1.0
+#define BLINN_PHONG_UPPER 32.0
+#define BLINN_PHONG_POWER 0.45
+
+// x2 check this somewhere ig
+// float distributionBlinnPhong(float NdotH, float alpha) {
+  // raise alpha to power to crunch it a bit
+  // map to a range of "1.0" to "idk 32.0" 
+  // two pows kinda sucks
+  // float distPow = mix(BLINN_PHONG_LOWER, BLINN_PHONG_UPPER, pow(rough, BLINN_PHONG_POWER));
+  // return pow(NdotH, distPow);
+// }
+
 
 float schlick(float NdotV, float K) {
   return NdotV / (NdotV * (1.0 - K) + K);

@@ -87,8 +87,6 @@ export class SkyboxMaterial implements Material {
         gl.uniform1f(this.unifs.skyboxIntensity_l, 0);
         this.placeholder_l.bindToUniform(this.unifs.uCubemap_l, 2);
       }
-
-      console.log(this);
   
       model.bindAttribute(AttributeType.POSITION, this.posLoc);
       model.draw();

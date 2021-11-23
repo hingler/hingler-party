@@ -21,7 +21,8 @@ export class ColorCubemap implements Cubemap {
 
     ctx.getGLExtension("OES_texture_float");
     ctx.getGLExtension("OES_texture_float_linear");
-
+    // firefox complains about this???
+    ctx.getGLExtension("WEBGL_color_buffer_float");
     this.dims = dim;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
@@ -39,6 +40,8 @@ export class ColorCubemap implements Cubemap {
   }
 
   generateMipmaps() {
+    // "lazy texture initialization on level 0"
+    // no idea what this means but i assume it has something to do with the crash before load
     const gl = this.ctx.getGLContext();
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);

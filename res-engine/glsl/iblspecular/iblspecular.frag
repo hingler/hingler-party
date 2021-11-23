@@ -1,7 +1,7 @@
 #version 100
 
 #extension GL_EXT_shader_texture_lod : enable
-#extension GL_OES_standard_derivates : enable
+#extension GL_OES_standard_derivatives : require
 
 precision highp float;
 
@@ -67,8 +67,8 @@ void main() {
         // est default mip level for texture cube
         // mipmap lookup from OGL 4.6 spec
         // todo: factor out into function and include? (also in pbr.inc.glsl)
-        vec3 Lx = dFdx(L) * sourceRes.x;
-        vec3 Ly = dFdy(L) * sourceRes.x;
+        vec3 Lx = dFdx(L) * sourceDestRes.x;
+        vec3 Ly = dFdy(L) * sourceDestRes.x;
         float dLx = dot(Lx, Ly);
         float dLy = dot(Lx, Ly);
         float dMaxSquared = max(dLx, dLy);
@@ -76,7 +76,7 @@ void main() {
         // lod is desired mip
         // mipguess is estimated current mipmap level
         // lod - mipguess should mimic textureCubeLod behavior
-        vec3 specSample = textureCube(skybox, L, lod - mipGuess).rgb;
+        vec3 specSample = textureCube(skybox, L, mipLevel - mipGuess).rgb;
       #endif
       totalWeight += NdotL;
     }

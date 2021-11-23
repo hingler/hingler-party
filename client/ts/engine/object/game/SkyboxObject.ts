@@ -41,23 +41,21 @@ export class SkyboxObject extends GameObject {
   // use the engine context to notify client that we're compiling a skybox
   constructor(ctx: GameContext, path: string) {
     super(ctx);
-    this.hdr = new HDRTexture(ctx, path);
-    this.mat = new SkyboxMaterial(ctx);
-
     // ensure this extension is loaded if avail -- we dont "need" it but it helps
     ctx.getGLExtension("EXT_shader_texture_lod");
     this.extMipmapRender =  !!(ctx.getGLExtension("OES_fbo_render_mipmap"));
-    
-    this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);
+    console.log(ctx.getGLExtension("OES_standard_derivatives"));
     this.cubemap = null;
     this.cubemapDiffuse = null;
     this.cubemapSpecular = null;
     this.iblBRDF = null;
-
+    ctx.getGLContext().getExtension("OES_standard_derivatives");
     this.intensity = 1.0;
 
     this.model = SkyboxObject.createSkyboxCube(ctx.getGLContext());
-
+    this.hdr = new HDRTexture(ctx, path);
+    this.mat = new SkyboxMaterial(ctx);
+    this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);    
     const hdrPromise = this.hdr.waitUntilUploaded(); 
     hdrPromise.then(this.prepareSkybox.bind(this));
   }
@@ -118,9 +116,9 @@ export class SkyboxObject extends GameObject {
 
   private async prepareSkybox() {
     const dim = this.hdr.dims.reduce((prev, cur) => Math.min(prev, cur));
-    const cubeBuffer = new SkyboxFramebuffer(this.getContext(), dim);
+    const cubeBuffer = new SkyboxFramebuffer(this.getContext(), dim / 2);
     const diffuseBuffer = new SkyboxFramebuffer(this.getContext(), 32);
-    const specBuffer = new SkyboxFramebuffer(this.getContext(), dim / 2);
+    const specBuffer = new SkyboxFramebuffer(this.getContext(), dim / 4);
     await this.hdrProg.getShaderFuture().wait();
     await this.renderSkybox(cubeBuffer, diffuseBuffer, specBuffer);
   }

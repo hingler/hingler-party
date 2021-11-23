@@ -170,7 +170,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.cameraPos = vec3.create();
 
     ctx.getGLExtension("EXT_shader_texture_lod");
-    ctx.getGLExtension("OES_standard_derivatives");
+    console.log(ctx.getGLExtension("OES_standard_derivatives"));
 
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();

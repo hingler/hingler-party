@@ -1,6 +1,10 @@
 #version 100
 
-precision highp float;
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+  precision highp float;
+#else
+  precision mediump float;
+#endif
 
 attribute vec4 aPosition;
 varying vec2 vCoord;
