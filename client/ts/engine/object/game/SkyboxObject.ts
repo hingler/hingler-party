@@ -44,7 +44,7 @@ export class SkyboxObject extends GameObject {
     // ensure this extension is loaded if avail -- we dont "need" it but it helps
     ctx.getGLExtension("EXT_shader_texture_lod");
     this.extMipmapRender =  !!(ctx.getGLExtension("OES_fbo_render_mipmap"));
-    console.log(ctx.getGLExtension("OES_standard_derivatives"));
+    ctx.getGLExtension("OES_standard_derivatives");
     this.cubemap = null;
     this.cubemapDiffuse = null;
     this.cubemapSpecular = null;

@@ -99,7 +99,7 @@ export class EngineContext implements GameContext {
     this.mobile = mobileCheck();
    
     // DEBUG LINE!!!
-    this.glContext = this.getGLProxy(this.glContext);
+    // this.glContext = this.getGLProxy(this.glContext);
     
     let gl = this.glContext;
     gl.clearColor(0, 0, 0, 1);
