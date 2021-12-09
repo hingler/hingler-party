@@ -170,7 +170,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.cameraPos = vec3.create();
 
     ctx.getGLExtension("EXT_shader_texture_lod");
-    console.log(ctx.getGLExtension("OES_standard_derivatives"));
+    ctx.getGLExtension("OES_standard_derivatives");
 
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();
@@ -433,6 +433,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       }
 
       let modelmats = model.getReadOnlyBuffer(this.modelMatrixIndex);
+      // TODO: allow this field to be initialized externally?
       this.calculateNormalMatrixFromBuffer(modelmats, instances);
       for (let i = 0; i < 3; i++) {
         let loc = this.attribs.normMat + i;

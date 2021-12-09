@@ -1,3 +1,4 @@
+import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
 import { GLBufferReadOnly } from "../gl/internal/GLBuffer";
 import { InstancedMaterial } from "../material/InstancedMaterial";
 import { RenderContext } from "../render/RenderContext";
@@ -16,6 +17,12 @@ export interface InstancedModel extends Model {
   drawInstanced() : void;
 
   /**
+   * Queues up several instanced model draws at once.
+   * @param count - number of draws to queue.
+   */
+  drawManyInstanced(count: number) : void;
+
+  /**
    * Destroys all instances which are currently queued on this model.
    */
   clearInstances() : void;
@@ -29,7 +36,7 @@ export interface InstancedModel extends Model {
    * @param data - the data which we are appending.
    * @param args - additional data values. Allows data to be provided either as a single array, or as multiple arguments.
    */
-  appendInstanceData(index: number, data: number | Array<number> | Float32Array, ...args: Array<number>) : void;
+  appendInstanceData(index: number, data: number | Array<number> | Float32Array | ReadonlyMat3 | ReadonlyMat4, ...args: Array<number>) : void;
 
   // TODO: if it becomes necessary, add support for appending integer vs float data.
   //       i don't need it right now :)
@@ -56,4 +63,10 @@ export interface InstancedModel extends Model {
    * @returns the associated buffer, or null if one does not exist.
    */
   getReadOnlyBuffer(index: number) : GLBufferReadOnly;
+
+  /**
+   * Flushes this instance's contents, rendering them to the screen.
+   * @param rc 
+   */
+  flush(rc: RenderContext) : void;
 }

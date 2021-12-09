@@ -1,4 +1,4 @@
-import { ReadonlyMat4 } from "gl-matrix";
+import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
 import { GameContext } from "../../GameContext";
 import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
@@ -56,6 +56,7 @@ export class InstancedModelImpl implements InstancedModel {
   }
 
   clearInstances() {
+    this.instanceCount = 0;
     for (let record of this.instances.values()) {
       record.offset = 0;
     }
@@ -123,7 +124,11 @@ export class InstancedModelImpl implements InstancedModel {
     this.instanceCount++;
   }
 
-  appendInstanceData(index: number, data: number | Array<number> | Float32Array | ReadonlyMat4, ...args: Array<number>) {
+  drawManyInstanced(count: number) {
+    this.instanceCount += count;
+  }
+
+  appendInstanceData(index: number, data: number | Array<number> | Float32Array | ReadonlyMat3 | ReadonlyMat4, ...args: Array<number>) {
     let buf = this.instances.get(index);
     if (!buf) {
       buf = {
