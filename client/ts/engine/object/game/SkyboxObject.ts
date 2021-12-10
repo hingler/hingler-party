@@ -240,20 +240,4 @@ export class SkyboxObject extends GameObject {
 
     this.iblBRDF = tex;
   }
-
-  // skybox shouldnt render itself
-  // instead, the renderer should handle it
-//   renderMaterial(rc: RenderContext) {
-//     if (this.cubemap !== null) {
-//       const gl = this.getContext().getGLContext();
-//       gl.disable(gl.CULL_FACE);
-//       const cam = rc.getActiveCameraInfo();
-//       this.mat.persp = cam.perspectiveMatrix;
-//       this.mat.view = cam.viewMatrix;
-//       this.mat.cube = this.cubemap;
-//       this.mat.intensity = this.intensity;
-//       this.mat.drawMaterial(this.model);
-//       gl.enable(gl.CULL_FACE);
-//     }
-//   }
 }

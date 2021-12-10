@@ -82,7 +82,7 @@ export class FXAAFilter extends PostProcessingFilter {
 
       gl.useProgram(this.lumaShader);
       this.lumaFramebuffer.bindFramebuffer(gl.FRAMEBUFFER);
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
       src.getColorTexture().bindToUniform(this.lumaTex, 1);
       const buf = this.getScreenBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -94,6 +94,7 @@ export class FXAAFilter extends PostProcessingFilter {
 
       gl.useProgram(this.aaShader);
       dst.bindFramebuffer(gl.FRAMEBUFFER);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       this.lumaFramebuffer.getColorTexture().bindToUniform(this.unifs.lum, 0);
       src.getColorTexture().bindToUniform(this.unifs.col, 1);
       gl.uniform2fv(this.unifs.resolution, newDims);
