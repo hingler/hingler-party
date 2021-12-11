@@ -12,6 +12,10 @@ import { ShaderEnv } from "../gl/ShaderEnv";
 
 let uintext: OES_element_index_uint = undefined;
 
+export interface ContextOptions {
+  useServiceWorker?: boolean;
+}
+
 /**
  * INTERNAL ONLY.
  */
@@ -63,10 +67,10 @@ export class EngineContext implements GameContext {
 
   // create a new constructor which allows this scene to borrow assets from
   // the last ctx
-  constructor(init: HTMLCanvasElement | EngineContext, scene: Scene) {
+  constructor(init: HTMLCanvasElement | EngineContext, scene: Scene, opts?: ContextOptions) {
     this.lastDelta = 0; 
     this.lastTimePoint = perf.now();
-    this.loader = new FileLoader();
+    this.loader = new FileLoader(opts ? opts.useServiceWorker : true);
     this.varMap = new Map();
     
     // copy over env???
