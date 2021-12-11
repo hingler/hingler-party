@@ -1,7 +1,7 @@
 import {Task} from "../../../../../ts/util/task/Task";
 import {GameContext} from "../../GameContext";
 import {FileLike} from "../../loaders/FileLike";
-import {Texture, TextureFormat} from "../Texture";
+import {SamplingMode, Texture, TextureFormat} from "../Texture";
 
 // todo: come up with a better system for managing gl extensions
 // might be a global that our engine pulls
@@ -39,6 +39,10 @@ export class HDRTexture extends Texture {
 
   async waitUntilUploaded() {
     await this.loadTask.getFuture().wait();
+  }
+
+  setSamplingMode(mode: SamplingMode) {
+    return this.handleTextureSampling(this.tex, this.ctx.getGLContext(), mode);
   }
 
   getTextureFormat() {

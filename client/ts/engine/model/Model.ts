@@ -12,13 +12,13 @@ export interface Triangle {
 }
 
 export enum AttributeType {
-  POSITION,
-  NORMAL,
-  TEXCOORD,
-  JOINT,
-  WEIGHT,
-  TANGENT
-}
+  POSITION = 0,
+  NORMAL = 1,
+  TEXCOORD = 2,
+  JOINT = 3,
+  WEIGHT = 4,
+  TANGENT = 5
+};
 
 /**
  * Model which does not enable binding of attributes. Draw only.
