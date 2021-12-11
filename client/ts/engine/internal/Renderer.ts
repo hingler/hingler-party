@@ -23,8 +23,10 @@ import { EngineContext } from "./EngineContext";
 
 class SpotLightRenderContext implements RenderContext {
   info: CameraInfo;
+  fb: Framebuffer;
   constructor(light: SpotLight) {
     this.info = light.getLightMatrixAsCameraInfo();
+    this.fb = light._getShadowFramebuffer();
   }
 
   getRenderPass() {
@@ -46,6 +48,10 @@ class SpotLightRenderContext implements RenderContext {
 
   getSkybox() {
     return null;
+  }
+
+  getFramebuffer() {
+    return this.fb;
   }
 }
 
@@ -165,6 +171,8 @@ export class Renderer {
     // desc wrt intensity
     skyboxList.sort((a, b) => (b.intensity - a.intensity));
 
+    const fb = this.primaryFB;
+
     let rc : RenderContext = {
       getRenderPass() {
         return RenderPass.FINAL;
@@ -184,6 +192,10 @@ export class Renderer {
 
       getSkybox() {
         return skyboxList;
+      },
+
+      getFramebuffer() {
+        return fb;
       }
     }
 

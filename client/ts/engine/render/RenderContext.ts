@@ -4,6 +4,7 @@
  */
 
 import { Cubemap } from "../gl/Cubemap";
+import { Framebuffer } from "../gl/Framebuffer";
 import { FloatColorTexture } from "../gl/internal/FloatColorTexture";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
@@ -38,4 +39,6 @@ export interface RenderContext {
   getAmbientLightInfo() : Array<AmbientLightStruct>; 
 
   getSkybox() : Array<SkyboxInfo>;
+
+  getFramebuffer() : Framebuffer;
 };
