@@ -6,7 +6,7 @@ import { Task } from "../../../../ts/util/task/Task";
 
 // fucking 
 export const screenCoords = new Float32Array([
-  -1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1
+  1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1
 ]);
 
 export abstract class TextureDisplay {
