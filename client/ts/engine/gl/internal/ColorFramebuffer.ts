@@ -12,9 +12,9 @@ export class ColorFramebuffer implements Framebuffer {
   private fb: WebGLFramebuffer;
   private gl: WebGLRenderingContext;
 
-  constructor(ctx: GameContext, dims: [number, number]) {
-    const floatattach = !!(ctx.getGLExtension("WEBGL_color_buffer_float"));
-    if (floatattach) {
+  constructor(ctx: GameContext, dims: [number, number], floatAttach?: boolean) {
+    const floatsupport = !!(ctx.getGLExtension("WEBGL_color_buffer_float"));
+    if (floatsupport && floatAttach) {
       this.colorTexture = new FloatColorTexture(ctx, dims);
     } else {
       this.colorTexture = new ColorTexture(ctx, dims);
