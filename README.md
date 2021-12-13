@@ -4,6 +4,13 @@
 
 hingler party is a 3d game engine written with javascript and the webgl api.
 
-the engine features a rudimentary forward-rendered pbr pipeline, allowing for flexibility and working directly with the webgl api.
+## features
+
+- forward-rendered pbr pipeline
+- gltf file loading
+- on-the-fly shader includes
+- a small library of predefined shader snippets which can be imported into any shader
+- fxaa
+- custom post-processing shaders
 
 ## screenshots
