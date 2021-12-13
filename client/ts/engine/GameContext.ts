@@ -44,6 +44,7 @@ export interface GameContext {
   getGLExtension(name: "ANGLE_instanced_arrays")          : ANGLE_instanced_arrays    | null;
   getGLExtension(name: "EXT_shader_texture_lod")          : EXT_shader_texture_lod    | null;
   getGLExtension(name: "OES_standard_derivatives")        : OES_standard_derivatives  | null;
+  getGLExtension(name: "WEBGL_color_buffer_float")        : WEBGL_color_buffer_float  | null;
   /**
    * @returns the present GL rendering context.
    */
