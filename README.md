@@ -14,3 +14,5 @@ hingler party is a 3d game engine written with javascript and the webgl api.
 - custom post-processing shaders
 
 ## screenshots
+![image of pbr rendered water](https://raw.githubusercontent.com/jamieboy1337/hingler-party/master/screenshots/watertest.png)
+![image of game demo](https://raw.githubusercontent.com/jamieboy1337/hingler-party/master/screenshots/maptest.png)
