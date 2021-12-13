@@ -1,5 +1,5 @@
 import { GameContext } from "../../GameContext";
-import { Texture, TextureFormat } from "../Texture";
+import { SamplingMode, Texture, TextureFormat } from "../Texture";
 
 export class ColorTexture extends Texture {
   dims: [number, number];
@@ -14,6 +14,10 @@ export class ColorTexture extends Texture {
 
   getTextureFormat() {
     return TextureFormat.RGBA;
+  }
+
+  setSamplingMode(mode: SamplingMode) {
+    return this.handleTextureSampling(this.tex, this.gl, mode);
   }
 
   bindToUniform(location: WebGLUniformLocation, index: number) {

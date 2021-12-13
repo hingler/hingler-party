@@ -12,6 +12,10 @@ import { ShaderEnv } from "../gl/ShaderEnv";
 
 let uintext: OES_element_index_uint = undefined;
 
+export interface ContextOptions {
+  useServiceWorker?: boolean;
+}
+
 /**
  * INTERNAL ONLY.
  */
@@ -26,6 +30,8 @@ export class EngineContext implements GameContext {
   private renderer: Renderer;
   private passOffset: number;
   private dims: [number, number];
+
+  private extensionList: Map<string, any>;
 
   private swapContext : EngineContext;
   private swapObject : SceneSwapImpl;
@@ -61,10 +67,10 @@ export class EngineContext implements GameContext {
 
   // create a new constructor which allows this scene to borrow assets from
   // the last ctx
-  constructor(init: HTMLCanvasElement | EngineContext, scene: Scene) {
+  constructor(init: HTMLCanvasElement | EngineContext, scene: Scene, opts?: ContextOptions) {
     this.lastDelta = 0; 
     this.lastTimePoint = perf.now();
-    this.loader = new FileLoader();
+    this.loader = new FileLoader(opts ? opts.useServiceWorker : true);
     this.varMap = new Map();
     
     // copy over env???
@@ -83,6 +89,8 @@ export class EngineContext implements GameContext {
     this.swapObject = null;
 
     this.passOffset = 0;
+
+    this.extensionList = new Map();
 
     this.shaderCache = new ShaderEnv();
 
@@ -126,8 +134,8 @@ export class EngineContext implements GameContext {
   }
 
   private updateScreenDims() {
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
+    // this.canvas.width = window.innerWidth;
+    // this.canvas.height = window.innerHeight;
     this.dims = [this.canvas.clientWidth, this.canvas.clientHeight];
   }
 
@@ -156,6 +164,20 @@ export class EngineContext implements GameContext {
 
   getGLTFLoader() {
     return this.gltfLoader;
+  }
+
+  getGLExtension<T>(name: string) {
+    if (this.extensionList.has(name)) {
+      return this.extensionList.get(name) as T;
+    }
+
+    const ext = this.glContext.getExtension(name);
+    if (ext !== null) {
+      this.extensionList.set(name, ext);
+      return ext as T;
+    }
+
+    return null;
   }
 
   getGLContext() {

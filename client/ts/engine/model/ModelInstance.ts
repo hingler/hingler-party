@@ -7,7 +7,7 @@ export abstract class ModelInstance {
   }
 
   get deleted() {
-    return this.deleted;
+    return this.deleted_;
   }
   
   /**

@@ -3,6 +3,9 @@
  * Contains information on the scene in general.
  */
 
+import { Cubemap } from "../gl/Cubemap";
+import { Framebuffer } from "../gl/Framebuffer";
+import { FloatColorTexture } from "../gl/internal/FloatColorTexture";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { CameraInfo } from "../object/game/Camera";
@@ -14,6 +17,14 @@ export enum RenderPass {
   SHADOW,
   FINAL
 }
+
+export interface SkyboxInfo {
+  irridance: Cubemap,
+  specular: Cubemap,
+  brdf: FloatColorTexture,
+  color: Cubemap,
+  intensity: number;
+};
 
 export interface RenderContext {
   // provide information on which pass is being drawn
@@ -27,4 +38,7 @@ export interface RenderContext {
 
   getAmbientLightInfo() : Array<AmbientLightStruct>; 
 
-}
+  getSkybox() : Array<SkyboxInfo>;
+
+  getFramebuffer() : Framebuffer;
+};

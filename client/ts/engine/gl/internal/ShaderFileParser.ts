@@ -15,7 +15,14 @@ const DEFAULT_INCLUDES = [
   "opensimplex",
   "perlin",
   "pbr",
-  "radialblur"
+  "radialblur",
+  "random"
+];
+
+const SPOTLIGHT_INCLUDES = [
+  "object",
+  "light",
+  "pbr"
 ]
 
 export class ShaderFileParser {
@@ -41,7 +48,8 @@ export class ShaderFileParser {
 
     this.pathRecord.add(path);
     const includeHeader = "#include "
-    const includeExtract = /\s*#include\s+<?(.*)>.*/
+
+    const includeExtract = /\s*#include\s+<(([^\/]+)(\/(.*))?)>.*/
     let contents = await this.loader.open(path);
     let folder = path.substring(0, Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1);
 
@@ -53,45 +61,62 @@ export class ShaderFileParser {
         console.info("Encountered new include: " + line);
         let match = includeExtract.exec(line);
         if (match !== null) {
-          const name = match[1];
+          const name = match[2];
+          // note: look for trailing slashes
+
           if (DEFAULT_INCLUDES.includes(name)) {
             switch (name) {
               case "env":
                 output.push(this.ctx.getShaderEnv());
                 break;
               case "attenuation":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl")));
                 break;
               case "spotlight":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl")));
+                console.log(match);
+                
+                if (match[4] !== undefined) {
+                  if (SPOTLIGHT_INCLUDES.indexOf(match[4]) !== -1) {
+                    output.push(await this.parseShaderFile_(getEnginePath(`engine/glsl/includes/spotlight/spotlight_libs/spotlight_${match[4]}.inc.glsl`)))
+                  } else {
+                    // if not a valid include, treat it as a normal path
+                    const relativePath = folder + match[1];
+                    output.push(await this.parseShaderFile_(relativePath));
+                  }
+                } else {
+                  output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl")));
+                }
                 break;
               case "ambient":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/ambient.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/ambient.inc.glsl")));
                 break;
               case "constants":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/constants.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/constants.inc.glsl")));
                 break;
               case "gradient":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/gradient.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/gradient.inc.glsl")));
                 break;
               case "opensimplex":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl")));
                 break;
               case "perlin":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/perlin.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/perlin.inc.glsl")));
                 break;
               case "pbr":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/pbr.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/pbr.inc.glsl")));
                 break;
               case "radialblur":
-                output.push(await this.parseShaderFile(getEnginePath("engine/glsl/includes/radialblur.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/radialblur.inc.glsl")));
+                break;
+              case "random":
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/random.inc.glsl")));
                 break;
             }
 
             continue;
           } else {
             let relativePath = folder + match[1];
-            output.push(await this.parseShaderFile(relativePath));
+            output.push(await this.parseShaderFile_(relativePath));
           }
           continue;
         }

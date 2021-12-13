@@ -1,6 +1,6 @@
 import { GameContext } from "../../GameContext";
 import { Sampler } from "../../loaders/internal/gltfTypes";
-import { Texture, TextureFormat } from "../Texture";
+import { SamplingMode, Texture, TextureFormat } from "../Texture";
 
 export class GLTFTexture extends Texture {
   private dims_: [number, number];
@@ -26,6 +26,10 @@ export class GLTFTexture extends Texture {
 
   get dims() {
     return this.dims_;
+  }
+
+  setSamplingMode(mode: SamplingMode) {
+    return this.handleTextureSampling(this.tex, this.gl, mode);
   }
 
   getTextureFormat() {

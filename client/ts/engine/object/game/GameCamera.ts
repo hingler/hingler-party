@@ -30,12 +30,6 @@ export class GameCamera extends GameObject implements Camera {
     this.lastFilter = 0;
   }
 
-  getGlobalPosition() {
-    let pos = this.getPosition();
-    vec3.transformMat4(pos, pos, this.getTransformationMatrix());
-    return pos;
-  }
-
   getCameraMatrix() {
     let perspectiveMatrix = this.getPerspectiveMatrix();
     let viewMatrix = this.getViewMatrix();

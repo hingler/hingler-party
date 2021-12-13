@@ -42,6 +42,41 @@ export class GLIndexImpl implements GLIndex {
 
   private accessFunc: (offset: number, littleEndian?: boolean) => number;
 
+  static createFromValues(buffer: GLBuffer, type: number, count: number, offset: number) {
+    const acc : Accessor = {
+      bufferView: -1,
+      componentType: type,
+      count: count,
+      type: "SCALAR"
+    };
+
+    const view : BufferView = {
+      buffer: -1,
+      byteLength: this.getByteSizeFromDataType(type) * count,
+      byteOffset: offset
+    };
+
+    return new GLIndexImpl(buffer, acc, view);
+  }
+
+  private static getByteSizeFromDataType(type: number) {
+    switch (type) {
+    case DataType.BYTE:
+    case DataType.UNSIGNED_BYTE:
+      return 1;
+    case DataType.SHORT:
+    case DataType.UNSIGNED_SHORT:
+      return 2;
+    case DataType.FLOAT:
+    case DataType.UNSIGNED_INT:
+      return 4;
+    default:
+      let err = `Unknown component type: ${type}`;
+      console.warn(err);
+      throw Error(err);
+    }
+  }
+
   constructor(buffer: GLBuffer, accessor: Accessor, view: BufferView) {
     this.buffer = buffer;
     this.type = accessor.componentType;
@@ -53,25 +88,7 @@ export class GLIndexImpl implements GLIndex {
     this.count = accessor.count;
 
     // TODO: these are reused, come up with a way to abstract them a bit better
-    switch (this.type) {
-      case DataType.BYTE:
-      case DataType.UNSIGNED_BYTE:
-        this.byteSize = 1;
-        break;
-      case DataType.SHORT:
-      case DataType.UNSIGNED_SHORT:
-        this.byteSize = 2;
-        break;
-      case DataType.FLOAT:
-      case DataType.UNSIGNED_INT:
-        this.byteSize = 4;
-        break;
-      default:
-        let err = `Unknown component type: ${this.type}`;
-        console.warn(err);
-        throw Error(err);
-
-    }
+    this.byteSize = GLIndexImpl.getByteSizeFromDataType(this.type);
 
     switch (this.type) {
       case DataType.BYTE:

@@ -7,21 +7,26 @@ import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { ColorDisplay } from "../material/ColorDisplay";
 import { PostProcessingFilter } from "../material/PostProcessingFilter";
 import { ShadowDisplay } from "../material/ShadowDisplay";
+import { SkyboxMaterial } from "../material/SkyboxMaterial";
 import { TextureDisplay } from "../material/TextureDisplay";
+import { Model } from "../model/Model";
 import { CameraInfo } from "../object/game/Camera";
 import { GameCamera } from "../object/game/GameCamera";
 import { GameObject } from "../object/game/GameObject";
 import { AmbientLightObject } from "../object/game/light/AmbientLightObject";
 import { SpotLight } from "../object/game/light/SpotLight";
 import { SpotLightObject } from "../object/game/light/SpotLightObject";
+import { SkyboxObject } from "../object/game/SkyboxObject";
 import { Scene } from "../object/scene/Scene";
-import { RenderContext, RenderPass } from "../render/RenderContext";
+import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { EngineContext } from "./EngineContext";
 
 class SpotLightRenderContext implements RenderContext {
   info: CameraInfo;
+  fb: Framebuffer;
   constructor(light: SpotLight) {
     this.info = light.getLightMatrixAsCameraInfo();
+    this.fb = light._getShadowFramebuffer();
   }
 
   getRenderPass() {
@@ -40,6 +45,14 @@ class SpotLightRenderContext implements RenderContext {
   getAmbientLightInfo() {
     return [];
   }
+
+  getSkybox() {
+    return null;
+  }
+
+  getFramebuffer() {
+    return this.fb;
+  }
 }
 
 /**
@@ -52,6 +65,9 @@ export class Renderer {
   private primaryFB: Framebuffer;
   private swapFB: Framebuffer;
 
+  private skyboxMat: SkyboxMaterial;
+  private cube: Model;
+
   // tracks rendered textures
   private renderPasses: Array<TextureDisplay>;
   constructor(ctx: EngineContext, scene: Scene) {
@@ -60,6 +76,8 @@ export class Renderer {
     this.scene = scene;
     this.primaryFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
     this.swapFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
+    this.skyboxMat = new SkyboxMaterial(ctx);
+    this.cube = SkyboxObject.createSkyboxCube(this.gl);
   }
 
   renderScene() {
@@ -119,7 +137,7 @@ export class Renderer {
       let vp = mat4.create();
       let pos = vec3.create();
       
-      console.log("no active cam found");
+      console.info("no active cam found");
       
       mat4.identity(view);
       let rat = this.ctx.getScreenDims();
@@ -134,6 +152,26 @@ export class Renderer {
         cameraPosition: pos
       };
     }
+
+    const skyboxes = this.findSkybox(this.scene.getGameObjectRoot());
+    const skyboxList : Array<SkyboxInfo> = [];
+    // do not include until completely convolved
+    for (let skybox of skyboxes) {
+      if (skybox !== null && skybox.getCubemapDiffuse() !== null && skybox.getCubemapSpecular() !== null && skybox.getBRDF() !== null) {
+        skyboxList.push({
+          irridance: skybox.getCubemapDiffuse(),
+          specular: skybox.getCubemapSpecular(),
+          brdf: skybox.getBRDF(),
+          intensity: skybox.intensity,
+          color: skybox.getCubemap()
+        });
+      }
+    }
+
+    // desc wrt intensity
+    skyboxList.sort((a, b) => (b.intensity - a.intensity));
+
+    const fb = this.primaryFB;
 
     let rc : RenderContext = {
       getRenderPass() {
@@ -150,6 +188,14 @@ export class Renderer {
 
       getAmbientLightInfo() {
         return ambLightInfo;
+      },
+
+      getSkybox() {
+        return skyboxList;
+      },
+
+      getFramebuffer() {
+        return fb;
       }
     }
 
@@ -162,14 +208,19 @@ export class Renderer {
       model.flush(rc);
     }
 
+    // draw skybox
+    this.gl.disable(gl.CULL_FACE);
+    this.skyboxMat.skyboxes = skyboxList;
+    this.skyboxMat.persp = info.perspectiveMatrix;
+    this.skyboxMat.view = info.viewMatrix;
+    this.skyboxMat.drawMaterial(this.cube);
+
     // run our post processing passes
     let filters : Array<PostProcessingFilter> = [];
     
     if (cam) {
       filters = cam.getFilters();
     }
-    
-    gl.disable(gl.CULL_FACE);
     
     let usePrimaryAsSource = true;
     let src : Framebuffer = this.swapFB;
@@ -264,5 +315,21 @@ export class Renderer {
     }
 
     return null;
+  }
+
+  private findSkybox(root: GameObject) : Array<SkyboxObject> {
+    let res = [];
+    for (let child of root.getChildren()) {
+      if (child instanceof SkyboxObject) {
+        res.push(child);
+      } else {
+        const skybox = this.findSkybox(child);
+        if (skybox.length !== 0) {
+          res = res.concat(skybox);
+        }
+      }
+    }
+
+    return res;
   }
 }

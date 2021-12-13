@@ -4,8 +4,8 @@ export interface Accessor {
   normalized?: boolean,
   componentType: number,
   count: number,
-  min: Array<number>,
-  max: Array<number>,
+  min?: Array<number>,
+  max?: Array<number>,
   type: string
 };
 

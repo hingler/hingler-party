@@ -1,5 +1,5 @@
 import { Task } from "../../../../../ts/util/task/Task";
-import { Texture, TextureFormat } from "../Texture";
+import { SamplingMode, Texture, TextureFormat } from "../Texture";
 
 export class ImageTexture extends Texture {
   private dims_: [number, number];
@@ -40,6 +40,10 @@ export class ImageTexture extends Texture {
       gl.bindTexture(gl.TEXTURE_2D, this.tex);
       gl.uniform1i(location, index);
     }
+  }
+
+  setSamplingMode(mode: SamplingMode) {
+    return this.handleTextureSampling(this.tex, this.gl, mode);
   }
 
   getTextureFormat() {

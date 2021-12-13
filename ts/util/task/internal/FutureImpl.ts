@@ -1,5 +1,5 @@
 import { Future } from "../Future";
-export class FutureImpl<T> implements Future<T> {
+export class FutureImpl<T> extends Future<T> {
   resolved: boolean;
   value: T;
   valuePromise: Promise<void>;
@@ -8,6 +8,7 @@ export class FutureImpl<T> implements Future<T> {
   private rej: () => void;
 
   constructor() {
+    super();
     this.resolved = false;
     this.value = null;
     this.valuePromise = new Promise((res, rej) => {

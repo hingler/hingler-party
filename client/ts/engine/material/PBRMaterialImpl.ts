@@ -2,6 +2,8 @@
 
 import { mat3, mat4, vec3, vec4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
+import { ColorCubemap } from "../gl/ColorCubemap";
+import { Cubemap } from "../gl/Cubemap";
 import { GLBuffer, GLBufferReadOnly } from "../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../gl/internal/GLBufferImpl";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
@@ -12,7 +14,7 @@ import { Texture } from "../gl/Texture";
 import { getEnginePath } from "../internal/getEnginePath";
 import { InstancedModel } from "../model/InstancedModel";
 import { AttributeType, Model } from "../model/Model";
-import { RenderContext } from "../render/RenderContext";
+import { RenderContext, SkyboxInfo } from "../render/RenderContext";
 import { CalculateNormalMatrixFromBuffer } from "./CalculateNormalMatrixFromBuffer";
 import { Material } from "./Material";
 import { PBRInstancedMaterial } from "./PBRInstancedMaterial";
@@ -50,6 +52,15 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   private spotLightUniforms: Array<SpotLightUniform>;
   private spotLightUniformsNoShadow: Array<SpotLightUniform>;
+
+  private placeholderCube: Cubemap;
+  private placeholderCubeSpec: Cubemap;
+  private placeholderBRDF: Texture;
+
+  private placeholderCubeSub: Cubemap;
+  private placeholderCubeSpecSub: Cubemap;
+
+  private skyboxes: Array<SkyboxInfo>;
    
   vpMat: mat4;
   modelMat: mat4;
@@ -63,6 +74,12 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   emission: Texture;
   emissionFactor: vec4;
+
+  // store a list!
+  irridance: Cubemap;
+  specular: Cubemap;
+  brdf: Texture;
+  skyboxIntensity: number;
 
   // use a flag to indicate whether the model matrix should be used as an attribute
   // probably use a step func to snag the right one
@@ -93,7 +110,20 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     metalDef: WebGLUniformLocation,
     emissionFactor: WebGLUniformLocation,
 
-    useAttribute: WebGLUniformLocation
+    useAttribute: WebGLUniformLocation,
+
+    irridance: WebGLUniformLocation,
+    specular: WebGLUniformLocation,
+    brdf: WebGLUniformLocation,
+    skyboxIntensity: WebGLUniformLocation,
+    specSize: WebGLUniformLocation,
+    useIrridance: WebGLUniformLocation
+
+    irridance_l: WebGLUniformLocation,
+    specular_l: WebGLUniformLocation,
+    specSize_l: WebGLUniformLocation,
+    skyboxIntensity_l: WebGLUniformLocation,
+    useIrridance_l: WebGLUniformLocation
   };
 
   private attribs: {
@@ -115,18 +145,32 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.modelMat = mat4.create();
     this.normal = null;
     this.color = null;
+    this.irridance = null;
+    this.specular = null;
+    this.brdf = null;
     this.colorFactor = vec4.create();
     this.metalRough = null;
     this.metalFactor = 1.0;
     this.roughFactor = 1.0;
     this.emissionFactor = vec4.create();
     this.emission = null;
+    this.placeholderCube = new ColorCubemap(ctx, 8);
+    this.placeholderCubeSpec = new ColorCubemap(ctx, 8);
+    this.placeholderBRDF = new TextureDummy(ctx);
+
+    this.placeholderCubeSub = new ColorCubemap(ctx, 8);
+    this.placeholderCubeSpecSub = new ColorCubemap(ctx, 8);
+
+    this.skyboxes = [];
     vec4.zero(this.emissionFactor);
 
     this.spotLightUniforms = [];
     this.spotLightUniformsNoShadow = [];
 
     this.cameraPos = vec3.create();
+
+    ctx.getGLExtension("EXT_shader_texture_lod");
+    ctx.getGLExtension("OES_standard_derivatives");
 
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();
@@ -139,8 +183,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       .withVertexShader(getEnginePath("engine/glsl/pbr/pbr.vert"))
       .withFragmentShader(getEnginePath("engine/glsl/pbr/pbr.frag"))
       .build()
-      .then(this.configureProgram.bind(this))
-      .catch(console.error.bind(console));
+      .then(this.configureProgram.bind(this));
   }
 
   private configureProgram(prog: WebGLProgram) {
@@ -167,7 +210,19 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       roughDef: gl.getUniformLocation(prog, "rough_factor"),
       metalDef: gl.getUniformLocation(prog, "metal_factor"),
       emissionFactor: gl.getUniformLocation(prog, "emission_factor"),
-      useAttribute: gl.getUniformLocation(prog, "is_instanced")
+      useAttribute: gl.getUniformLocation(prog, "is_instanced"),
+      irridance: gl.getUniformLocation(prog, "irridance"),
+      specular: gl.getUniformLocation(prog, "specular"),
+      brdf: gl.getUniformLocation(prog, "brdf"),
+      skyboxIntensity: gl.getUniformLocation(prog, "skyboxIntensity"),
+      specSize: gl.getUniformLocation(prog, "specSize"),
+      useIrridance: gl.getUniformLocation(prog, "useIrridance"),
+
+      irridance_l: gl.getUniformLocation(prog, "irridance_l"),
+      specular_l: gl.getUniformLocation(prog, "specular_l"),
+      specSize_l: gl.getUniformLocation(prog, "specSize_l"),
+      skyboxIntensity_l: gl.getUniformLocation(prog, "skyboxIntensity_l"),
+      useIrridance_l: gl.getUniformLocation(prog, "useIrridance_l")
     };
 
     this.attribs = {
@@ -234,6 +289,10 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.amb = light;
   }
 
+  setSkybox(skybox: Array<SkyboxInfo>) {
+    this.skyboxes = skybox;
+  }
+
   setModelMatrixIndex(index: number) {
     this.modelMatrixIndex = index;
   }
@@ -244,10 +303,6 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   prepareAttributes(model: InstancedModel, instances: number, rc: RenderContext) {
     let gl = this.ctx.getGLContext();
-    if (this.prog === null) {
-      const err = "Program is not yet compiled -- cannot bind attributes";
-      throw Error(err);
-    }
 
     // there's some setup that happens here which breaks the shadow renderer, when the prog fails
     // to compile the shadow view looks just fine so i will have to investigate further :(
@@ -264,8 +319,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       let noShadowSpot = 0;
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
-          if (this.spot[i].hasShadow() && shadowSpot < 4) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 8);
+          if (this.spot[i].hasShadow() && shadowSpot < 3) {
+            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
@@ -331,6 +386,41 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform1f(this.locs.metalDef, this.metalFactor);
       gl.uniform4fv(this.locs.emissionFactor, this.emissionFactor);
 
+      const skyboxList = rc.getSkybox();
+      if (skyboxList.length > 0 && skyboxList[0].irridance !== null && skyboxList[0].specular !== null && skyboxList[0].brdf !== null) {
+        const skybox = skyboxList[0];
+        skybox.irridance.bindToUniform(this.locs.irridance, 8);
+        skybox.specular.bindToUniform(this.locs.specular, 9);
+        skybox.brdf.bindToUniform(this.locs.brdf, 10);
+
+        gl.uniform1f(this.locs.specSize, skybox.specular.dims);
+        gl.uniform1f(this.locs.skyboxIntensity, skybox.intensity);
+        gl.uniform1i(this.locs.useIrridance, 1);
+      } else {
+        // need more cubes!!!!!
+        this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
+        this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
+        gl.uniform1f(this.locs.skyboxIntensity, 0.0);
+        gl.uniform1i(this.locs.useIrridance, 0);
+      }
+
+      if (skyboxList.length > 1 && skyboxList[1].irridance !== null && skyboxList[1].specular !== null && skyboxList[1].brdf !== null) {
+        const skybox = skyboxList[1];
+        skybox.irridance.bindToUniform(this.locs.irridance_l, 11);
+        skybox.specular.bindToUniform(this.locs.specular_l, 12);
+
+        gl.uniform1f(this.locs.specSize_l, skybox.specular.dims);
+        gl.uniform1f(this.locs.skyboxIntensity_l, skybox.intensity);
+        gl.uniform1i(this.locs.useIrridance_l, 1);
+      } else {
+        // need more cubes!!!!!
+        this.placeholderCubeSub.bindToUniform(this.locs.irridance_l, 11);
+        this.placeholderCubeSpecSub.bindToUniform(this.locs.specular_l, 12);
+        gl.uniform1f(this.locs.skyboxIntensity_l, 0.0);
+        gl.uniform1i(this.locs.useIrridance_l, 0);
+      }
+
       model.bindAttribute(AttributeType.POSITION, this.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, this.attribs.norm);
       model.bindAttribute(AttributeType.TEXCOORD, this.attribs.tex);
@@ -343,6 +433,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       }
 
       let modelmats = model.getReadOnlyBuffer(this.modelMatrixIndex);
+      // TODO: allow this field to be initialized externally?
       this.calculateNormalMatrixFromBuffer(modelmats, instances);
       for (let i = 0; i < 3; i++) {
         let loc = this.attribs.normMat + i;
@@ -376,8 +467,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       let noShadowSpot = 0;
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
-          if (this.spot[i].hasShadow() && shadowSpot < 4) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 8);
+          if (this.spot[i].hasShadow() && shadowSpot < 3) {
+            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
@@ -423,6 +514,48 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform4fv(this.locs.emissionFactor, this.emissionFactor);
 
       gl.uniform1i(this.locs.useAttribute, 0);
+      
+      let useSkyboxMain = false;
+      if (this.skyboxes.length > 0) {
+        const skybox = this.skyboxes[0];
+        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
+          skybox.irridance.bindToUniform(this.locs.irridance, 8);
+          skybox.specular.bindToUniform(this.locs.specular, 9);
+          skybox.brdf.bindToUniform(this.locs.brdf, 10);
+          gl.uniform1f(this.locs.specSize, skybox.specular.dims);
+          gl.uniform1f(this.locs.skyboxIntensity, skybox.intensity);
+          gl.uniform1i(this.locs.useIrridance, 1);
+          useSkyboxMain = true;
+        }
+      }
+    
+      if (!useSkyboxMain) {
+        this.placeholderCube.bindToUniform(this.locs.irridance, 8);
+        this.placeholderCubeSpec.bindToUniform(this.locs.specular, 9);
+        this.placeholderBRDF.bindToUniform(this.locs.brdf, 10);
+        gl.uniform1f(this.locs.skyboxIntensity, 0.0);
+        gl.uniform1i(this.locs.useIrridance, 0);
+      }
+
+      let useSkyboxSub = false;
+      if (this.skyboxes.length > 1) {
+        const skybox = this.skyboxes[1];
+        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
+          skybox.irridance.bindToUniform(this.locs.irridance_l, 11);
+          skybox.specular.bindToUniform(this.locs.specular_l, 12);
+          gl.uniform1f(this.locs.specSize_l, skybox.specular.dims);
+          gl.uniform1f(this.locs.skyboxIntensity_l, skybox.intensity);
+          gl.uniform1i(this.locs.useIrridance_l, 1);
+          useSkyboxSub = true;
+        }
+      }
+
+      if (!useSkyboxSub) {
+        this.placeholderCubeSub.bindToUniform(this.locs.irridance_l, 11);
+        this.placeholderCubeSpecSub.bindToUniform(this.locs.specular_l, 12);
+        gl.uniform1f(this.locs.skyboxIntensity_l, 0.0);
+        gl.uniform1i(this.locs.useIrridance_l, 0);
+      }
 
       model.bindAttribute(AttributeType.POSITION, this.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, this.attribs.norm);

@@ -1,4 +1,5 @@
 import { vec4 } from "gl-matrix";
+import { Cubemap } from "../gl/Cubemap";
 import { Texture } from "../gl/Texture";
 
 export interface PBRInterface {
@@ -9,5 +10,9 @@ export interface PBRInterface {
   metalFactor: number,
   roughFactor: number,
   emission: Texture,
-  emissionFactor: vec4
+  emissionFactor: vec4,
+  irridance: Cubemap;
+  specular: Cubemap;
+  brdf: Texture;
+  skyboxIntensity: number;
 };

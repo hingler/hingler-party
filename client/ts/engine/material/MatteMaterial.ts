@@ -117,7 +117,7 @@ export class MatteMaterial implements Material {
       let noShadowSpot = 0;
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
-          this.spot[i].setShadowTextureIndex(i + 16);
+          this.spot[i].setShadowTextureIndex(i + 4);
           if (this.spot[i].hasShadow() && shadowSpot < 4) {
             this.spot[i].bindToUniformByName(this.progWrap, `spotlight[${i}]`, true);
             shadowSpot++;

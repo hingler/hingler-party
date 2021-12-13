@@ -56,6 +56,9 @@ export class PBRModelImpl implements PBRModel {
       mat.vpMat = info.vpMatrix;
 
       mat.setSpotLight(rc.getSpotLightInfo());
+      const skybox = rc.getSkybox();
+      mat.setSkybox(skybox);
+      
       mat.drawMaterial(mod);
     }
   }

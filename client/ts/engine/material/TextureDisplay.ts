@@ -2,10 +2,11 @@ import { Future } from "../../../../ts/util/task/Future";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { Texture } from "../gl/Texture";
 import { GameContext } from "../GameContext";
+import { Task } from "../../../../ts/util/task/Task";
 
 // fucking 
 export const screenCoords = new Float32Array([
-  -1, 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, -1
+  1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1
 ]);
 
 export abstract class TextureDisplay {
@@ -23,15 +24,30 @@ export abstract class TextureDisplay {
     tex: WebGLUniformLocation;
   }
 
-  constructor(ctx: GameContext, vert: string, frag: string, texture: Texture) {
+  constructor(ctx: GameContext, vert: string, frag: string, texture: Texture | Future<Texture>) {
     this.ctx = ctx;
-    this.tex = texture;
+    this.tex = null;
+    if (texture instanceof Texture) {
+      this.tex = texture;
+    } else {
+      if (texture.valid()) {
+        this.tex = texture.get();
+      } else {
+        texture.wait().then((tex) => { this.tex = tex });
+      }
+    }
+
     let gl = this.ctx.getGLContext();
     this.prog = null;
-    this.shaderFuture = new ShaderProgramBuilder(ctx)
+    let shaderTask = new Task<WebGLProgram>();
+    new ShaderProgramBuilder(ctx)
       .withVertexShader(vert)
       .withFragmentShader(frag)
-      .buildFuture();
+      .build()
+      .then((res) => { this.configureProgram(res); return res; })
+      .then(shaderTask.resolve.bind(shaderTask));
+
+    this.shaderFuture = shaderTask.getFuture();
 
     this.buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
@@ -49,15 +65,31 @@ export abstract class TextureDisplay {
     };
   }
 
+  // returns the game context for this object :3
   protected getContext() {
     return this.ctx;
   }
 
+  // fetches the descriptor for the compiled GL program
+  protected getProgram() {
+    return this.prog;
+  }
+
+  // override as needed -- called after compilation, allowing the extender
+  // to configure any necessary uniforms.
+  protected configureProgram(prog: WebGLProgram) {
+    // nop
+  }
+
   /**
-   * Called on every draw call.
-   * @param prog - the corresponding program. Used to fetch uniform locations.
+   * Called on every draw call, after the program has been bound.
+   * @param prog - the corresponding program.
    */
   protected abstract prepareUniforms(prog: WebGLProgram) : void;
+
+  getShaderFuture() {
+    return this.shaderFuture;
+  }
 
   drawTexture() {
     let gl = this.ctx.getGLContext();
@@ -68,7 +100,7 @@ export abstract class TextureDisplay {
       }
     }
     
-    if (this.prog !== null) {
+    if (this.prog !== null && this.tex !== null) {
       gl.useProgram(this.prog);
       this.prepareUniforms(this.prog);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -81,6 +113,14 @@ export abstract class TextureDisplay {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
 
       gl.disableVertexAttribArray(this.attribs.pos);
+    } else {
+      if (this.prog === null) {
+        console.debug("TextureDisplay program was null!");
+      }
+
+      if (this.tex === null) {
+        console.debug("TextureDisplay texture was null!");
+      }
     }
   }
 }

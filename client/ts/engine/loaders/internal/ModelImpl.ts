@@ -130,6 +130,7 @@ export class ModelImpl extends Model {
     return new TriangleIterator(this);
   }
 
+  // todo: allow arb data?
   bindAttribute(at: AttributeType, ...location: Array<number>) {
     switch (at) {
       case AttributeType.POSITION:

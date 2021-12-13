@@ -6,6 +6,13 @@ export enum TextureFormat {
   DEPTH
 };
 
+export enum SamplingMode {
+  NEAREST,
+  LINEAR,
+  LINEAR_MIPMAP_LINEAR,
+  LINEAR_MIPMAP_NEAREST
+}
+
 export abstract class Texture {
   // texture dimensions
   abstract readonly dims : [number, number];
@@ -17,6 +24,54 @@ export abstract class Texture {
    */
   abstract bindToUniform(location: WebGLUniformLocation, index: number) : void;
   abstract getTextureFormat() : TextureFormat;
+
+  /**
+   * Attempts to set the sampling mode for this texture.
+   * @param mode - desired sampling mode.
+   * @returns true if the sampling mode was set successfully, or false if it coould not be set, 
+   *          typically for the mipmap sampling modes on NPOT textures.
+   */
+  abstract setSamplingMode(mode: SamplingMode) : boolean;
+
+  protected static pot(n: number) {
+    return !(n & (n - 1));
+  }
+
+  protected handleTextureSampling(tex: WebGLTexture, gl: WebGLRenderingContext, mode: SamplingMode) {
+    const pot = Texture.pot(this.dims[0]) && Texture.pot(this.dims[1]);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    switch (mode) {
+      case SamplingMode.LINEAR:
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        break;
+      case SamplingMode.NEAREST:
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        break;
+      case SamplingMode.LINEAR_MIPMAP_NEAREST:
+        if (!pot) {
+          console.warn("Attempted to generate mipmaps for non-POT texture!");
+          return false;
+        }
+
+        // redundant mipmap gen? whatever its safe :)
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        break;
+      case SamplingMode.LINEAR_MIPMAP_LINEAR:
+        if (!pot) {
+          console.warn("Attempted to generate mipmaps for non-POT texture!");
+          return false;
+        }
+
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        break;
+    }
+  }
 
   protected static createTextureFromImage(gl: WebGLRenderingContext, img: HTMLImageElement, sampler?: Sampler) : [[number, number], WebGLTexture] {
     if (!sampler) {

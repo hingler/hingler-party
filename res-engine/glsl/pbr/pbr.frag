@@ -1,8 +1,11 @@
 #version 100
+#extension GL_EXT_shader_texture_lod : enable
+#extension GL_OES_standard_derivatives : enable
 
 precision highp float;
 precision highp int;
 precision highp sampler2D;
+
 
 #include <../includes/ambient.inc.glsl>
 #include <../includes/spotlight/spotlight.inc.glsl>
@@ -44,6 +47,23 @@ uniform float rough_factor;
 uniform float metal_factor;
 // add sampler for this if necc.
 uniform vec4 emission_factor;
+
+// fattest shader so far
+// 224 uniforms, 16 texture units seems like a reasonable limit
+// we'll query for those on launch and omit clients which fall below them
+uniform samplerCube irridance;
+uniform samplerCube specular;
+uniform sampler2D brdf;
+uniform float specSize;
+uniform float skyboxIntensity;
+uniform int useIrridance;
+
+uniform samplerCube irridance_l;
+uniform samplerCube specular_l;
+// no need to bind a second brdf cube
+uniform float specSize_l;
+uniform float skyboxIntensity_l;
+uniform int useIrridance_l;
 
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;
@@ -96,6 +116,14 @@ void main() {
     }
 
     col += vec4(C, 1.0) * getAmbientColor(ambient[i]);
+  }
+
+  if (useIrridance > 0) { 
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0);
+  }
+
+  if (useIrridance_l > 0) {
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance_l, specular_l, brdf, C, N, rough, metal, specSize_l).rgb * skyboxIntensity_l, 0.0);
   }
 
   if (use_emission == 0) {

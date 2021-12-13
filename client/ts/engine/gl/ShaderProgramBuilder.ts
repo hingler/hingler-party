@@ -144,6 +144,7 @@ export class ShaderProgramBuilder {
     gl.attachShader(prog, fragShader);
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.log("Encountered linking error: " + gl.getProgramParameter(prog, gl.LINK_STATUS));
       let info = gl.getProgramInfoLog(prog);
       console.error(info);
       rej();

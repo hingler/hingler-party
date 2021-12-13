@@ -15,20 +15,23 @@ export class FileLoader {
   private rej: (_: any) => void;
   private static workerLoaded: Task<void> = null;
 
-  constructor() {
+  constructor(loadServiceWorker?: boolean) {
     this.loadedFiles = new Map();
-    this.workerPath = new Promise((re, rj) => { this.res = re; this.rej = rj; });;
-
-    // serviceworker needs to be a singleton!!!
-    // 
-    if ("serviceWorker" in navigator && FileLoader.workerLoaded === null) {
-      FileLoader.workerLoaded = new Task();
-      console.log("jenkem planet");
-      this.cb();
+    FileLoader.workerLoaded = null;
+    if (loadServiceWorker === undefined || loadServiceWorker) {
+      this.workerPath = new Promise((re, rj) => { this.res = re; this.rej = rj; });;
+  
+      // serviceworker needs to be a singleton!!!
+      
+      if ("serviceWorker" in navigator && FileLoader.workerLoaded === null) {
+        FileLoader.workerLoaded = new Task();
+        this.cb();
+      } else {
+        // fetch calls won't go to cache, but it's OK
+        this.res();
+      }
     } else {
-      console.error("serviceWorker not available on this platform");
-      // fetch calls won't go to cache, but it's OK
-      this.res();
+      console.debug("ServiceWorker did not load on this run :)");
     }
   }
 

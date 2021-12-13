@@ -40,6 +40,41 @@ export class PBRInstanceFactory implements InstancedModelFactory<PBRInstance> {
     return inst;
   }
 
+  /**
+   * Draws several instances from an array representing a model matrix.
+   * @param matList - array-like structure containing our matrices
+   */
+  drawInstanceFromModelMatArray(matList: Array<number> | Float32Array, rc: RenderContext) {
+    const instanceCount = Math.floor(matList.length / 16);
+    let mat = matList;
+    // array does not contain exact amt of instance data
+
+    if (instanceCount * 16 !== matList.length) {
+      mat = matList.slice(0, instanceCount * 16);
+    }
+
+    const pass = rc.getRenderPass();
+    if (this.currentPass !== pass) {
+      this.currentPass = pass;
+      for (let i = 0; i < this.models.length; i++) {
+        let model = this.models[i];
+        // issue: imagine that we were to draw to the FB, not flush, then draw to shadow
+        model.flush(rc);
+        if (pass === RenderPass.SHADOW) {
+          model.setInstancedMaterial(this.shadowMat);
+        } else {
+          model.setInstancedMaterial(this.materials[i]);
+        }
+      }
+    }
+
+    for (let i = 0; i < this.models.length; i++) {
+      // also calculate normal matrices, or skip?
+      this.models[i].appendInstanceData(PBR_MODEL_MAT_INDEX, mat);
+      this.models[i].drawManyInstanced(instanceCount);
+    }
+  }
+
   private callbackfunc(mat: ReadonlyMat4, rc: RenderContext) {
     let pass = rc.getRenderPass();
     if (this.currentPass !== pass) {
@@ -57,6 +92,8 @@ export class PBRInstanceFactory implements InstancedModelFactory<PBRInstance> {
     }
 
     for (let i = 0; i < this.models.length; i++) {
+      // need some sort of "batchedinstancemodel" which queues several draws at once
+
       this.models[i].appendInstanceData(PBR_MODEL_MAT_INDEX, mat);
       this.models[i].drawInstanced();
     }

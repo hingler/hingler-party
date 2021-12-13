@@ -1,6 +1,6 @@
-export interface Future<T> {
-  valid() : boolean;
-  wait() : Promise<T>;
-  get() : T;
+export abstract class Future<T> {
+  abstract valid() : boolean;
+  abstract wait() : Promise<T>;
+  abstract get() : T;
 
 }
