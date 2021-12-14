@@ -1,8 +1,11 @@
-#version 100
+#include <version>
 precision highp float;
 
-attribute vec4 aPosition;
-varying vec2 vCoord;
+#include <env>
+#include <compatibility>
+
+ATTRIB vec4 aPosition;
+VARYING vec2 vCoord;
 
 void main() {
   vCoord = -aPosition.xy;

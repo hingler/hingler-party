@@ -1,0 +1,20 @@
+.debug-frame {
+  position: absolute;
+  right: 32px;
+  top: 32px;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 100000;
+}
+
+.debug-frame p {
+  margin: 4px;
+  font-size: 12px;
+  font-family: sans-serif;
+  color: white;
+  font-weight: 900;
+}
+
+.debug-frame span {
+  font-weight: 300;
+}

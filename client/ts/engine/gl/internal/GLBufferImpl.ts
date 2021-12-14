@@ -1,4 +1,5 @@
 import { ReadonlyMat4 } from "gl-matrix";
+import { GameContext } from "../../GameContext";
 import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
 
 
@@ -15,6 +16,7 @@ export class GLBufferImpl implements GLBuffer {
   buf: ArrayBuffer;
   glBuf: WebGLBuffer;
   view: DataView;
+  ctx: GameContext;
   gl: WebGLRenderingContext;
   target: BufferTarget;
 
@@ -26,7 +28,7 @@ export class GLBufferImpl implements GLBuffer {
   // TODO: assign a target on ctor? (array / element array / etc?)
   // we'd have a confusing dependency :( but even then it like won't matter
   // it's just a safeguard for me, so that we have a bit more info instead of just crashing out
-  constructor(gl: WebGLRenderingContext, buffer?: ArrayBuffer | number, dataMode?: number) {
+  constructor(ctx: GameContext, buffer?: ArrayBuffer | number, dataMode?: number) {
     if (typeof buffer === "number") {
       this.buf = new ArrayBuffer(buffer);
     } else if (buffer instanceof ArrayBuffer) {
@@ -35,10 +37,13 @@ export class GLBufferImpl implements GLBuffer {
       this.buf = new ArrayBuffer(16);
     }
 
+    this.ctx = ctx;
+    this.gl = ctx.getGLContext();
+    const gl = this.gl;
+
     this.glBuf = gl.createBuffer();
     this.view = new DataView(this.buf);
     this.target = BufferTarget.UNBOUND;
-    this.gl = gl;
 
     this.dirty = true;
     this.glBufferSize = -1;
@@ -49,8 +54,8 @@ export class GLBufferImpl implements GLBuffer {
       this.dataMode = dataMode;
     }
 
-    if (!ext) {
-      ext = gl.getExtension("ANGLE_instanced_arrays");
+    if (!ext && ctx.webglVersion < 2) {
+      ext = ctx.getGLExtension("ANGLE_instanced_arrays");
     }
   }
 
@@ -117,12 +122,31 @@ export class GLBufferImpl implements GLBuffer {
     this.bindAndPopulate(BufferTarget.ARRAY_BUFFER);
     this.gl.enableVertexAttribArray(location);
     this.gl.vertexAttribPointer(location, components, type, normalize, stride, offset);
-    ext.vertexAttribDivisorANGLE(location, divisor);
+    
+    this.glVertexAttribDivisor(location, divisor);
+  }
+
+  private glVertexAttribDivisor(loc: number, div: number) {
+    if (this.ctx.webglVersion === 2) {
+      const gl = this.ctx.getGLContext() as WebGL2RenderingContext;
+      gl.vertexAttribDivisor(loc, div);
+    } else {
+      ext.vertexAttribDivisorANGLE(loc, div);
+    }
+  }
+
+  private glDrawElementsInstanced(mode: number, count: number, dataType: number, offset: number, primCount: number) {
+    if (this.ctx.webglVersion === 2) {
+      const gl = this.ctx.getGLContext() as WebGL2RenderingContext;
+      gl.drawElementsInstanced(mode, count, dataType, offset, primCount);
+    } else {
+      ext.drawElementsInstancedANGLE(mode, count, dataType, offset, primCount);
+    }
   }
 
   disableInstancedVertexAttribute(location: number) {
     this.gl.disableVertexAttribArray(location);
-    ext.vertexAttribDivisorANGLE(location, 0);
+    this.glVertexAttribDivisor(location, 0);
   }
 
   disableVertexAttribute(location: number) {
@@ -208,7 +232,7 @@ export class GLBufferImpl implements GLBuffer {
     let [glMode, dataType] = this.handleBindingPoints(mode, type);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.glBuf);
-    ext.drawElementsInstancedANGLE(glMode, count, dataType, offset, primCount);
+    this.glDrawElementsInstanced(glMode, count, dataType, offset, primCount);
   }
 
   getInt8(offset: number) {
@@ -310,7 +334,7 @@ export class GLBufferImpl implements GLBuffer {
   }
   
   copy() : GLBuffer {
-    return new GLBufferImpl(this.gl, this.buf, this.dataMode);
+    return new GLBufferImpl(this.ctx, this.buf, this.dataMode);
   }
 }
 

@@ -23,6 +23,11 @@ export class ColorCubemap implements Cubemap {
     ctx.getGLExtension("OES_texture_float_linear");
     // firefox complains about this???
     ctx.getGLExtension("WEBGL_color_buffer_float");
+
+    if (ctx.webglVersion === 2) {
+      // 16f mipmap
+      ctx.getGLExtension("EXT_color_buffer_float");
+    }
     this.dims = dim;
 
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
@@ -33,9 +38,15 @@ export class ColorCubemap implements Cubemap {
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+    const ver = this.ctx.webglVersion;
     for (let i = 0; i < 6; i++) {
       // alloc our textures
-      gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, dim, dim, 0, gl.RGBA, gl.FLOAT, null);
+      if (ver === 2) {
+        const gl2 = gl as WebGL2RenderingContext;
+        gl2.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl2.RGBA16F, dim, dim, 0, gl.RGBA, gl.FLOAT, null);
+      } else {
+        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, gl.RGBA, dim, dim, 0, gl.RGBA, gl.FLOAT, null);
+      }
     }
   }
 

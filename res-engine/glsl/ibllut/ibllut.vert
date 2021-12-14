@@ -1,4 +1,6 @@
-#version 100
+#include <version>
+
+#include <compatibility>
 
 #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -6,8 +8,8 @@
   precision mediump float;
 #endif
 
-attribute vec4 aPosition;
-varying vec2 vCoord;
+ATTRIB vec4 aPosition;
+VARYING vec2 vCoord;
 
 void main() {
   vCoord = (aPosition.xy + vec2(1.0)) / vec2(2.0);

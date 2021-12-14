@@ -3,6 +3,9 @@ import { EngineObject } from "../EngineObject";
 
 import { mat4, vec3, quat, ReadonlyMat4 } from "gl-matrix";
 import { RenderContext } from "../../render/RenderContext";
+import { perf } from "../../../../../ts/performance";
+import { logRender } from "../../internal/performanceanalytics";
+import { assert } from "console";
 
 /**
  * Game object rendered to a lovely 3d world.
@@ -19,6 +22,10 @@ export class GameObject extends EngineObject {
   private dirty: boolean;
 
   constructor(ctx: GameContext) {
+    if (!ctx) {
+      throw Error("wtf");
+    }
+
     super(ctx);
     this.children = new Set();
     this.parent = null;
@@ -47,7 +54,16 @@ export class GameObject extends EngineObject {
 
   // renders itself and its children
   protected renderfunc(rc: RenderContext) {
+    const start = perf.now();
     this.renderMaterial(rc);
+    
+    if (this.getContext().debugger) {
+      // when the debug context is open, add a flush call to ensure the render op finishes completely
+      this.getContext().getGLContext().finish();
+    }
+
+    const end = perf.now();
+    logRender(this.getDebugName(), end - start);
     for (let child of this.children) {
       child.renderfunc(rc);
     }

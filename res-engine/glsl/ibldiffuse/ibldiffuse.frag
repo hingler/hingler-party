@@ -1,10 +1,11 @@
-#version 100
+#include <version>
 
 precision highp float;
 
 #include <constants>
+#include <compatibility>
 
-varying vec2 vCoord;
+VARYING vec2 vCoord;
 
 // 33k samples per pixel
 // i think thats fine :(
@@ -19,6 +20,8 @@ uniform vec3 right;
 uniform vec3 center;
 
 uniform samplerCube skybox;
+
+OUTPUT_FRAGCOLOR;
 
 // calculate coord from up+right+center
 // reuse up to get right for tangent space
@@ -51,7 +54,7 @@ void main() {
       // mipmap filtering incurred because we downsample hdr texture
       // 256x cubemap -> 32x cubemap should incur 3.0 abs bias
 
-      res += textureCube(skybox, boxSample, 0.0).rgb * cos(phi) * sin(phi);
+      res += TEXTURECUBE(skybox, boxSample, 0.0).rgb * cos(phi) * sin(phi);
 
       theta += thetaStep;
     }
@@ -59,5 +62,5 @@ void main() {
     phi += phiStep;
   }
 
-  gl_FragColor = vec4(PI * res / float(STEPS_PHI * STEPS_THETA), 1.0);
+  fragColor = vec4(PI * res / float(STEPS_PHI * STEPS_THETA), 1.0);
 }

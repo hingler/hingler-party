@@ -174,7 +174,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();
-    this.normalBuffer = new GLBufferImpl(gl, undefined, gl.DYNAMIC_DRAW);
+    this.normalBuffer = new GLBufferImpl(ctx, undefined, gl.DYNAMIC_DRAW);
 
     mat4.identity(this.vpMat);
     mat4.identity(this.modelMat);

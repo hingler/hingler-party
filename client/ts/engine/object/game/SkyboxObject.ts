@@ -49,10 +49,10 @@ export class SkyboxObject extends GameObject {
     this.cubemapDiffuse = null;
     this.cubemapSpecular = null;
     this.iblBRDF = null;
-    ctx.getGLContext().getExtension("OES_standard_derivatives");
+    ctx.getGLExtension("OES_standard_derivatives");
     this.intensity = 1.0;
 
-    this.model = SkyboxObject.createSkyboxCube(ctx.getGLContext());
+    this.model = SkyboxObject.createSkyboxCube(ctx);
     this.hdr = new HDRTexture(ctx, path);
     this.mat = new SkyboxMaterial(ctx);
     this.hdrProg = new HDRToCubemapDisplay(ctx, this.hdr);    
@@ -78,9 +78,12 @@ export class SkyboxObject extends GameObject {
     return this.iblBRDF;
   }
 
-  public static createSkyboxCube(gl: WebGLRenderingContext) {
-    const vertexBuf = new GLBufferImpl(gl);
-    const indexBuf = new GLBufferImpl(gl);
+  public static createSkyboxCube(ctx: GameContext) {
+    const vertexBuf = new GLBufferImpl(ctx);
+    const indexBuf = new GLBufferImpl(ctx);
+
+    const gl = ctx.getGLContext();
+
     for (let i = 0; i < 8; i++) {
       vertexBuf.setFloatArray(i * 12, [(i & 1 ? 1 : -1), (i & 2 ? 1 : -1), (i & 4 ? 1 : -1)]);
     }

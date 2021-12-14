@@ -1,6 +1,11 @@
-#version 100
-#extension GL_EXT_shader_texture_lod : enable
-#extension GL_OES_standard_derivatives : enable
+#include <version>
+#include <compatibility>
+#include <env>
+
+#if (WEBGL_VERSION == 1)
+  #extension GL_EXT_shader_texture_lod : enable
+  #extension GL_OES_standard_derivatives : enable
+#endif
 
 precision highp float;
 precision highp int;
@@ -13,7 +18,7 @@ precision highp sampler2D;
 uniform SpotLight spotlight[4];
 uniform sampler2D texture_spotlight[4];
 uniform int spotlightCount;
-varying vec4 spot_coord[4];
+VARYING vec4 spot_coord[4];
 
 uniform SpotLight spotlight_no_shadow[4];
 uniform int spotlightCount_no_shadow;
@@ -21,10 +26,10 @@ uniform int spotlightCount_no_shadow;
 uniform AmbientLight ambient[4];
 uniform int ambientCount;
 
-varying vec4 v_pos;
-varying vec3 v_norm;
-varying vec2 v_tex;
-varying mat3 TBN;
+VARYING vec4 v_pos;
+VARYING vec3 v_norm;
+VARYING vec2 v_tex;
+VARYING mat3 TBN;
 
 uniform vec3 camera_pos;
 
@@ -65,9 +70,11 @@ uniform float specSize_l;
 uniform float skyboxIntensity_l;
 uniform int useIrridance_l;
 
+OUTPUT_FRAGCOLOR;
+
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;
-  vec4 colAlpha = texture2D(tex_albedo, v_tex);
+  vec4 colAlpha = TEXTURE2D(tex_albedo, v_tex);
   vec3 C = colAlpha.rgb * color_factor.rgb;
   if (use_albedo == 0) {
     C = color_factor.xyz;
@@ -77,11 +84,11 @@ void main() {
 
   vec3 N = v_norm;
   // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-  vec3 norm_tex = normalize(texture2D(tex_norm, v_tex).rgb * 2.0 - 1.0);
+  vec3 norm_tex = normalize(TEXTURE2D(tex_norm, v_tex).rgb * 2.0 - 1.0);
   N = TBN * norm_tex * step(0.5, float(use_norm)) + N * step(float(use_norm), 0.5);
 
   // get rough at tex, use as roughness, store in float rough;
-  vec2 metal_rough = texture2D(tex_metal_rough, v_tex).bg;
+  vec2 metal_rough = TEXTURE2D(tex_metal_rough, v_tex).bg;
   float metal = metal_rough.x * metal_factor;
   float rough = metal_rough.y * rough_factor;
 
@@ -94,13 +101,10 @@ void main() {
   }
 
   vec4 col = vec4(0.0);
-  for (int i = 0; i < 4; i++) {
-    if (i >= spotlightCount) {
-      break;
-    }
-
-    col += getSpotLightColorPBR(spotlight[i], camera_pos, v_pos.xyz, spot_coord[i], C, N, rough, metal, texture_spotlight[i]);
-  }
+  col += getSpotLightColorPBR(spotlight[0], camera_pos, v_pos.xyz, spot_coord[0], C, N, rough, metal, texture_spotlight[0]) * step(0.5, float(spotlightCount));
+  col += getSpotLightColorPBR(spotlight[1], camera_pos, v_pos.xyz, spot_coord[1], C, N, rough, metal, texture_spotlight[1]) * step(1.5, float(spotlightCount));
+  col += getSpotLightColorPBR(spotlight[2], camera_pos, v_pos.xyz, spot_coord[2], C, N, rough, metal, texture_spotlight[2]) * step(2.5, float(spotlightCount));
+  col += getSpotLightColorPBR(spotlight[3], camera_pos, v_pos.xyz, spot_coord[3], C, N, rough, metal, texture_spotlight[3]) * step(3.5, float(spotlightCount));
 
   for (int i = 0; i < 4; i++) {
     if (i >= spotlightCount_no_shadow) {
@@ -129,8 +133,8 @@ void main() {
   if (use_emission == 0) {
     col += vec4(emission_factor.rgb, 0.0);
   } else {
-    col += vec4(texture2D(tex_emission, v_tex).rgb, 0.0);
+    col += vec4(TEXTURE2D(tex_emission, v_tex).rgb, 0.0);
   }
 
-  gl_FragColor = vec4(pow(col.xyz, vec3(1.0 / 2.2)), 1.0);
+  fragColor = vec4(pow(col.xyz, vec3(1.0 / 2.2)), 1.0);
 }

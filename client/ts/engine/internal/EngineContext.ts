@@ -9,8 +9,26 @@ import { Renderer } from "./Renderer";
 import { mobileCheck } from "../../../../ts/util/MobileCheck";
 import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
+import { clearPerf } from "./performanceanalytics";
+import { DebugDisplay } from "./DebugDisplay";
 
-let uintext: OES_element_index_uint = undefined;
+// short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
+const WEBGL2_NATIVE_EXTENSIONS = [
+  "WEBGL_depth_texture",
+  "OES_texture_float",
+  "OES_texture_float_linear",
+  "OES_texture_half_float",
+  "OES_texture_half_float_linear",
+  "OES_vertex_array_object",
+  "OES_standard_derivatives",
+  "ANGLE_instanced_arrays",
+  "OES_element_index_uint",
+  "EXT_frag_depth",
+  "EXT_blend_minmax",
+  "EXT_shader_texture_lod",
+  "WEBGL_draw_buffers",
+  "OES_fbo_render_mipmap"
+]
 
 export interface ContextOptions {
   useServiceWorker?: boolean;
@@ -24,7 +42,7 @@ export class EngineContext implements GameContext {
   private lastDelta: number;
   private loader: FileLoader;
   private gltfLoader: GLTFLoaderImpl;
-  glContext: WebGLRenderingContext;
+  glContext: WebGLRenderingContext | WebGL2RenderingContext;
   canvas: HTMLCanvasElement;
   private scene: Scene;
   private renderer: Renderer;
@@ -40,9 +58,16 @@ export class EngineContext implements GameContext {
   private shaderCache: ShaderEnv;
   private windowListener: () => void;
 
+  debugger: boolean;
+  webglVersion: number;
+
   readonly mobile: boolean;
 
-  private getGLProxy(gl: WebGLRenderingContext) {
+  private debug: DebugDisplay;
+
+  private updateTime: number;
+
+  private getGLProxy(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     gl = new Proxy(gl, {
       get: function(target, prop, _) {
         let res = target[prop];
@@ -72,15 +97,32 @@ export class EngineContext implements GameContext {
     this.lastTimePoint = perf.now();
     this.loader = new FileLoader(opts ? opts.useServiceWorker : true);
     this.varMap = new Map();
+
+    this.debugger = true;
+
     
     // copy over env???
     // nah we'll standardize its initialization
     if (init instanceof EngineContext) {
       this.canvas = init.canvas;
       this.glContext = init.glContext;
+      this.debug = init.debug;
+      this.webglVersion = init.webglVersion;
     } else {
       this.canvas = init;
-      this.glContext = init.getContext("webgl");
+      
+      const gl2 = init.getContext("webgl2");
+      if (gl2 && gl2 instanceof WebGL2RenderingContext) {
+        this.glContext = gl2;
+        this.webglVersion = 2;
+      } else {
+        this.glContext = init.getContext("webgl");
+        this.webglVersion = 1;
+      }
+
+      console.log(`Using WebGL Version ${this.webglVersion}`);
+
+      this.debug = new DebugDisplay(this);
     }
 
     this.gltfLoader = new GLTFLoaderImpl(this.loader, this);
@@ -111,13 +153,6 @@ export class EngineContext implements GameContext {
     gl.depthFunc(gl.LEQUAL);
     gl.clearDepth(1.0);
 
-    if (uintext === undefined) {
-      uintext = gl.getExtension("OES_element_index_uint");
-      if (uintext === null) {
-        console.warn("Could not load uint index extension!");
-      }
-    }
-
     this.scene = scene;
     this.renderer = new Renderer(this, this.scene);
     if (!this.scene.isInitialized()) {
@@ -129,8 +164,12 @@ export class EngineContext implements GameContext {
         this.passOffset--;
       } else if (e.code === "PageDown") {
         this.passOffset++;
+      } else if (e.code === "Backquote") {
+        this.debugger = !this.debugger;
       }
-    })
+    });
+
+    this.setContextVar("SHADER_WEBGL_VERSION", this.webglVersion, {shaderInteger: true});
   }
 
   private updateScreenDims() {
@@ -169,6 +208,11 @@ export class EngineContext implements GameContext {
   getGLExtension<T>(name: string) {
     if (this.extensionList.has(name)) {
       return this.extensionList.get(name) as T;
+    }
+
+    if (WEBGL2_NATIVE_EXTENSIONS.indexOf(name) !== -1) {
+      // native support -- return a placeholder
+      return true;
     }
 
     const ext = this.glContext.getExtension(name);
@@ -248,11 +292,25 @@ export class EngineContext implements GameContext {
   }
 
   step() {
+    clearPerf();
     this.updateDelta();
     if (this.scene && this.scene.isInitialized()) {
+      const updateStart = perf.now();
       this.scene.getGameObjectRoot().updateChildren();
+      const updateEnd = perf.now();
+      this.updateTime = updateEnd - updateStart;
       this.renderer.renderScene();
+      this.debug.updateTime = this.updateTime;
     }
+
+
+    const renderTiming = this.renderer.getDebugTiming();
+    this.debug.shadowTime = renderTiming.shadowTime;
+    this.debug.finalTime = renderTiming.finalTime;
+    this.debug.postTime = renderTiming.postTime;
+    this.debug.totalTime = renderTiming.totalTime;
+
+    this.debug.update();
   }
 
   drawFrame() {
@@ -263,7 +321,7 @@ export class EngineContext implements GameContext {
         this.glContext.bindFramebuffer(this.glContext.FRAMEBUFFER, null);
         this.glContext.clear(this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT);
         disp.drawTexture();
-        this.glContext.flush();
+        this.glContext.finish();
       }
     }
   }

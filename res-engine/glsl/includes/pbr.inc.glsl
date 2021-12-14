@@ -62,7 +62,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
 
     float lod = roughness * MAX_REFLECTION_LOD;
     #ifdef GL_EXT_shader_texture_lod
-      vec3 specSample = textureCubeLodEXT(specCube, R, lod).rgb;
+      vec3 specSample = TEXTURECUBELOD(specCube, R, lod).rgb;
     #else
       // mipmap lookup from OGL 4.6 spec
       vec3 Rx = dFdx(R) * specRes;
@@ -74,7 +74,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
       // lod is desired mip
       // mipguess is estimated current mipmap level
       // lod - mipguess should mimic textureCubeLod behavior
-      vec3 specSample = textureCube(specCube, R, lod - mipGuess).rgb;
+      vec3 specSample = TEXTURECUBE(specCube, R, lod - mipGuess).rgb;
     #endif
 
     vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
@@ -84,9 +84,9 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
     float rad = (1.0 - metallic);
     vec3 kd = vec3(rad) - ks * rad;
 
-    vec3 diffuse = textureCube(diffCube, N).rgb * albedo;
+    vec3 diffuse = TEXTURECUBE(diffCube, N).rgb * albedo;
 
-    vec2 brdfTex = texture2D(brdfTexture, vec2(NdotV, roughness)).rg;
+    vec2 brdfTex = TEXTURE2D(brdfTexture, vec2(NdotV, roughness)).rg;
     vec3 specResult = specSample * (F * brdfTex.x + brdfTex.y);
 
     return kd * diffuse + specResult;

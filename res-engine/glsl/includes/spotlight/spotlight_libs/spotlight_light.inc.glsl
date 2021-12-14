@@ -55,7 +55,7 @@ float sampleShadow(vec3 pos_ndc, in sampler2D shadowtex, vec2 sample_tex, vec2 t
   for (float i = SHADOW_SAMPLE_START; i < SHADOW_SAMPLE_END; i += 1.0) {
     for (float j = SHADOW_SAMPLE_START; j < SHADOW_SAMPLE_END; j += 1.0) {
       vec2 pos_tex = sample_tex + (shadow_step * vec2(i, j));
-      float shadow_dist = texture2D(shadowtex, pos_tex).r + SHADOW_BIAS;
+      float shadow_dist = TEXTURE2D(shadowtex, pos_tex).r + SHADOW_BIAS;
       float rawDist = (pos_ndc.z - shadow_dist);
       coll += 1.0 - step(0.0, rawDist);
     }

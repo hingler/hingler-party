@@ -29,7 +29,7 @@ export class PlaneModel extends ModelImpl {
 
     let gl = ctx.getGLContext();
 
-    let planebuf = new GLBufferImpl(gl);
+    let planebuf = new GLBufferImpl(ctx);
     
     let pos = vec3.create();
     let norm = vec3.create();
@@ -80,7 +80,7 @@ export class PlaneModel extends ModelImpl {
       yOffset += ystep;
     }
 
-    let indexbuf = new GLBufferImpl(gl);
+    let indexbuf = new GLBufferImpl(ctx);
     let indexOffset = 0;
     const korn = (subs - 1);
 

@@ -1,12 +1,14 @@
-#version 100
+#include <version>
 
 precision highp float;
 precision highp int;
 
+#include <compatibility>
+
 #include <../includes/spotlight/spotlight.inc.glsl>
 
-attribute vec4 position;
-attribute vec3 normal;
+ATTRIB vec4 position;
+ATTRIB vec3 normal;
 
 uniform mat4 model_matrix;
 uniform mat4 vp_matrix;
@@ -20,10 +22,10 @@ uniform mat3 normal_matrix;
 uniform SpotLight spotlight[4];
 uniform int spotlightCount;
 
-varying vec4 spot_coord[4];
+VARYING vec4 spot_coord[4];
 
-varying vec4 position_v;
-varying vec3 normal_v;
+VARYING vec4 position_v;
+VARYING vec3 normal_v;
 
 void main() {
   position_v = model_matrix * position;

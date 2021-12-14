@@ -6,9 +6,9 @@
 // @param sample - the point to sample from
 // @param radius - size, in texcoord units, of blur
 // @param steps  - number of blur steps
-vec4 radialBlur(in sampler2D src, vec2 center, vec2 sample, float radius, int steps);
+vec4 radialBlur(in sampler2D src, vec2 center, vec2 samp, float radius, int steps);
 
-vec4 radialBlur(in sampler2D src, vec2 center, vec2 sample, float radius, int steps) {
+vec4 radialBlur(in sampler2D src, vec2 center, vec2 samp, float radius, int steps) {
   radius = max(min(radius, 1.0), -1.0);
 
   // multiply radius by our sampled step
@@ -17,7 +17,7 @@ vec4 radialBlur(in sampler2D src, vec2 center, vec2 sample, float radius, int st
   float cur = 0.0;
 
 
-  vec2 dir = sample - center;
+  vec2 dir = samp - center;
   dir = dir / length(dir);
   vec2 adv = step_size * dir;
   // get dist to center
@@ -29,15 +29,15 @@ vec4 radialBlur(in sampler2D src, vec2 center, vec2 sample, float radius, int st
 
   vec4 res = vec4(0.0);
   float weight = 0.0;
-  vec2 pt = sample;
+  vec2 pt = samp;
   for (int i = 0; i < MAX_STEPS; i++) {
     if (i >= steps) {
       break;
     }
 
-    vec4 colsample = texture2D(src, pt);
+    vec4 colsample = TEXTURE2D(src, pt);
     cur += step_size;
-    pt = sample - ((radius * cur) * dir);
+    pt = samp - ((radius * cur) * dir);
 
     // if (pt.x < 0.0 || pt.x > 1.0 || pt.y < 0.0 || pt.y > 1.0) {
     //   continue;

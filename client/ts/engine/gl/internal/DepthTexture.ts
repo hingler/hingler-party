@@ -7,15 +7,17 @@ let depthtex: WEBGL_depth_texture = undefined;
 // probably engine side
 // grab framebuffers after every render pass, just return the moment the desired fb is complete
 export class DepthTexture extends Texture {
+  ctx: GameContext;
   dims: [number, number];
   gl: WebGLRenderingContext;
   private tex: WebGLTexture;
   constructor(ctx: GameContext, dims: [number, number]) {
     super();
+    this.ctx = ctx;
     this.gl = ctx.getGLContext();
     this.tex = null;
     if (depthtex === undefined) {
-      depthtex = ctx.getGLContext().getExtension("WEBGL_depth_texture");
+      depthtex = ctx.getGLExtension("WEBGL_depth_texture");
       if (depthtex !== null) {
         console.log("ok :)");
       }
@@ -79,14 +81,26 @@ export class DepthTexture extends Texture {
   }
 
   private createDepthTextureWithDims(x: number, y: number) {
-    let gl = this.gl;
+    const ver = this.ctx.webglVersion;
+    const gl = this.gl;
     if (this.tex === null) {
       this.tex = gl.createTexture();
       console.log("texture created :)");
     }
 
+    let internalFormat: number, type: number;
+    if (ver === 2) {
+      const gl = this.ctx.getGLContext() as WebGL2RenderingContext;
+      internalFormat = gl.DEPTH_COMPONENT32F;
+      type = gl.FLOAT;
+    } else {
+      internalFormat = gl.DEPTH_COMPONENT;
+      type = gl.UNSIGNED_INT;
+    }
+
+
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, x, y, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, x, y, 0, gl.DEPTH_COMPONENT, type, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

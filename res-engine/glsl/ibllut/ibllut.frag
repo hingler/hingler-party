@@ -1,7 +1,12 @@
-#version 100
+#include <version>
 
-#extension GL_EXT_shader_texture_lod : enable
-#extension GL_OES_standard_derivatives : enable
+#include <compatibility>
+#include <env>
+
+#if (WEBGL_VERSION == 1)
+  #extension GL_EXT_shader_texture_lod : enable
+  #extension GL_OES_standard_derivatives : enable
+#endif
 
 #ifdef GL_FRAGMENT_PRECISION_HIGH
   precision highp float;
@@ -14,9 +19,11 @@
 
 precision highp float;
 
-varying vec2 vCoord;
+VARYING vec2 vCoord;
 
 #define SAMPLE_COUNT 1024
+
+OUTPUT_FRAGCOLOR;
 
 vec2 integrateBRDF(float NdotV, float roughness) {
   vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0.0, NdotV);
@@ -53,5 +60,5 @@ vec2 integrateBRDF(float NdotV, float roughness) {
 
 void main() {
   vec2 res = integrateBRDF(vCoord.x, vCoord.y);
-  gl_FragColor = vec4(res.xy, 0.0, 1.0);
+  fragColor = vec4(res.xy, 0.0, 1.0);
 }

@@ -1,27 +1,30 @@
-#version 100
+#include <version>
 
 precision highp float;
 precision highp int;
+
+#include <env>
+#include <compatibility>
 
 #define STRUCT_ONLY
 #include <../includes/spotlight/spotlight.inc.glsl>
 
 // TODO: bitangents are already calculated as 
 // part of tangent computation, so just toss them in
-attribute vec4 position;
-attribute vec3 normal;
-attribute vec2 texcoord;
-attribute vec3 tangent;
+ATTRIB vec4 position;
+ATTRIB vec3 normal;
+ATTRIB vec2 texcoord;
+ATTRIB vec3 tangent;
 
-attribute mat4 a_model_matrix;
-attribute mat3 a_normal_matrix;
+ATTRIB mat4 a_model_matrix;
+ATTRIB mat3 a_normal_matrix;
 
 uniform int is_instanced;
 
-varying vec4 v_pos;
-varying vec2 v_tex;
-varying vec3 v_norm;
-varying mat3 TBN;
+VARYING vec4 v_pos;
+VARYING vec2 v_tex;
+VARYING vec3 v_norm;
+VARYING mat3 TBN;
 
 
 uniform mat4 model_matrix;
@@ -31,7 +34,7 @@ uniform mat3 normal_matrix;
 uniform SpotLight spotlight[4];
 uniform int spotlightCount;
 
-varying vec4 spot_coord[4];
+VARYING vec4 spot_coord[4];
 
 void main() {
   float modelstep = step(0.5, float(is_instanced));

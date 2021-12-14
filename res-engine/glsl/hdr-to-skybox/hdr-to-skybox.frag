@@ -1,16 +1,19 @@
-#version 100
+#include <version>
 
 precision highp float;
 
 #include <constants>
+#include <compatibility>
 
-varying vec2 vCoord;
+VARYING vec2 vCoord;
 
 uniform vec3 center;
 uniform vec3 right;
 uniform vec3 up;
 
 uniform sampler2D tex;
+
+OUTPUT_FRAGCOLOR;
 
 void main() {
   vec3 skyCoord = normalize(center + (right * vCoord.x) + (up * vCoord.y));
@@ -25,5 +28,5 @@ void main() {
   );
 
   vec2 hdrCoord = vec2(sphereCoord.x / (2.0 * PI), (sphereCoord.y / PI) + 0.5);
-  gl_FragColor = texture2D(tex, hdrCoord);
+  fragColor = TEXTURE2D(tex, hdrCoord);
 }

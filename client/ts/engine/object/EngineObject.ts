@@ -4,8 +4,10 @@
  * which are called throughout the object's lifecycle.
  */
 
+import { perf } from "../../../../ts/performance";
 import { IDGenerator } from "../../../../ts/util/IDGenerator";
 import { GameContext } from "../GameContext";
+import { logUpdate } from "../internal/performanceanalytics";
 import { ObjectType } from "./ObjectType";
 
 const gen = new IDGenerator();
@@ -17,11 +19,23 @@ export abstract class EngineObject {
   // i dont need this anymore :)
   readonly type: ObjectType;
 
+  private name: string;
+
   constructor(ctx: GameContext) {
     this.context = ctx;
     this.id = gen.getNewID();
     this.created = false;
     this.type = ObjectType.ENGINEOBJECT;
+
+    this.name = this.constructor.name;
+  }
+
+  protected getDebugName() {
+    return this.name;
+  }
+
+  protected setDebugName(name: string) {
+    this.name = name;
   }
 
   setId(id: number) {
@@ -37,13 +51,16 @@ export abstract class EngineObject {
     return this.context;
   }
 
-  private updateFunc() {
+  protected updateFunc() {
     if (!this.created) {
       this.create();
       this.created = true;
     }
 
+    const start = perf.now();
     this.update();
+    const end = perf.now();
+    logUpdate(this.name, end - start);
 
     for (let child of this.getChildren()) {
       child.updateFunc();

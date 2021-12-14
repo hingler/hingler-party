@@ -5,6 +5,7 @@ import { GameContext } from "../../../GameContext";
 import { CameraInfo } from "../Camera";
 import { GameObject } from "../GameObject";
 import { SpotLight } from "./SpotLight";
+import { TextureDummy } from "../../../material/TextureDummy";
 
 export class SpotLightObject extends GameObject implements SpotLight {
   fov: number;
@@ -21,6 +22,8 @@ export class SpotLightObject extends GameObject implements SpotLight {
 
   private fb: ShadowFramebuffer;
   private shadows: boolean;
+
+  private dummy: TextureDummy;
   constructor(ctx: GameContext) {
     super(ctx);
     // TODO: find some way to store consts like shadow map size across objects
@@ -32,6 +35,8 @@ export class SpotLightObject extends GameObject implements SpotLight {
     this.color = vec4.create();
     this.intensity = 1;
     this.shadows = true;
+
+    this.dummy = new TextureDummy(ctx);
   }
 
   setShadowDims(dim_a: [number, number] | number, dim_b?: number) {

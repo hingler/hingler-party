@@ -10,7 +10,7 @@ export class GameModel extends GameObject {
   model: Model;
   private shadowTex: ShadowNoTextureMaterial;
 
-  constructor(ctx: GameContext, init: string | Model | Future<Model>) {
+  constructor(ctx: GameContext, init: string | Model | Future<Model>, modelName?: string) {
     // pass by path? pass as arg?
     // ctor raw seems like a piss idea
     super(ctx);
@@ -29,6 +29,8 @@ export class GameModel extends GameObject {
           console.error("Something went wrong while parsing model");
           console.error(reason);
         });
+      
+        this.setDebugName(`${this.getDebugName()}:${init}`);
         
     } else if (init instanceof Model) {
       // init instanceof Model
@@ -42,6 +44,11 @@ export class GameModel extends GameObject {
           this.model = res;
         });
       }
+    }
+
+    if (modelName !== undefined) {
+      // preserve file path if provided, add name to end
+      this.setDebugName(`${this.getDebugName()}:${modelName}`);
     }
   }
 

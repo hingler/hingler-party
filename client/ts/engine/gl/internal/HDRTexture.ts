@@ -12,6 +12,8 @@ export class HDRTexture extends Texture {
   private tex: WebGLTexture;
   private ctx: GameContext;
 
+  private internalFormat: number;
+
   readonly uintTexture: boolean;
   
   private loadTask: Task<void>;
@@ -21,6 +23,12 @@ export class HDRTexture extends Texture {
     this.tex = null;
     this.ctx = ctx;
     const gl = this.ctx.getGLContext();
+
+    if (this.ctx.webglVersion === 2) {
+      this.internalFormat = (gl as WebGL2RenderingContext).RGB16F;
+    } else {
+      this.internalFormat = gl.RGB;
+    }
     
     this.uintTexture = !(ctx.getGLExtension("OES_texture_float") !== null && ctx.getGLExtension("OES_texture_float_linear") !== null);
 
@@ -83,7 +91,7 @@ export class HDRTexture extends Texture {
     this.tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, dims[1], dims[0], 0, gl.RGB, gl.FLOAT, data);
+    gl.texImage2D(gl.TEXTURE_2D, 0, this.internalFormat, dims[1], dims[0], 0, gl.RGB, gl.FLOAT, data);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 

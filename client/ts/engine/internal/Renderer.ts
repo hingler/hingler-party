@@ -1,5 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
+import { perf } from "../../../../ts/performance";
 import { mobileCheck } from "../../../../ts/util/MobileCheck";
+import { PingQueue } from "../../../../ts/util/PingQueue";
 import { Framebuffer } from "../gl/Framebuffer";
 import { ColorFramebuffer } from "../gl/internal/ColorFramebuffer";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
@@ -19,7 +21,15 @@ import { SpotLightObject } from "../object/game/light/SpotLightObject";
 import { SkyboxObject } from "../object/game/SkyboxObject";
 import { Scene } from "../object/scene/Scene";
 import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
+import { DebugDisplay } from "./DebugDisplay";
 import { EngineContext } from "./EngineContext";
+
+export class RenderPerformanceInfo {
+  readonly shadowTime: number;
+  readonly finalTime: number;
+  readonly postTime: number;
+  readonly totalTime: number;
+}
 
 class SpotLightRenderContext implements RenderContext {
   info: CameraInfo;
@@ -68,6 +78,17 @@ export class Renderer {
   private skyboxMat: SkyboxMaterial;
   private cube: Model;
 
+  // time spent rendering shadows
+  private shadowRenderTime: number;
+
+  // time spent rendering final image
+  private finalRenderTime: number;
+
+  // time spent on post processing
+  private postRenderTime: number;
+
+  private totalRenderTime: number;
+
   // tracks rendered textures
   private renderPasses: Array<TextureDisplay>;
   constructor(ctx: EngineContext, scene: Scene) {
@@ -77,7 +98,12 @@ export class Renderer {
     this.primaryFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
     this.swapFB = new ColorFramebuffer(ctx, ctx.getScreenDims());
     this.skyboxMat = new SkyboxMaterial(ctx);
-    this.cube = SkyboxObject.createSkyboxCube(this.gl);
+    this.cube = SkyboxObject.createSkyboxCube(this.ctx);
+
+    this.shadowRenderTime = 0;
+    this.finalRenderTime = 0;
+    this.postRenderTime = 0;
+    this.totalRenderTime = 0;
   }
 
   renderScene() {
@@ -85,6 +111,8 @@ export class Renderer {
       console.info("Render skipped due to uninitialized scene...");
       return;
     }
+
+    const totalStart = perf.now();
     
     let dims = this.ctx.getScreenDims();
     let old_dims = this.primaryFB.dims;
@@ -104,6 +132,8 @@ export class Renderer {
     gl.enable(gl.CULL_FACE);
     gl.cullFace(gl.FRONT);
 
+    const shadowStart = perf.now();
+
     for (let light of lights) {
       // skip until spotlights are definitely working
       // skip lights which won't contribute to final image
@@ -119,6 +149,8 @@ export class Renderer {
       
       spotLightInfo.push(new SpotLightStruct(this.ctx, light));
     }
+
+    const shadowEnd = perf.now();
 
     for (let light of ambLights) {
       ambLightInfo.push(new AmbientLightStruct(this.ctx, light));
@@ -199,6 +231,8 @@ export class Renderer {
       }
     }
 
+    const finalStart = perf.now();
+
     this.primaryFB.bindFramebuffer(gl.FRAMEBUFFER);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     let dim = this.ctx.getScreenDims();
@@ -215,8 +249,16 @@ export class Renderer {
     this.skyboxMat.view = info.viewMatrix;
     this.skyboxMat.drawMaterial(this.cube);
 
+    if (this.ctx.debugger) {
+      gl.finish();
+    }
+
+    const finalEnd = perf.now();
+
     // run our post processing passes
     let filters : Array<PostProcessingFilter> = [];
+
+    const postStart = perf.now();
     
     if (cam) {
       filters = cam.getFilters();
@@ -230,7 +272,7 @@ export class Renderer {
       dst = (usePrimaryAsSource ? this.swapFB : this.primaryFB);
 
       dst.bindFramebuffer(this.gl.FRAMEBUFFER);
-      filter.runFilter(src, dst, rc);
+      filter.filterfunc(src, dst, rc);
 
       usePrimaryAsSource = !usePrimaryAsSource;
     }
@@ -238,6 +280,24 @@ export class Renderer {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.renderPasses.push(new ColorDisplay(this.ctx, dst.getColorTexture()));
 
+    if (this.ctx.debugger) {
+      this.gl.finish();
+    }
+    const postEnd = perf.now();
+
+    this.shadowRenderTime = shadowEnd - shadowStart;
+    this.finalRenderTime = finalEnd - finalStart;
+    this.postRenderTime = postEnd - postStart;
+    this.totalRenderTime = postEnd - totalStart;
+  }
+
+  getDebugTiming() {
+    return {
+      shadowTime: this.shadowRenderTime,
+      finalTime: this.finalRenderTime,
+      postTime: this.postRenderTime,
+      totalTime: this.totalRenderTime
+    } as RenderPerformanceInfo;
   }
 
   /**

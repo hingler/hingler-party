@@ -1,7 +1,9 @@
-#version 100
+#include <version>
 
 precision highp float;
 precision highp int;
+
+#include <compatibility>
 
 #include <../includes/spotlight/spotlight.inc.glsl>
 
@@ -14,14 +16,14 @@ uniform sampler2D texture_spotlight[4];
 
 uniform int spotlightCount;
 
-varying vec4 spot_coord[4];
+VARYING vec4 spot_coord[4];
 
 uniform SpotLight spotlight_no_shadow[16];
 
 uniform int spotlightCount_no_shadow;
 
-varying vec4 position_v;
-varying vec3 normal_v;
+VARYING vec4 position_v;
+VARYING vec3 normal_v;
 
 uniform vec4 surface_color;
 
@@ -55,5 +57,5 @@ void main() {
     col += n_b * light_col;
   }
 
-  gl_FragColor = vec4(col.xyz, 1.0);
+  fragColor = vec4(col.xyz, 1.0);
 }

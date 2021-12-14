@@ -1,4 +1,5 @@
 import { assert, expect } from "chai";
+import { GameContext } from "../client/ts/engine/GameContext";
 import { DataType } from "../client/ts/engine/gl/internal/GLBuffer";
 import { GLBufferImpl } from "../client/ts/engine/gl/internal/GLBufferImpl";
 
@@ -14,10 +15,22 @@ const glstub = new Proxy(tempGL as WebGLRenderingContext, {
   }
 });
 
+const ctxstub = new Proxy({} as GameContext, {
+  get: function(target, prop, receiver) {
+    if (prop === "getGLContext") {
+      return (...temp: any) => glstub;
+    }
+
+    else {
+      return (..._: any) => null;
+    }
+  }
+})
+
 describe("GLBuffer", function() {
   it("Should instantiate itself without crashing", function() {
     let buf = new ArrayBuffer(16);
-    let buffer = new GLBufferImpl(glstub, buf);
+    let buffer = new GLBufferImpl(ctxstub, buf);
   });
 
   it("Should return buffer data accurately", function() {
@@ -34,7 +47,7 @@ describe("GLBuffer", function() {
 
     view.setFloat32(14, 409.6, true);
 
-    let buffer = new GLBufferImpl(glstub, buf);
+    let buffer = new GLBufferImpl(ctxstub, buf);
 
     expect(buffer.getInt8(0)).to.equal(64);
     expect(buffer.getUint8(1)).to.equal(128);
@@ -63,7 +76,7 @@ describe("GLBuffer", function() {
       }
     })
 
-    let glbuf = new GLBufferImpl(glProxy, buf);
+    let glbuf = new GLBufferImpl(ctxstub, buf);
     glbuf.bindToVertexAttribute(0, 2, DataType.FLOAT, false, 0, 0);
     assert.throw(() => glbuf.drawElements(0, 1, DataType.UNSIGNED_SHORT)); 
   });
@@ -95,7 +108,7 @@ describe("GLBuffer", function() {
       }
     });
 
-    let glbuf = new GLBufferImpl(glProxy, buf);
+    let glbuf = new GLBufferImpl(ctxstub, buf);
     glbuf.bindToVertexAttribute(0, 2, DataType.FLOAT, false, 0, 0);
     glbuf.bindToVertexAttribute(1, 2, DataType.UNSIGNED_SHORT, false, 0, 0);
 

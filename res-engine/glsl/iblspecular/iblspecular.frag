@@ -1,7 +1,11 @@
-#version 100
+#include <version>
+#include <env>
+#include <compatibility>
 
-#extension GL_EXT_shader_texture_lod : enable
-#extension GL_OES_standard_derivatives : require
+#if (WEBGL_VERSION == 1)
+  #extension GL_EXT_shader_texture_lod : enable
+  #extension GL_OES_standard_derivatives : require
+#endif
 
 precision highp float;
 
@@ -16,7 +20,7 @@ precision highp float;
 
 #define SAMPLE_COUNT 4096
 
-varying vec2 vCoord;
+VARYING vec2 vCoord;
 
 uniform vec3 center;
 uniform vec3 right;
@@ -26,6 +30,8 @@ uniform samplerCube skybox;
 uniform float roughness;
 
 uniform vec2 sourceDestRes;
+
+OUTPUT_FRAGCOLOR;
 
 void main() {
   // fwd
@@ -60,23 +66,27 @@ void main() {
     float mipLevel = (roughness == 0.0 ? 0.0 : 0.5 * log2(saSample / saTexel));
 
     if (NdotL > 0.0) {
-      #ifdef GL_EXT_shader_texture_lod
-        col += textureCubeLodEXT(skybox, L, mipLevel).rgb * NdotL;
-      #else
-        // *should* work -- need to test :(
-        // est default mip level for texture cube
-        // mipmap lookup from OGL 4.6 spec
-        // todo: factor out into function and include? (also in pbr.inc.glsl)
-        vec3 Lx = dFdx(L) * sourceDestRes.x;
-        vec3 Ly = dFdy(L) * sourceDestRes.x;
-        float dLx = dot(Lx, Ly);
-        float dLy = dot(Lx, Ly);
-        float dMaxSquared = max(dLx, dLy);
-        float mipGuess = 0.5 * log2(dMaxSquared);
-        // lod is desired mip
-        // mipguess is estimated current mipmap level
-        // lod - mipguess should mimic textureCubeLod behavior
-        vec3 specSample = textureCube(skybox, L, mipLevel - mipGuess).rgb;
+      #if (WEBGL_VERSION == 1)
+        #ifdef GL_EXT_shader_texture_lod
+          col += TEXTURECUBELOD(skybox, L, mipLevel).rgb * NdotL;
+        #else
+          // *should* work -- need to test :(
+          // est default mip level for texture cube
+          // mipmap lookup from OGL 4.6 spec
+          // todo: factor out into function and include? (also in pbr.inc.glsl)
+          vec3 Lx = dFdx(L) * sourceDestRes.x;
+          vec3 Ly = dFdy(L) * sourceDestRes.x;
+          float dLx = dot(Lx, Ly);
+          float dLy = dot(Lx, Ly);
+          float dMaxSquared = max(dLx, dLy);
+          float mipGuess = 0.5 * log2(dMaxSquared);
+          // lod is desired mip
+          // mipguess is estimated current mipmap level
+          // lod - mipguess should mimic textureCubeLod behavior
+          vec3 specSample = TEXTURECUBE(skybox, L, mipLevel - mipGuess).rgb;
+        #endif
+      #else // WEBGL_VERSION == 2
+        col += textureLod(skybox, L, mipLevel).rgb * NdotL;
       #endif
       totalWeight += NdotL;
     }
@@ -84,5 +94,5 @@ void main() {
 
   col /= totalWeight;
 
-  gl_FragColor = vec4(col, 1.0);
+  fragColor = vec4(col, 1.0);
 }

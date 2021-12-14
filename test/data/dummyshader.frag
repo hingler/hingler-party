@@ -1,9 +1,9 @@
-#version 100
+#include <version>
 
 precision mediump float;
 
-varying vec3 normal_v;
+VARYING vec3 normal_v;
 
 void main() {
-  gl_FragColor = vec4(normal_v, 1.0);
+  fragColor = vec4(normal_v, 1.0);
 }

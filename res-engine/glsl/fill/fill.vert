@@ -1,8 +1,10 @@
-#version 100
+#include <version>
+
+#include <compatibility>
 
 precision highp float;
 
-attribute vec4 aPosition;
+ATTRIB vec4 aPosition;
 
 void main() {
   gl_Position = aPosition;

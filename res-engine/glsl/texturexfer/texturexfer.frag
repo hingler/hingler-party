@@ -1,12 +1,16 @@
-#version 100
+#include <version>
 
 precision mediump float;
 
-varying vec2 vCoord;
+#include <compatibility>
+
+VARYING vec2 vCoord;
 
 uniform sampler2D tex;
 
+OUTPUT_FRAGCOLOR;
+
 void main() {
-  vec3 res = texture2D(tex, vCoord).rgb;
-  gl_FragColor = vec4(res, 1.0);
+  vec3 res = TEXTURE2D(tex, vCoord).rgb;
+  fragColor = vec4(res, 1.0);
 }

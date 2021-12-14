@@ -5,9 +5,12 @@ import { getEnginePath } from "../../internal/getEnginePath";
 
 const eol = /\r?\n/;
 
+let ver : string = undefined;
+
 const DEFAULT_INCLUDES = [
   "env",
   "attenuation",
+  "compatibility",
   "spotlight",
   "ambient",
   "constants",
@@ -16,15 +19,18 @@ const DEFAULT_INCLUDES = [
   "perlin",
   "pbr",
   "radialblur",
-  "random"
+  "random",
+  "version"
 ];
 
 const SPOTLIGHT_INCLUDES = [
   "object",
   "light",
   "pbr"
-]
+];
 
+
+// fix dupe includes on env :(
 export class ShaderFileParser {
   private loader: FileLoader;
   private ctx: GameContext;
@@ -33,14 +39,17 @@ export class ShaderFileParser {
   constructor(ctx: GameContext) {
     this.loader = ctx.getFileLoader();
     this.ctx = ctx;
+    if (ver === undefined) {
+      ver = (this.ctx.webglVersion === 2 ? "#version 300 es" : "#version 100");
+    }
   }
 
-  async parseShaderFile(path: string) {
+  async parseShaderFile(path: string, isVertexShader?: boolean) {
     this.pathRecord = new Set();
-    return await this.parseShaderFile_(path);
+    return await this.parseShaderFile_(path, !!isVertexShader);
   }
 
-  private async parseShaderFile_(path: string) {
+  private async parseShaderFile_(path: string, isVertexShader: boolean) {
     if (this.pathRecord.has(path)) {
       console.info(path + " already included in program. Ignoring import...");
       return "";
@@ -68,55 +77,62 @@ export class ShaderFileParser {
             switch (name) {
               case "env":
                 output.push(this.ctx.getShaderEnv());
+                output.push(`#define VERT ${isVertexShader ? 1 : 0}`);
                 break;
               case "attenuation":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl"), isVertexShader));
+                break;
+              case "compatibility":
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/compatibility.inc.glsl"), isVertexShader));
                 break;
               case "spotlight":
                 console.log(match);
                 
                 if (match[4] !== undefined) {
                   if (SPOTLIGHT_INCLUDES.indexOf(match[4]) !== -1) {
-                    output.push(await this.parseShaderFile_(getEnginePath(`engine/glsl/includes/spotlight/spotlight_libs/spotlight_${match[4]}.inc.glsl`)))
+                    output.push(await this.parseShaderFile_(getEnginePath(`engine/glsl/includes/spotlight/spotlight_libs/spotlight_${match[4]}.inc.glsl`), isVertexShader))
                   } else {
                     // if not a valid include, treat it as a normal path
                     const relativePath = folder + match[1];
-                    output.push(await this.parseShaderFile_(relativePath));
+                    output.push(await this.parseShaderFile_(relativePath, isVertexShader));
                   }
                 } else {
-                  output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl")));
+                  output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl"), isVertexShader));
                 }
                 break;
               case "ambient":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/ambient.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/ambient.inc.glsl"), isVertexShader));
                 break;
               case "constants":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/constants.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/constants.inc.glsl"), isVertexShader));
                 break;
               case "gradient":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/gradient.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/gradient.inc.glsl"), isVertexShader));
                 break;
               case "opensimplex":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl"), isVertexShader));
                 break;
               case "perlin":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/perlin.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/perlin.inc.glsl"), isVertexShader));
                 break;
               case "pbr":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/pbr.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/pbr.inc.glsl"), isVertexShader));
                 break;
               case "radialblur":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/radialblur.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/radialblur.inc.glsl"), isVertexShader));
                 break;
               case "random":
-                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/random.inc.glsl")));
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/random.inc.glsl"), isVertexShader));
+                break;
+              case "version":
+                output.push(ver + "\n");
                 break;
             }
 
             continue;
           } else {
             let relativePath = folder + match[1];
-            output.push(await this.parseShaderFile_(relativePath));
+            output.push(await this.parseShaderFile_(relativePath, isVertexShader));
           }
           continue;
         }

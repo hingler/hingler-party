@@ -1,6 +1,8 @@
+import { perf } from "../../../../ts/performance";
 import { GameContext } from "../GameContext";
 import { Framebuffer } from "../gl/Framebuffer";
 import { Texture } from "../gl/Texture";
+import { logRender } from "../internal/performanceanalytics";
 import { RenderContext } from "../render/RenderContext";
 import { screenCoords } from "./TextureDisplay";
 
@@ -16,12 +18,16 @@ export abstract class PostProcessingFilter {
   private ctx: GameContext;
   private buf: WebGLBuffer;
 
+  private name: string;
+
   constructor(ctx: GameContext) {
     this.ctx = ctx;
     let gl = this.ctx.getGLContext();
     this.buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
+
+    this.name = this.constructor.name;
   }
 
   getContext() {
@@ -33,6 +39,18 @@ export abstract class PostProcessingFilter {
    */
   protected getScreenBuffer() {
     return this.buf;
+  }
+
+  filterfunc(src: Framebuffer, dst: Framebuffer, rc: RenderContext) {
+    const start = perf.now();
+    this.runFilter(src, dst, rc);
+    if (this.getContext().debugger) {
+      this.getContext().getGLContext().finish();
+    }
+    
+    const end = perf.now();
+
+    logRender(this.name, end - start);
   }
 
   /**

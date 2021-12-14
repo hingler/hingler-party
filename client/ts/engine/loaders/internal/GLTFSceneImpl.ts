@@ -373,7 +373,7 @@ export class GLTFSceneImpl implements GLTFScene {
       }
     }
 
-    let glbuf = new GLBufferImpl(this.gl, buf);
+    let glbuf = new GLBufferImpl(this.ctx, buf);
     return GLAttributeImpl.createFromValues(glbuf, 3, this.gl.FLOAT, vertCount, 0, 0);
   }
   

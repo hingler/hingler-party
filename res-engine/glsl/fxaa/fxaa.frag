@@ -1,5 +1,6 @@
-#version 100
+#include <version>
 
+#include <compatibility>
 #include <env>
 
 precision highp float;
@@ -7,6 +8,8 @@ precision highp float;
 uniform sampler2D col;
 uniform sampler2D lum;
 uniform vec2 resolution;
+
+OUTPUT_FRAGCOLOR;
 
 // still got the old fxaa
 // probably implement a bit differently
@@ -24,11 +27,11 @@ uniform vec2 resolution;
   #define FXAA_TRIM_LOCAL 0.1866
 #endif
 
-varying vec2 vCoord;
+VARYING vec2 vCoord;
 // simple for now
 
 float gLum(vec2 v) {
-  return texture2D(lum, v).r;
+  return TEXTURE2D(lum, v).r;
 }
 
 float getEdgeStep(int i) {
@@ -59,7 +62,7 @@ float getEdgeStep(int i) {
       #ifdef DEBUG
         return vec4(vec3(0.0), 1.0);
       #else
-        return texture2D(col, m);
+        return TEXTURE2D(col, m);
       #endif
     }
 
@@ -74,11 +77,11 @@ float getEdgeStep(int i) {
     float swL = gLum(sw);
     float seL = gLum(se);
     
-    float filter = 2.0 * (nL + eL + sL + wL) + neL + nwL + seL + swL;
-    filter *= 0.083333333333;
-    filter = max(min(filter, 1.0), 0.0);
-    filter = smoothstep(0.0, 1.0, abs(filter - mL) / lumaRan);
-    filter *= filter;
+    float phil = 2.0 * (nL + eL + sL + wL) + neL + nwL + seL + swL;
+    phil *= 0.083333333333;
+    phil = max(min(phil, 1.0), 0.0);
+    phil = smoothstep(0.0, 1.0, abs(phil - mL) / lumaRan);
+    phil *= phil;
 
     // compute edge orientation
     float horizontal = 2.0 * abs(nL - 2.0 * mL + sL)
@@ -149,22 +152,22 @@ float getEdgeStep(int i) {
     // 0 if same, 1 if diff
     float comp = abs(step(0.0, delta) - step(0.0, edgeGrad));
     float edgeFilter = 0.5 - (min(distToEdgePos, distToEdgeNeg) / (distToEdgePos + distToEdgeNeg));
-    filter = max(filter, comp * edgeFilter);
+    phil = max(phil, comp * edgeFilter);
 
-    // return vec4(vec3(filter), 1.0);
+    // return vec4(vec3(phil), 1.0);
     #ifdef DEBUG
       return vec4(1.0, 0.0, 0.0, 1.0);
     #else
-      return texture2D(col, m + stepSize * filter);
+      return TEXTURE2D(col, m + stepSize * phil);
     #endif
   }
 #else
  vec4 fxaa(vec2 m) {
-   return texture2D(col, m);
+   return TEXTURE2D(col, m);
  }
 #endif
 
 
 void main() {
-  gl_FragColor = fxaa(vCoord);
+  fragColor = fxaa(vCoord);
 }

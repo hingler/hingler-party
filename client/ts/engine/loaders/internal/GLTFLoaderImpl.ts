@@ -219,7 +219,7 @@ export class GLTFLoaderImpl implements GLTFLoader {
         throw Error(err);
       }
 
-      buffers.push(new GLBufferImpl(this.gl, buffer.slice(offset, chunkLen + offset)))
+      buffers.push(new GLBufferImpl(this.ctx, buffer.slice(offset, chunkLen + offset)))
       offset += chunkLen;
     }
 

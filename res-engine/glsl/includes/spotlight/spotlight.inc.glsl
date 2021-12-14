@@ -39,6 +39,10 @@ vec4 getSpotLightColorPBR(SpotLight s, vec3 cam_pos, vec3 geom_pos, vec4 shadow_
 
 
 vec4 getSpotLightColorPBR(SpotLight s, vec3 cam_pos, vec3 geom_pos, vec3 albedo, vec3 norm, float rough, float metal) {
+  if (s.intensity < 0.0001) {
+    return vec4(0.0);
+  }
+  
   vec3 col = pbr(geom_pos, cam_pos, s.position.xyz, s.color.rgb, albedo, norm, rough, metal) * s.intensity;
   vec3 dist = (geom_pos - s.position);
   col *= calculateAttenFactor(s.a, length(dist));
@@ -76,7 +80,7 @@ float getShadowTexture(SpotLight s, vec3 pos, vec4 light_pos, in sampler2D shado
   pos_ndc += 0.5;
   float shadowRes = sampleShadow(pos_ndc.xyz, shadowtex, pos_ndc.xy, s.shadowSize);
   // vec2 pos_tex = pos_ndc.xy;
-  // float shadow_dist = texture2D(shadowtex, pos_tex).r + SHADOW_BIAS;
+  // float shadow_dist = TEXTURE2D(shadowtex, pos_tex).r + SHADOW_BIAS;
   // float rawDist = (pos_ndc.z - shadow_dist);
   return shadowRes;
 }

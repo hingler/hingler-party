@@ -12,6 +12,16 @@ export interface GameContext {
   readonly mobile : boolean;
 
   /**
+   * true if the debugger is open, false otherwise
+   */
+  readonly debugger : boolean;
+
+  /**
+   * 1 or 2, for webgl and webgl2 respectively
+   */
+  readonly webglVersion : number;
+
+  /**
    * @returns the delta on the last frame, in seconds.
    */
   getDelta() : number;
@@ -48,7 +58,7 @@ export interface GameContext {
   /**
    * @returns the present GL rendering context.
    */
-  getGLContext() : WebGLRenderingContext;
+  getGLContext() : WebGLRenderingContext | WebGL2RenderingContext;
 
   /**
    * @returns the XY size of the window, in pixels

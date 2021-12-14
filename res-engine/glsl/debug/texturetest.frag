@@ -1,11 +1,13 @@
-#version 100
+#include <version>
 
 precision highp float;
 
+#include <compatibility>
+
 uniform sampler2D tex;
 
-varying vec2 tex_v;
+VARYING vec2 tex_v;
 
 void main() {
-  gl_FragColor = texture2D(tex, tex_v);
+  fragColor = TEXTURE2D(tex, tex_v);
 }

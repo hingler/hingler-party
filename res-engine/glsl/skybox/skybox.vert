@@ -1,10 +1,12 @@
-#version 100
+#include <version>
 
 precision highp float;
 
-attribute vec4 aPosition;
+#include <compatibility>
 
-varying vec3 texcoord;
+ATTRIB vec4 aPosition;
+
+VARYING vec3 texcoord;
 
 uniform mat4 uViewmat;
 uniform mat4 uPersmat;

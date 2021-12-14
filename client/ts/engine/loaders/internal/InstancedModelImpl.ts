@@ -1,7 +1,9 @@
 import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
+import { perf } from "../../../../../ts/performance";
 import { GameContext } from "../../GameContext";
 import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
+import { logRender } from "../../internal/performanceanalytics";
 import { InstancedMaterial } from "../../material/InstancedMaterial";
 import { InstancedModel } from "../../model/InstancedModel";
 import { AttributeType } from "../../model/Model";
@@ -69,7 +71,8 @@ export class InstancedModelImpl implements InstancedModel {
    * renders all currently stored instances to the screen.
    */
   flush(rc: RenderContext) {
-    if (this.instanceCount > 0) { 
+    const start = perf.now();
+    if (this.instanceCount > 0) {
       if (this.mat !== null) {
         // TODO: instead of just passing the instance count and the model,
         // pass the render context as well!
@@ -95,6 +98,8 @@ export class InstancedModelImpl implements InstancedModel {
         }
         
       }
+
+      
     }
     
     this.instanceCount = 0;
@@ -103,15 +108,22 @@ export class InstancedModelImpl implements InstancedModel {
     for (let attrib of this.enabledAttributes) {
       gl.disableVertexAttribArray(attrib);
     }
-
+    
     for (let record of this.instances.values()) {
       record.offset = 0;
+    }
+    
+    if (this.ctx.debugger) {
+      this.ctx.getGLContext().finish();
     }
 
     this.enabledAttributes = new Set();
     this.attributeToBuffer = new Map();
+    const end = perf.now();
+    let matname = (this.mat ? this.mat.constructor.name : "UnknownMaterial");
+    logRender(`InstancedModel:${matname}`, end - start);
   }
-
+  
   bindAttribute(at: AttributeType, location: number) {
     this.model.bindAttribute(at, location);
   }
@@ -132,7 +144,7 @@ export class InstancedModelImpl implements InstancedModel {
     let buf = this.instances.get(index);
     if (!buf) {
       buf = {
-        buf: new GLBufferImpl(this.ctx.getGLContext(), 32768), 
+        buf: new GLBufferImpl(this.ctx, 32768), 
         offset: 0
       };
 

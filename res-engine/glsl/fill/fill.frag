@@ -1,9 +1,9 @@
-#version 100
+#include <version>
 
 precision highp float;
 
 uniform vec4 col;
 
 void main() {
-  gl_FragColor = col;
+  fragColor = col;
 }

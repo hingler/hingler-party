@@ -161,7 +161,7 @@ export class ShaderProgramBuilder {
   private async createShaderFromFile_(shaderPath: string, shaderType: number) : Promise<WebGLShader> {
     const gl = this.ctx.getGLContext();
     let shader = gl.createShader(shaderType);
-    let contents = await this.fileParser.parseShaderFile(shaderPath);
+    let contents = await this.fileParser.parseShaderFile(shaderPath, (shaderType === gl.VERTEX_SHADER));
 
     gl.shaderSource(shader, contents);
     gl.compileShader(shader);

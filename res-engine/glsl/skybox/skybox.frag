@@ -1,17 +1,21 @@
-#version 100
+#include <version>
 
 // todo: need a workaround for this
 // works perfectly if we have to fall back
 
 precision highp float;
 
-varying vec3 texcoord;
+#include <compatibility>
+
+VARYING vec3 texcoord;
 uniform samplerCube uCubemap;
 uniform float skyboxIntensity;
 
 uniform samplerCube uCubemap_l;
 uniform float skyboxIntensity_l;
 
+OUTPUT_FRAGCOLOR;
+
 void main() {
-  gl_FragColor = vec4(pow(textureCube(uCubemap, texcoord).rgb * skyboxIntensity + textureCube(uCubemap_l, texcoord).rgb * skyboxIntensity_l, vec3(1.0 / 2.2)), 1.0);
+  fragColor = vec4(pow(TEXTURECUBE(uCubemap, texcoord).rgb * skyboxIntensity + TEXTURECUBE(uCubemap_l, texcoord).rgb * skyboxIntensity_l, vec3(1.0 / 2.2)), 1.0);
 }
