@@ -2,7 +2,7 @@ import { perf } from "../../../../ts/performance";
 import { GameCamera } from "../object/game/GameCamera";
 import { GameObject } from "../object/game/GameObject";
 import { Scene } from "../object/scene/Scene";
-import { GameContext } from "../GameContext";
+import { EXT_disjoint_timer_query_webgl2, GameContext } from "../GameContext";
 import { FileLoader } from "../loaders/FileLoader";
 import { GLTFLoaderImpl } from "../loaders/internal/GLTFLoaderImpl";
 import { Renderer } from "./Renderer";
@@ -11,6 +11,7 @@ import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
+import { SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -28,10 +29,11 @@ const WEBGL2_NATIVE_EXTENSIONS = [
   "EXT_shader_texture_lod",
   "WEBGL_draw_buffers",
   "OES_fbo_render_mipmap"
-]
+];
 
 export interface ContextOptions {
   useServiceWorker?: boolean;
+  forceWebGL1?: boolean;
 }
 
 /**
@@ -67,6 +69,8 @@ export class EngineContext implements GameContext {
 
   private updateTime: number;
 
+  private gpuTimer: SharedGPUTimer;
+
   private getGLProxy(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     gl = new Proxy(gl, {
       get: function(target, prop, _) {
@@ -101,45 +105,61 @@ export class EngineContext implements GameContext {
     this.debugger = true;
 
     
+
+    
     // copy over env???
     // nah we'll standardize its initialization
+    
+    
+    this.swapContext = null;
+    this.swapObject = null;
+    
+    this.passOffset = 0;
+    
+    
+    
+    this.shaderCache = new ShaderEnv();
+    
+    
     if (init instanceof EngineContext) {
       this.canvas = init.canvas;
       this.glContext = init.glContext;
       this.debug = init.debug;
       this.webglVersion = init.webglVersion;
+      this.extensionList = init.extensionList;
+      this.gpuTimer = init.gpuTimer;
     } else {
       this.canvas = init;
-      
-      const gl2 = init.getContext("webgl2");
-      if (gl2 && gl2 instanceof WebGL2RenderingContext) {
-        this.glContext = gl2;
-        this.webglVersion = 2;
-      } else {
+      this.extensionList = new Map();
+      if (opts && opts.forceWebGL1) {
         this.glContext = init.getContext("webgl");
         this.webglVersion = 1;
+      } else {
+        const gl2 = init.getContext("webgl2");
+        if (gl2 && gl2 instanceof WebGL2RenderingContext) {
+          this.glContext = gl2;
+          this.webglVersion = 2;
+          
+          const timing = this.getGLExtension("EXT_disjoint_timer_query_webgl2") as EXT_disjoint_timer_query_webgl2;
+          if (timing !== null) {
+            this.gpuTimer = new SharedGPUTimer(gl2, timing);
+          }
+        } else {
+          this.glContext = init.getContext("webgl");
+          this.webglVersion = 1;
+        }
       }
-
+      
+      
       console.log(`Using WebGL Version ${this.webglVersion}`);
-
+      
       this.debug = new DebugDisplay(this);
     }
-
+    
     this.gltfLoader = new GLTFLoaderImpl(this.loader, this);
-
-    this.swapContext = null;
-    this.swapObject = null;
-
-    this.passOffset = 0;
-
-    this.extensionList = new Map();
-
-    this.shaderCache = new ShaderEnv();
-
     this.updateScreenDims();
-
+    
     this.windowListener = this.updateScreenDims.bind(this);
-
     // will this event listener stick around forever?
     window.addEventListener("resize", this.windowListener);
     this.mobile = mobileCheck();
@@ -178,6 +198,10 @@ export class EngineContext implements GameContext {
     this.dims = [this.canvas.clientWidth, this.canvas.clientHeight];
   }
 
+  getGPUTimer() {
+    return this.gpuTimer;
+  }
+
   // TODO: add method to switch scenes.
 
   /**
@@ -207,17 +231,21 @@ export class EngineContext implements GameContext {
 
   getGLExtension<T>(name: string) {
     if (this.extensionList.has(name)) {
-      return this.extensionList.get(name) as T;
+      const res = this.extensionList.get(name) as T;
+      return res;
     }
 
-    if (WEBGL2_NATIVE_EXTENSIONS.indexOf(name) !== -1) {
+    if (this.webglVersion === 2 && WEBGL2_NATIVE_EXTENSIONS.indexOf(name) !== -1) {
       // native support -- return a placeholder
-      return true;
+      // TODO: bundle in something to indicate that the extension is native
+      return {} as T;
     }
 
     const ext = this.glContext.getExtension(name);
     if (ext !== null) {
       this.extensionList.set(name, ext);
+      console.log("loaded extension " + name);
+      console.log(ext);
       return ext as T;
     }
 
@@ -271,14 +299,14 @@ export class EngineContext implements GameContext {
   }
 
   // we should kickstart the engine, and then forget this object
-  deployContext() {
+  async deployContext() {
     // perform our gl setup here
     this.glSetup();
-    this.step();
+    await this.step();
     requestAnimationFrame(this.computeFrame.bind(this));
   }
 
-  private computeFrame() {
+  private async computeFrame() {
     this.drawFrame();
     // put swap code here
     if (this.swapObject !== null && this.swapObject.canSwap()) {
@@ -286,12 +314,12 @@ export class EngineContext implements GameContext {
       this.swapContext.updateDelta();
       requestAnimationFrame(this.swapContext.deployContext.bind(this.swapContext));
     } else {
-      this.step();
+      await this.step();
       requestAnimationFrame(this.computeFrame.bind(this));
     }
   }
 
-  step() {
+  async step() {
     clearPerf();
     this.updateDelta();
     if (this.scene && this.scene.isInitialized()) {
@@ -299,18 +327,20 @@ export class EngineContext implements GameContext {
       this.scene.getGameObjectRoot().updateChildren();
       const updateEnd = perf.now();
       this.updateTime = updateEnd - updateStart;
-      this.renderer.renderScene();
+      await this.renderer.renderScene();
       this.debug.updateTime = this.updateTime;
     }
-
-
+    
+    this.gpuTimer.invalidateAll();
+    
     const renderTiming = this.renderer.getDebugTiming();
     this.debug.shadowTime = renderTiming.shadowTime;
     this.debug.finalTime = renderTiming.finalTime;
     this.debug.postTime = renderTiming.postTime;
     this.debug.totalTime = renderTiming.totalTime;
-
+    
     this.debug.update();
+
   }
 
   drawFrame() {

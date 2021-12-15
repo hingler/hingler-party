@@ -45,7 +45,7 @@ vec3 grad(float hash) {
     return grad;
 }
 
-vec3 round(vec3 X) {
+vec3 roundVec(vec3 X) {
     return floor(X + 0.5);
 }
 
@@ -53,7 +53,7 @@ vec3 round(vec3 X) {
 vec4 openSimplex2Base(vec3 X) {
     
     // First half-lattice, closest edge
-    vec3 v1 = round(X);
+    vec3 v1 = roundVec(X);
     vec3 d1 = X - v1;
     vec3 score1 = abs(d1);
     vec3 dir1 = step(max(score1.yzx, score1.zxy), score1);
@@ -62,7 +62,7 @@ vec4 openSimplex2Base(vec3 X) {
     
     // Second half-lattice, closest edge
     vec3 X2 = X + 144.5;
-    vec3 v3 = round(X2);
+    vec3 v3 = roundVec(X2);
     vec3 d3 = X2 - v3;
     vec3 score2 = abs(d3);
     vec3 dir2 = step(max(score2.yzx, score2.zxy), score2);

@@ -71,7 +71,6 @@ export class InstancedModelImpl implements InstancedModel {
    * renders all currently stored instances to the screen.
    */
   flush(rc: RenderContext) {
-    const start = perf.now();
     if (this.instanceCount > 0) {
       if (this.mat !== null) {
         // TODO: instead of just passing the instance count and the model,
@@ -112,16 +111,11 @@ export class InstancedModelImpl implements InstancedModel {
     for (let record of this.instances.values()) {
       record.offset = 0;
     }
-    
-    if (this.ctx.debugger) {
-      this.ctx.getGLContext().finish();
-    }
 
     this.enabledAttributes = new Set();
     this.attributeToBuffer = new Map();
-    const end = perf.now();
     let matname = (this.mat ? this.mat.constructor.name : "UnknownMaterial");
-    logRender(`InstancedModel:${matname}`, end - start);
+    // logRender(`InstancedModel:${matname}`, end - start);
   }
   
   bindAttribute(at: AttributeType, location: number) {
