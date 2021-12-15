@@ -13,7 +13,7 @@ uniform vec3 up;
 
 uniform sampler2D tex;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   vec3 skyCoord = normalize(center + (right * vCoord.x) + (up * vCoord.y));

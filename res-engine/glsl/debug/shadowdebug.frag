@@ -10,7 +10,7 @@ uniform sampler2D tex;
 uniform float near;
 uniform float far;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   float z = TEXTURE2D(tex, vCoord).r;

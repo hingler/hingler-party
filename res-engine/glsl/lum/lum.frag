@@ -8,7 +8,7 @@ precision highp float;
 VARYING vec2 vCoord;
 uniform sampler2D disp;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   // jej https://en.wikipedia.org/wiki/Relative_luminance

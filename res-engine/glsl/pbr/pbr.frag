@@ -70,7 +70,7 @@ uniform float specSize_l;
 uniform float skyboxIntensity_l;
 uniform int useIrridance_l;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;

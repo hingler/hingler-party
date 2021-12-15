@@ -31,7 +31,7 @@ uniform float roughness;
 
 uniform vec2 sourceDestRes;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   // fwd

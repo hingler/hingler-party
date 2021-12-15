@@ -12,7 +12,7 @@
   #define TEXTURE2D texture
   #define TEXTURECUBE texture
   #define TEXTURECUBELOD textureLod
-  #define OUTPUT_FRAGCOLOR out vec4 fragColor
+  #define OUTPUT_FRAGCOLOR out vec4 fragColor;
 #else
   #define VARYING varying
   #define ATTRIB attribute

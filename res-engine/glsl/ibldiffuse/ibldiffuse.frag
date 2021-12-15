@@ -21,7 +21,7 @@ uniform vec3 center;
 
 uniform samplerCube skybox;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 // calculate coord from up+right+center
 // reuse up to get right for tangent space

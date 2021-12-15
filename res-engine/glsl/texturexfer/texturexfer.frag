@@ -8,7 +8,7 @@ VARYING vec2 vCoord;
 
 uniform sampler2D tex;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   vec3 res = TEXTURE2D(tex, vCoord).rgb;

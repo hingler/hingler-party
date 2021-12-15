@@ -14,7 +14,7 @@ uniform float skyboxIntensity;
 uniform samplerCube uCubemap_l;
 uniform float skyboxIntensity_l;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 void main() {
   fragColor = vec4(pow(TEXTURECUBE(uCubemap, texcoord).rgb * skyboxIntensity + TEXTURECUBE(uCubemap_l, texcoord).rgb * skyboxIntensity_l, vec3(1.0 / 2.2)), 1.0);

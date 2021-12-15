@@ -23,7 +23,7 @@ VARYING vec2 vCoord;
 
 #define SAMPLE_COUNT 1024
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 vec2 integrateBRDF(float NdotV, float roughness) {
   vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0.0, NdotV);

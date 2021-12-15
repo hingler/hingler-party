@@ -9,7 +9,7 @@ uniform sampler2D col;
 uniform sampler2D lum;
 uniform vec2 resolution;
 
-OUTPUT_FRAGCOLOR;
+OUTPUT_FRAGCOLOR
 
 // still got the old fxaa
 // probably implement a bit differently
