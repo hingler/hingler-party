@@ -33,6 +33,9 @@ export interface DrawOnlyModel {
  * Probably wrap this class and not import -- draw will use GLTF material w params.
  */
 export abstract class Model implements DrawOnlyModel {
+
+  abstract readonly name: string;
+
   /**
    * Binds an attribute to a specific location.
    * @param at - The attribute type we are binding.

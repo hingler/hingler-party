@@ -351,7 +351,6 @@ export class EngineContext implements GameContext {
         this.glContext.bindFramebuffer(this.glContext.FRAMEBUFFER, null);
         this.glContext.clear(this.glContext.COLOR_BUFFER_BIT | this.glContext.DEPTH_BUFFER_BIT);
         disp.drawTexture();
-        this.glContext.finish();
       }
     }
   }

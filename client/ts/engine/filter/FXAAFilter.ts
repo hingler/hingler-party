@@ -3,6 +3,7 @@ import { Framebuffer } from "../gl/Framebuffer";
 import { ColorFramebuffer } from "../gl/internal/ColorFramebuffer";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../internal/getEnginePath";
+import { RenderType } from "../internal/performanceanalytics";
 import { PostProcessingFilter } from "../material/PostProcessingFilter";
 import { RenderContext } from "../render/RenderContext";
 
@@ -69,6 +70,8 @@ export class FXAAFilter extends PostProcessingFilter {
   }
 
   runFilter(src: Framebuffer, dst: Framebuffer, rc: RenderContext) {
+    const timer = this.getContext().getGPUTimer();
+    const id = timer.startQuery();
     if (this.aaShader !== null && this.lumaShader !== null) {
       const gl = this.getContext().getGLContext();
       
@@ -104,5 +107,6 @@ export class FXAAFilter extends PostProcessingFilter {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       gl.disableVertexAttribArray(this.locs.aPosition);
     }
+    timer.stopQueryAndLog(id, "FXAAFilter", RenderType.POST);
   }
 }

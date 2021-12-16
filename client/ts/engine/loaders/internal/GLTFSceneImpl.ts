@@ -61,6 +61,16 @@ export class GLTFSceneImpl implements GLTFScene {
     }
 
     let res = new ModelImpl(models);
+
+    if (typeof name === "string") {
+      // probably the node name
+      res.name = name;
+    } else {
+      res.name = this.getMeshName(meshID);
+    }
+
+    console.log(name);
+
     return res;
 
   }
@@ -268,23 +278,41 @@ export class GLTFSceneImpl implements GLTFScene {
     return meshID;
   }
 
+  private getMeshName(meshID: number) {
+    return this.data.meshes[meshID].name;
+  }
+
   getPBRModel(model: string | number) {
     let meshID = this.lookupMeshID(model); 
 
     let [models, materials] = [this.getInstancesAsModels(meshID), this.getPBRMaterials(meshID)];
+
     let res = new PBRModelImpl(this.ctx, models, materials);
+    if (typeof model === "string") {
+      // probably the node name
+      res.setName(model);
+    } else {
+      res.setName(this.getMeshName(meshID));
+    }
     return res;
   }
 
 
-  getPBRInstanceFactory(model: string | number) {
+  getPBRInstanceFactory(init: string | number) {
     // need multiple instances and materials
-    let meshID = this.lookupMeshID(model);
+    let meshID = this.lookupMeshID(init);
     let [models, materials] = [this.getInstancesAsModels(meshID), this.getPBRMaterials(meshID)];
 
     // queue these up under the meshID
     let modelsInstanced = models.map((model) => {
       let inst = new InstancedModelImpl(this.ctx, model);
+      if (typeof init === "string") {
+        // probably the node name
+        model.name = init;
+      } else {
+        model.name = (this.getMeshName(meshID));
+      }
+      
       this.ctx.getGLTFLoader().registerInstancedModel(inst);
       return inst; 
     });

@@ -1,6 +1,7 @@
 import { PingQueue } from "../../../../ts/util/PingQueue";
 import { EngineContext } from "./EngineContext";
 import { getEnginePath } from "./getEnginePath";
+import { getRenderPerf, RenderType } from "./performanceanalytics";
 import { RenderPerformanceInfo } from "./Renderer";
 
 function text(s: string) {
@@ -15,7 +16,8 @@ function br() {
   return document.createElement("br");
 }
 
-const DEBUG_QUEUE_SIZE = 64;
+const MAX_NUMBER_BARS = 24;
+const DEBUG_QUEUE_SIZE = 128;
 
 /**
  * Little class for displaying debug information on the screen :D
@@ -42,6 +44,9 @@ export class DebugDisplay {
   finalTime: number;
   postTime: number;
   totalTime: number;
+
+  private renderbarsContainer: HTMLElement;
+  private renderBars: Array<HTMLElement>;
 
   constructor(ctx: EngineContext) {
     this.ctx = ctx;
@@ -89,7 +94,13 @@ export class DebugDisplay {
 
     this.frame.appendChild(general);
     this.frame.appendChild(renderdata);
+
+    const renderBars = document.createElement("div");
+    renderBars.classList.add("renderbars");
+    this.frame.appendChild(renderBars);
     document.body.appendChild(this.frame);
+    this.renderbarsContainer = renderBars;
+    this.renderBars = [];
 
     this.updateTime = 0;
     this.shadowTime = 0;
@@ -98,9 +109,46 @@ export class DebugDisplay {
     this.totalTime = 0;
   }
 
+  private generateRenderBar() {
+    const bar = document.createElement("div");
+    bar.classList.add("bar");
+    return bar;
+  }
+
   update() {
-    if (this.updateTime === undefined) {
-      console.log(this);
+    if (!this.ctx.debugger) {
+      return;
+    }
+
+    const perf = getRenderPerf();
+    const len = Math.min(perf.length, MAX_NUMBER_BARS);
+    while (this.renderBars.length < len) {
+      const bar = this.generateRenderBar();
+      this.renderbarsContainer.appendChild(bar);
+      this.renderBars.push(bar);
+    }
+
+    let max = 0;
+    for (let val of perf) {
+      max = Math.max(val[1], max);
+    }
+
+    for (let i = 0; i < len; i++) {
+      const res = perf.get(i);
+      this.renderBars[i].style.width = (res[1] / max) * 100 + "%";
+      const name = res[0];
+      const ind = name.indexOf(":");
+      const type = name.substring(0, ind);
+      this.renderBars[i].classList.remove(RenderType.FINAL, RenderType.POST, RenderType.SHADOW, RenderType.UNCATEGORIZED);
+      this.renderBars[i].classList.add(type);
+      this.renderBars[i].textContent = `${res[0]} - ${res[1].toFixed(3)}MS`;
+
+      
+      this.renderBars[i].classList.remove("hidden");
+    }
+
+    for (let i = len; i < this.renderBars.length; i++) {
+      this.renderBars[i].classList.add("hidden");
     }
 
     this.updateQueue.enqueue(this.updateTime);

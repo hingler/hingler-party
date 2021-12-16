@@ -50,8 +50,9 @@ export class GameObject extends EngineObject {
 
   // renders itself and its children
   protected renderfunc(rc: RenderContext) {
+    const timer = this.getContext().getGPUTimer();
     this.renderMaterial(rc);
-
+    // overtime should round out :)
     for (let child of this.children) {
       child.renderfunc(rc);
     }

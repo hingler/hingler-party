@@ -25,6 +25,7 @@ import { Scene } from "../object/scene/Scene";
 import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { DebugDisplay } from "./DebugDisplay";
 import { EngineContext } from "./EngineContext";
+import { RenderType } from "./performanceanalytics";
 
 export class RenderPerformanceInfo {
   readonly shadowTime: number;
@@ -131,105 +132,7 @@ export class Renderer {
     }
   }
 
-  private gl2() {
-    if (this.ctx.webglVersion === 2) {
-      return this.gl as WebGL2RenderingContext;
-    }
-    return null;
-  }
-
-  // creates a query object with the gl context if avail, begins it
-  private beginQuery() {
-    if (this.queryExt) {
-      const gl = this.gl2();
-
-      const query = gl.createQuery();
-      gl.beginQuery(this.queryExt.TIME_ELAPSED_EXT, query);
-      return query;
-    }
-
-    return null;
-  }
-
-  // ends the query
-  // we can just return the query object, or we could return a promise which eventually resolves
-  // promise might take a while :(
-  private endQuery(query: WebGLQuery, queue: PingQueue) {
-    if (this.queryExt) {
-      const ext = this.queryExt;
-      const gl = this.gl2();
-      gl.endQuery(this.queryExt.TIME_ELAPSED_EXT);
-      const prom = new Promise<number>((res, rej) => {
-        // thanks greggman :D
-        function checkStatus() {
-          const avail = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
-          const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
-
-          if (avail && !disjoint) {
-            res(gl.getQueryParameter(query, gl.QUERY_RESULT));
-          } else {
-            setTimeout(checkStatus)
-          }
-        }
-
-        setTimeout(checkStatus);
-      });
-
-      prom.then((val) => {
-        queue.enqueue(val);
-      });
-    }
-
-
-    return Promise.resolve();
-  }
-
-  private checkQuery(query: WebGLQuery) {
-    if (this.queryExt) {
-      const gl = this.gl2();
-
-      const avail = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
-      const disjoint = gl.getParameter(this.queryExt.GPU_DISJOINT_EXT);
-
-      if (avail && !disjoint) {
-        return gl.getQueryParameter(query, gl.QUERY_RESULT);
-      }
-    }
-
-    return -1;
-  }
-
-  private async waitSync() {
-    if (this.ctx.webglVersion === 2) {
-      const gl = this.gl as WebGL2RenderingContext;
-      let res: number;
-      const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-      gl.flush();
-
-      let good : (value: unknown) => void;
-      let bad : (value: unknown) => void;
-      const prom = new Promise((resolve, reject) => { good = resolve; bad = reject; });
-
-      function callback() {
-        let res = gl.clientWaitSync(sync, 0, 0);
-        if (res === gl.TIMEOUT_EXPIRED) {
-          setTimeout(callback, 0);
-        } else if (res === gl.WAIT_FAILED) {
-          bad(res);
-        } else {
-          good(res);
-        }
-      }
-
-      setTimeout(callback, 0);
-      
-      await prom;
-    } else {
-      this.gl.finish();
-    }
-  }
-
-  async renderScene() {
+  renderScene() {
     const timer = this.ctx.getGPUTimer();
     if (!this.scene.isInitialized()) {
       console.info("Render skipped due to uninitialized scene...");
@@ -275,10 +178,6 @@ export class Renderer {
       
       spotLightInfo.push(new SpotLightStruct(this.ctx, light));
     }
-
-    // if (this.ctx.debugger) {
-    //   await this.waitSync();
-    // }
 
     const shadowProm = timer.stopQuery(shadowStart);
 
@@ -373,15 +272,16 @@ export class Renderer {
     }
 
     // draw skybox
+
+    const skyboxid = timer.startQuery();
+
     this.gl.disable(gl.CULL_FACE);
     this.skyboxMat.skyboxes = skyboxList;
     this.skyboxMat.persp = info.perspectiveMatrix;
     this.skyboxMat.view = info.viewMatrix;
     this.skyboxMat.drawMaterial(this.cube);
 
-    // if (this.ctx.debugger) {
-    //   await this.waitSync();
-    // }
+    timer.stopQueryAndLog(skyboxid, "SkyboxMaterial", RenderType.FINAL);
 
     const finalProm = timer.stopQuery(finalStart);
     const postStart = timer.startQuery();
@@ -406,17 +306,11 @@ export class Renderer {
       usePrimaryAsSource = !usePrimaryAsSource;
     }
 
-    // if (this.ctx.debugger) {
-    //   await this.waitSync();
-    // }
-
 
 
 
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.renderPasses.push(new ColorDisplay(this.ctx, dst.getColorTexture()));
-
-    this.gl.finish();
 
     const postProm = timer.stopQuery(postStart);
     const totalProm = timer.stopQuery(totalStart);

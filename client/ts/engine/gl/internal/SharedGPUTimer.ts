@@ -4,6 +4,7 @@
 
 import { IDGenerator } from "../../../../../ts/util/IDGenerator";
 import { EXT_disjoint_timer_query_webgl2 } from "../../GameContext";
+import { logRender, RenderType } from "../../internal/performanceanalytics";
 import { RingArray } from "./RingArray";
 
 let objCount : number = 0;
@@ -42,75 +43,90 @@ export class IntervalBlock implements Block {
   time: Promise<number>;
 };
 
+class QueryRecord {
+  query: WebGLQuery;
+  logDest: string;
+  resolve: (value: number) => void;
+  reject: (value: number) => void;
+}
+
 class QueryManager {
   gl: WebGL2RenderingContext;
   ext: EXT_disjoint_timer_query_webgl2;
 
   query: WebGLQuery;
+  queryList: Set<QueryRecord>;
+
+  // alternative: use a pool of timers!!!
 
   constructor(gl: WebGL2RenderingContext, ext: EXT_disjoint_timer_query_webgl2) {
     this.gl = gl;
     this.ext = ext;
     this.query = null;
+    this.queryList = new Set();
   }
 
-  private logerr(gl: WebGLRenderingContext) {
-    const e = gl.getError();
-    if (e !== gl.NO_ERROR) {
-      console.error(e);
-      debugger;
-    }
-  }
-
-  private genReadCallback(q: WebGLQuery) {
-    const query = q;
+  resolveQueryAsyncWorker() {
     const gl = this.gl;
     const ext = this.ext;
-    const that = this;
-    return new Promise<number>((res, rej) => {
-      function checkStatus() {
-        const avail = gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE);
-        that.logerr(gl);
-        const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
-        that.logerr(gl);
+    const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
+    for (let query of this.queryList) {
+      const q = query.query;
 
-        if (avail && !disjoint) {
-          const result = gl.getQueryParameter(query, gl.QUERY_RESULT);
-          that.logerr(gl);
-          gl.deleteQuery(query);
-          that.logerr(gl);
-          res(result);
-        } else if (disjoint) {
-          gl.deleteQuery(query);
-          that.logerr(gl);
-          rej(-1);
-        } else {
-          setTimeout(checkStatus);
-        }
+      if (disjoint) {
+        query.reject(-1);
       }
 
-      checkStatus();
-    });
+      const avail = gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE);
+
+      if (avail && !disjoint) {
+        const result = gl.getQueryParameter(q, gl.QUERY_RESULT);
+        query.resolve(result);
+      }
+      
+      if (avail || disjoint) {
+        gl.deleteQuery(q);
+        this.queryList.delete(query);
+      }
+    }
   }
 
   startQuery() {
     this.query = this.gl.createQuery();
-    this.gl.finish();
     this.gl.beginQuery(this.ext.TIME_ELAPSED_EXT, this.query);
-    this.gl.finish();
   }
 
   async stopQuery() {
-    this.gl.finish();
     this.gl.endQuery(this.ext.TIME_ELAPSED_EXT);
-    this.gl.finish();
     const q = this.query;
     this.query = null;
-    return this.genReadCallback(q);
+    return new Promise<number>((res, rej) => {
+      this.queryList.add({
+        query: q,
+        logDest: null,
+        resolve: res,
+        reject: rej
+      });
+    });
   }
 }
 
-// make a consistent interface out of this :(
+export interface PerformanceRecord {
+  // the interval which this will eventually populate
+  intervalId: number;
+
+  // the query itself
+  query: WebGLQuery;
+}
+
+// create a second gputimer!
+
+// swap the two around, check one after we run  the other :)
+// store all our queries in a big giant list
+
+// write a dummy for non-debug cases, and for unsupported cases
+// write the webgl1 version
+
 export class SharedGPUTimer {
   private blockList: RingArray<Block>;
   private gl: WebGL2RenderingContext;
@@ -124,52 +140,10 @@ export class SharedGPUTimer {
   constructor(gl: WebGL2RenderingContext, ext?: EXT_disjoint_timer_query_webgl2) {
     this.blockList = new RingArray(4096);
     this.gen = new IDGenerator();
+
     let extension = ext;
     this.word = new QueryManager(gl, ext);
     this.test = false;
-  }
-  
-  private logerr(gl: WebGLRenderingContext) {
-    const e = gl.getError();
-    if (e !== gl.NO_ERROR) {
-      console.error(e);
-      debugger;
-    }
-  }
-
-  cleanBlockList() {
-    // associate startblocks with their endblocks
-    // we can delete everything prior to the last startblock whose endblock is unresolved
-    
-    // block id -> index
-    const starts = new Map<number, number>();
-    // set of all queryids which have completed!
-    const completedQueries = new Set<number>();
-    for (let i = 0; i < this.blockList.length; i++) {
-      // store startblock indices -- additionally, map them to their endblocks
-      // go back through our startblocks in sequence, and find the first one with an unresolved (or nonexistent) end block
-      // dequeue everything up to that startblock :D
-      const block = this.blockList.get(i);
-      if (block.type === BlockType.START) {
-        starts.set((block as StartBlock).queryId, i);
-      } else if (block.type === BlockType.END) {
-        const end = block as EndBlock;
-        if (starts.has(end.queryId) && end.resolved) {
-          completedQueries.add(end.queryId);
-        }
-      }
-    }
-
-    let lastKeep = this.blockList.length;
-    for (let [queryId, index] of starts) {
-      if (!completedQueries.has(queryId)) {
-        lastKeep = Math.min(index, lastKeep);
-      }
-    }
-
-    for (let i = 0; i < lastKeep; i++) {
-      this.blockList.dequeue();
-    }
   }
 
   getLastBlockAsIntervalBlock() {
@@ -196,6 +170,9 @@ export class SharedGPUTimer {
 
     const id = this.gen.getNewID();
     const start = new StartBlock();
+
+    start.id = this.gen.getNewID();
+
     start.queryId = id;
     start.resolved = false;
     
@@ -269,6 +246,11 @@ export class SharedGPUTimer {
     return sumPromise;
   }
 
+  stopQueryAndLog(id: number, name: string, category?: RenderType) {
+    this.stopQuery(id)
+      .then(res => logRender(name, res / 1e6, category));
+  }
+
   invalidateAll() {
     // reset state -- called at the end of a frame
     if (this.test === true) {
@@ -277,7 +259,8 @@ export class SharedGPUTimer {
 
     this.test = false;
     this.blockList.clear();
-    // anything waiting to resolve, will still resolve!
-    // we just want to assume that a query doesn't hang over the start of a frame
+
+    // flush out our queue
+    this.word.resolveQueryAsyncWorker();
   }
 }
