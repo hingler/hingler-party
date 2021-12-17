@@ -11,7 +11,7 @@ import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
-import { SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -132,8 +132,7 @@ export class EngineContext implements GameContext {
       this.canvas = init;
       this.extensionList = new Map();
       if (opts && opts.forceWebGL1) {
-        this.glContext = init.getContext("webgl");
-        this.webglVersion = 1;
+        this.setupWebGL1(init);
       } else {
         const gl2 = init.getContext("webgl2");
         if (gl2 && gl2 instanceof WebGL2RenderingContext) {
@@ -142,11 +141,11 @@ export class EngineContext implements GameContext {
           
           const timing = this.getGLExtension("EXT_disjoint_timer_query_webgl2") as EXT_disjoint_timer_query_webgl2;
           if (timing !== null) {
-            this.gpuTimer = new SharedGPUTimer(gl2, timing);
+            const mgr = new QueryManagerWebGL2(gl2, timing);
+            this.gpuTimer = new SharedGPUTimer(mgr);
           }
         } else {
-          this.glContext = init.getContext("webgl");
-          this.webglVersion = 1;
+          this.setupWebGL1(init);
         }
       }
       
@@ -190,6 +189,11 @@ export class EngineContext implements GameContext {
     });
 
     this.setContextVar("SHADER_WEBGL_VERSION", this.webglVersion, {shaderInteger: true});
+  }
+
+  private setupWebGL1(init: HTMLCanvasElement) {
+    this.glContext = init.getContext("webgl");
+    this.webglVersion = 1;
   }
 
   private updateScreenDims() {

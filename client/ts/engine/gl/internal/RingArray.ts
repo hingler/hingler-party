@@ -23,12 +23,23 @@ export class RingArray<T> {
     this.elements[(this.offset + this.size++) % this.elements.length] = item;
   }
 
-  pop() {
+  pop() : T {
     if (this.size <= 0) {
       return undefined;
     }
 
     return this.elements[(this.offset + --this.size) % this.elements.length];
+  }
+
+  enqueue(item: T) {
+    if (this.size >= this.elements.length) {
+      throw Error("Exceeded Ringbuffer Capacity!");
+    }
+
+    // scoot back 1
+    this.offset = (this.offset + this.elements.length - 1) % this.elements.length;
+    this.size++;
+    this.elements[this.offset] = item;
   }
 
   dequeue() : T {
@@ -39,11 +50,19 @@ export class RingArray<T> {
   }
 
   get(ind: number) {
-    if (ind >= this.size) {
+    if (ind >= this.size || ind < 0) {
       return undefined;
     }
 
     return this.elements[(this.offset + ind) % this.elements.length];
+  }
+
+  set(ind: number, val: T) {
+    if (ind >= this.size || ind < 0) {
+      throw Error("Attempted to set value which is OOB");
+    }
+
+    this.elements[(this.offset + ind) % this.elements.length] = val;
   }
 
   clear() {

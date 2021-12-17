@@ -4,7 +4,7 @@
 
 import { IDGenerator } from "../../../../../ts/util/IDGenerator";
 import { EXT_disjoint_timer_query_webgl2 } from "../../GameContext";
-import { logRender, RenderType } from "../../internal/performanceanalytics";
+import { Category, logRender, RenderType } from "../../internal/performanceanalytics";
 import { RingArray } from "./RingArray";
 
 let objCount : number = 0;
@@ -50,7 +50,20 @@ class QueryRecord {
   reject: (value: number) => void;
 }
 
-class QueryManager {
+export interface QueryManager {
+  // attempts to match values to any waiting queries
+  flushQueries() : void;
+
+  // starts a new query
+  startQuery() : void;
+
+  /**
+   * Stops the last started query
+   */
+  stopQuery() : Promise<number>;
+}
+
+export class QueryManagerWebGL2 implements QueryManager {
   gl: WebGL2RenderingContext;
   ext: EXT_disjoint_timer_query_webgl2;
 
@@ -66,7 +79,7 @@ class QueryManager {
     this.queryList = new Set();
   }
 
-  resolveQueryAsyncWorker() {
+  flushQueries() {
     const gl = this.gl;
     const ext = this.ext;
     const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
@@ -119,30 +132,37 @@ export interface PerformanceRecord {
   query: WebGLQuery;
 }
 
-// create a second gputimer!
+export interface GPUTimer {
+  startQuery() : number;
+  stopQuery(id: number) : Promise<number>;
+  stopQueryAndLog(id: number, name: string, category?: RenderType) : void;
+}
 
-// swap the two around, check one after we run  the other :)
-// store all our queries in a big giant list
+export interface GPUTimerInternal extends GPUTimer {
+  invalidateAll() : void;
+}
 
-// write a dummy for non-debug cases, and for unsupported cases
-// write the webgl1 version
+// placeholder if extension is not avail
+export class DummyGPUTimer implements GPUTimerInternal {
+  startQuery() { return -1; }
+  stopQuery(_: number) { return Promise.resolve(0); }
+  stopQueryAndLog(_: number, __: string, ___?: RenderType) { /* nop */ }
+  invalidateAll() { /* nop */ }
+}
 
-export class SharedGPUTimer {
+// webgl2 gpu timer
+export class SharedGPUTimer implements GPUTimerInternal {
   private blockList: RingArray<Block>;
-  private gl: WebGL2RenderingContext;
-  private ext: EXT_disjoint_timer_query_webgl2;
   
   private gen: IDGenerator;
   
   private word: QueryManager;
   private test: boolean;
   
-  constructor(gl: WebGL2RenderingContext, ext?: EXT_disjoint_timer_query_webgl2) {
+  constructor(mgr: QueryManager) {
     this.blockList = new RingArray(4096);
     this.gen = new IDGenerator();
-
-    let extension = ext;
-    this.word = new QueryManager(gl, ext);
+    this.word = mgr;
     this.test = false;
   }
 
@@ -261,6 +281,6 @@ export class SharedGPUTimer {
     this.blockList.clear();
 
     // flush out our queue
-    this.word.resolveQueryAsyncWorker();
+    this.word.flushQueries();
   }
 }
