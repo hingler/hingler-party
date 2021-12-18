@@ -200,9 +200,18 @@ export class GLTFLoaderImpl implements GLTFLoader {
     let ac = data.accessors[accessor];
     let view = data.bufferViews[ac.bufferView];
     let buffer = buffers[view.buffer];
+    // convert this over to something which is just raw memory
+
+    // TODO: this whole bunch needs a reorganization
+    // the loader should turn files into arrbuffers
+    // the scene should bunch arrbuffers into models
+    // and a third component should turn those models into GL data
+
+    // for now i'll just test it in browser 😉
     return new GLAttributeImpl(buffer, view, ac);
   }
 
+  // convert this over to array buffers
   private readBinaryDataToBuffers(view: DataView, buffer: ArrayBuffer, initOffset: number, len: number) : Array<GLBuffer> {
     let buffers : Array<GLBuffer> = [];
     let chunkCount = 1;

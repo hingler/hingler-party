@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { ReadonlyVec3, vec3 } from "gl-matrix";
 
 // rudimentary interface for parametric curves
 export interface ParametricCurve {
@@ -20,7 +20,7 @@ export interface ParametricCurve {
    * @param up - if provided, specifies an up vector which is then used to calculate the normal.
    *             otherwise, the Y+ unit vector is used, or if the curve is facing upwards, the Z+ unit vector.
    */
-  getNormal(time: number, up?: vec3) : vec3;
+  getNormal(time: number, up?: ReadonlyVec3) : vec3;
 
   /**
    * Returns a control point on this curve.
@@ -38,4 +38,6 @@ export interface ParametricCurve {
   setControlPoint(point: number, val: vec3) : void;
 
   getControlPointCount() : number;
+
+  readonly arcLength: number;
 }
