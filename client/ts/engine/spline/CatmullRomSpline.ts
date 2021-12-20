@@ -103,11 +103,13 @@ export class CatmullRomSpline implements ParametricCurve {
     return vel;
   }
 
-  getNormal(time: number) {
+  getNormal(time: number, up?: vec3) {
     const timeMap = Math.max(Math.min(1, time), 0);
 
     let t = this.reparameterizeTime(timeMap * this.curveList.length);
-    const norm = this.getNormalNoLookup(t);
+    const norm = this.getNormalNoLookup(t, up);
+
+    vec3.normalize(norm, norm);
     return norm;
   }
 
@@ -250,6 +252,15 @@ export class CatmullRomSpline implements ParametricCurve {
     return ((cur - 1) * T_STEP) + ((lenTarget - tLow) / (tHigh - tLow)) * T_STEP;
   }
 
+  private getCurveIndexFromT(t: number) {
+    let sample = Math.floor(t);
+    if (sample >= this.curveList.length) {
+      sample--;
+    }
+
+    return sample;
+  }
+
   private getPointNoLookup(time: number) {
     if (this.curveList.length === 0) {
       if (this.initPoint === null) {
@@ -263,7 +274,7 @@ export class CatmullRomSpline implements ParametricCurve {
       return (this.initPoint);
     }
     
-    const curveIndex = Math.min(Math.floor(t), this.curveList.length - 1);
+    const curveIndex = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(curveIndex);
     return curve.getPosition(t - curveIndex);
   }
@@ -278,13 +289,17 @@ export class CatmullRomSpline implements ParametricCurve {
       return [0, 0, 0] as vec3;
     }
 
-    let t = Math.max(Math.min(time, 1), 0);
-    t *= this.curveList.length;
-    const curve = this.curveList.get(Math.floor(t));
-    return curve.getVelocity(t - Math.floor(t));
+    let t = Math.max(Math.min(time, this.curveList.length), 0);
+    if (this.curveList.length === 0) {
+      return [0, 0, 0] as vec3;
+    }
+
+    const curveIndex = this.getCurveIndexFromT(t);
+    const curve = this.curveList.get(curveIndex);
+    return curve.getVelocity(t - curveIndex);
   }
 
-  private getNormalNoLookup(time: number) {
+  private getNormalNoLookup(time: number, up?: vec3) {
     if (this.curveList.length === 0) {
       if (this.initPoint === null) {
         return null;
@@ -293,10 +308,14 @@ export class CatmullRomSpline implements ParametricCurve {
       return [0, 0, 0] as vec3;
     }
 
-    let t = Math.max(Math.min(time, 1), 0);
-    t *= this.curveList.length;
-    const curve = this.curveList.get(Math.floor(t));
-    return curve.getNormal(t - Math.floor(t));
+    let t = Math.max(Math.min(time, this.curveList.length), 0);
+    if (this.curveList.length === 0) {
+      return [0, 0, 0] as vec3;
+    }
+
+    const index = this.getCurveIndexFromT(t);
+    const curve = this.curveList.get(index);
+    return curve.getNormal(t - Math.floor(t), up);
   }
 
   // recalculates length cache upto and including end

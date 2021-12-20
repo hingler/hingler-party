@@ -1,18 +1,48 @@
 import { ReadonlyVec3, vec2, vec3 } from "gl-matrix";
 import { ParametricCurve } from "./ParametricCurve";
 
+const DEFAULT_STEP_COUNT = 200;
 
 export class BezierCurve implements ParametricCurve {
   private p0: vec3;
   private p1: vec3;
   private p2: vec3;
   private p3: vec3;
+
+  private timeSteps: number;
+  private lut: Array<number>;
   
   constructor(p0_x: number, p0_y: number, p0_z: number, p1_x: number, p1_y: number, p1_z: number, p2_x: number, p2_y: number, p2_z: number, p3_x: number, p3_y: number, p3_z: number) {
     this.p0 = [p0_x, p0_y, p0_z];
     this.p1 = [p1_x, p1_y, p1_z];
     this.p2 = [p2_x, p2_y, p2_z];
     this.p3 = [p3_x, p3_y, p3_z];
+
+    this.timeSteps = DEFAULT_STEP_COUNT;
+
+    this.createLUT();
+  }
+
+  private createLUT() {
+    // create look up table for bezier curve so that we get time independent sampling
+    this.lut = [];
+    const tStep = 1.0 / this.timeSteps;
+    let startVec = this.getPosition(0);
+    const temp = vec3.create();
+    for (let i = 0; i <= this.timeSteps; i++) {
+      const time = tStep * i;
+      const prev = (i > 0 ? this.lut[i - 1] : 0);
+      const end = this.getPosition(time);
+      const endDiff = vec3.copy(temp, end);
+      vec3.sub(endDiff, end, startVec);
+      const dist = vec3.length(endDiff);
+      this.lut.push(dist + prev);
+      startVec = end;
+    }
+  }
+
+  get arcLength() {
+    return this.lut[this.lut.length - 1];
   }
 
   getControlPoint(point: number) : vec3 {
@@ -27,6 +57,8 @@ export class BezierCurve implements ParametricCurve {
     if (point >= 0 && point < 4) {
       vec3.copy(this[`p${point}`], val);
     }
+
+    this.createLUT();
   }
 
   getPosition(time: number) : vec3 {
@@ -83,7 +115,7 @@ export class BezierCurve implements ParametricCurve {
     let upVec = up;
     if (up === undefined) {
       if (Math.abs(tangent[1]) > 0.999) {
-        upVec = vec3.fromValues(0, 0, 1);
+        upVec = vec3.fromValues(0, 0, -Math.sign(tangent[1]));
       } else {
         upVec = vec3.fromValues(0, 1, 0);
       }
@@ -93,6 +125,41 @@ export class BezierCurve implements ParametricCurve {
     vec3.cross(res, tangent, upVec);
 
     return res;
+  }
+
+  private reparameterizeTime(time: number) {
+    const t = Math.max(Math.min(1, time), 0);
+    const end = this.arcLength;
+    const desiredLength = t * end;
+    let cur = 0;
+    for (; cur < this.lut.length && this.lut[cur] <= desiredLength; cur++);
+
+    if (cur <= 0) {
+      return 0;
+    }
+
+    const stepSize = 1.0 / (this.lut.length - 1);
+    const tSub = (desiredLength - this.lut[cur - 1]) / (this.lut[cur] - this.lut[cur - 1]);
+    return stepSize * (cur - 1) + (tSub * stepSize);
+  }
+
+  // LUT FUNCTIONS - arc length reparameterization
+  // t should be equivalent to a fraction of the desired curve length
+
+  getPositionLut(time: number) {
+    return this.getPosition(this.reparameterizeTime(time));
+  }
+
+  getVelocityLut(time: number) {
+    return this.getVelocity(this.reparameterizeTime(time));
+  }
+
+  getTangentLut(time: number) {
+    return this.getTangent(this.reparameterizeTime(time));
+  }
+
+  getNormalLut(time: number, up?: vec3) {
+    return this.getNormal(this.reparameterizeTime(time), up);
   }
 
   static fromVec3(p0: vec3, p1: vec3, p2: vec3, p3: vec3) {
