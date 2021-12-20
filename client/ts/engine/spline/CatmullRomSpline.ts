@@ -3,12 +3,13 @@ import { RingArray } from "../gl/internal/RingArray";
 import { BezierCurve } from "./BezierCurve";
 import { ParametricCurve } from "./ParametricCurve";
 
-export class CatmullRomSpline implements ParametricCurve {
+export class CatmullRomSpline extends ParametricCurve {
   // list of all contained curves
   private curveList: RingArray<BezierCurve>;
 
   private initPoint: vec3;
   constructor() {
+    super();
     this.curveList = new RingArray<BezierCurve>(256);
     this.initPoint = null;
   }
@@ -49,6 +50,8 @@ export class CatmullRomSpline implements ParametricCurve {
       const newCurve = this.calculateSpline(p1, p2, p3, p3);
       this.curveList.push(newCurve);
     }
+
+    this.update();
   }
 
   get pointLength() {
@@ -112,8 +115,10 @@ export class CatmullRomSpline implements ParametricCurve {
       const p3 = secondCurve.getControlPoint(3);
       const newStart = this.calculateSpline(p0, p1, p2, p3);
       this.curveList.enqueue(newStart);
-    }
-    
+    }  
+
+    this.update();
+
     return lastCurve.getControlPoint(0);
   }
 
@@ -182,6 +187,8 @@ export class CatmullRomSpline implements ParametricCurve {
         }
       }
     }
+
+    this.update();
   }
 
   getControlPointCount() {

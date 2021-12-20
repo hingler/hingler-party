@@ -3,7 +3,7 @@ import { ParametricCurve } from "./ParametricCurve";
 
 const DEFAULT_STEP_COUNT = 200;
 
-export class BezierCurve implements ParametricCurve {
+export class BezierCurve extends ParametricCurve {
   private p0: vec3;
   private p1: vec3;
   private p2: vec3;
@@ -13,6 +13,7 @@ export class BezierCurve implements ParametricCurve {
   private lut: Array<number>;
   
   constructor(p0_x: number, p0_y: number, p0_z: number, p1_x: number, p1_y: number, p1_z: number, p2_x: number, p2_y: number, p2_z: number, p3_x: number, p3_y: number, p3_z: number) {
+    super();
     this.p0 = [p0_x, p0_y, p0_z];
     this.p1 = [p1_x, p1_y, p1_z];
     this.p2 = [p2_x, p2_y, p2_z];
@@ -59,6 +60,7 @@ export class BezierCurve implements ParametricCurve {
     }
 
     this.createLUT();
+    this.update();
   }
 
   getPosition(time: number) : vec3 {
@@ -169,5 +171,5 @@ export class BezierCurve implements ParametricCurve {
     return new BezierCurve(p0[0], p0[1], p0[2], p1[0], p1[1], p1[2], p2[0], p2[1], p2[2], p3[0], p3[1], p3[2]);
   }
 
-  getControlPointCount() { return 3; }
+  getControlPointCount() { return 4; }
 }

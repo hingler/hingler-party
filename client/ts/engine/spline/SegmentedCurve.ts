@@ -4,10 +4,11 @@ import { ParametricCurve } from "./ParametricCurve";
 /**
  * A path built out of several vertices :D
  */
-export class SegmentedCurve implements ParametricCurve {
+export class SegmentedCurve extends ParametricCurve {
   private vertexList : Array<vec3>;
   private pathLength : number;
   constructor(vertexList: Array<vec3>) {
+    super();
     this.vertexList = [];
     this.pathLength = 0;
     for (let i = 0; i < vertexList.length; i++) {
