@@ -136,11 +136,14 @@ export class BezierCurve implements ParametricCurve {
 
     if (cur <= 0) {
       return 0;
+    } else if (cur >= this.lut.length) {
+      cur--;
     }
 
     const stepSize = 1.0 / (this.lut.length - 1);
     const tSub = (desiredLength - this.lut[cur - 1]) / (this.lut[cur] - this.lut[cur - 1]);
-    return stepSize * (cur - 1) + (tSub * stepSize);
+    const tRes = stepSize * (cur - 1) + (tSub * stepSize);
+    return Math.max(Math.min(tRes, 1), 0);
   }
 
   // LUT FUNCTIONS - arc length reparameterization

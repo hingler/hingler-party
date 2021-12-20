@@ -3,25 +3,13 @@ import { RingArray } from "../gl/internal/RingArray";
 import { BezierCurve } from "./BezierCurve";
 import { ParametricCurve } from "./ParametricCurve";
 
-const STEPS_PER_CURVE = 200;
-const T_STEP = 1 / Math.round(STEPS_PER_CURVE);
-
 export class CatmullRomSpline implements ParametricCurve {
   // list of all contained curves
   private curveList: RingArray<BezierCurve>;
 
-  // stores the estimated length of the spline at a given point in time
-  // when polling for a time, t:
-  // multiply length by t
-  // interpolate by two closest points to target length, linearly, and return that
-  // private, raw interpolation, and a public one which sugarcoats the results
-
   private initPoint: vec3;
-
-  private lenMap: Array<number>;
   constructor() {
     this.curveList = new RingArray<BezierCurve>(256);
-    this.lenMap = [];
     this.initPoint = null;
   }
 
@@ -37,7 +25,6 @@ export class CatmullRomSpline implements ParametricCurve {
         this.initPoint = pt;
       } else {
         this.curveList.push(this.calculateSpline(this.initPoint, this.initPoint, pt, pt));
-        this.recalculateLengthCache();
       }
     } else {
       const lastCurve = this.curveList.pop();
@@ -61,21 +48,7 @@ export class CatmullRomSpline implements ParametricCurve {
 
       const newCurve = this.calculateSpline(p1, p2, p3, p3);
       this.curveList.push(newCurve);
-
-      // recalculate our cache
-
-      this.recalculateLengthCache(this.curveList.length - 2);
     }
-    // if its the second point, create a curve from the first two points
-
-    // otherwise:
-    //  - pop the last curve in the curvelist
-    //  - get the curve before that
-    //  - recalculate the last curve, using our new point
-    //  - push it back
-    //  - calculate this new curve
-    //  - push it on as well
-    //  - repopulate our length map once more, starting from the first query on the spline we just pushed back
   }
 
   get pointLength() {
@@ -83,7 +56,12 @@ export class CatmullRomSpline implements ParametricCurve {
   }
 
   get arcLength() {
-    return this.lenMap[this.lenMap.length - 1];
+    let res = 0;
+    for (let i = 0; i < this.curveList.length; i++) {
+      res += this.curveList.get(i).arcLength;
+    }
+
+    return res;
   }
 
   getPosition(time: number) {
@@ -134,14 +112,6 @@ export class CatmullRomSpline implements ParametricCurve {
       const p3 = secondCurve.getControlPoint(3);
       const newStart = this.calculateSpline(p0, p1, p2, p3);
       this.curveList.enqueue(newStart);
-      this.lenMap = this.lenMap.slice(STEPS_PER_CURVE);
-      const offset = this.lenMap[0];
-      for (let i = 0; i < this.lenMap.length; i++) {
-        this.lenMap[i] -= offset;
-      }
-      
-      this.recalculateLengthCache(0, 1);
-      // for the rest of our curves, we use the same points, but we want to adjust their start points
     }
     
     return lastCurve.getControlPoint(0);
@@ -210,14 +180,6 @@ export class CatmullRomSpline implements ParametricCurve {
           const frontCurve = this.calculateSpline(p_0, p_1, p_2, p_3);
           this.curveList.set(point + 1, frontCurve);
         }
-
-        // last step: update the cache!
-        // side note: the whole circuit gets shorter!
-        // optimization: grab the last affected point by a recache, compare its old value
-        // to the value after the recache
-
-        // offset every successive point by that delta!
-        this.recalculateLengthCache();
       }
     }
   }
@@ -230,26 +192,28 @@ export class CatmullRomSpline implements ParametricCurve {
     return this.curveList.length + 1;
   }
 
+  // returns t on range (0, curvelist.length)
   private reparameterizeTime(time: number) {
-    let t = Math.max(Math.min(this.curveList.length, time), 0);
-    const curveSize = this.lenMap[this.lenMap.length - 1];
-
-    // figure out the estimated length of our curve
-    let lenTarget = ((t / this.curveList.length) * curveSize);
-    let cur = 0;
-
-    // find the first point in our length cache greater than target
-    for (; cur < this.lenMap.length && this.lenMap[cur] <= lenTarget; cur++);
-
-    if (cur === this.lenMap.length) {
-      // t end
-      return this.curveList.length;
-    }
+    const desiredLength = (time / this.curveList.length) * this.arcLength;
     
-    const tLow = this.lenMap[(cur - 1)];
-    const tHigh = this.lenMap[cur];
-    // inverse lerp to get t from low to high, multiply by step size and add
-    return ((cur - 1) * T_STEP) + ((lenTarget - tLow) / (tHigh - tLow)) * T_STEP;
+    let cur = 0;
+    let curLen = 0;
+    for (; cur < this.curveList.length && desiredLength >= curLen; cur++) {
+      curLen += this.curveList.get(cur).arcLength; 
+    }
+
+    if (cur === 0) {
+      return 0;
+    }
+
+    // somewhere along curveList[cur - 1].
+    cur--;
+    const curve = this.curveList.get(cur);
+    // roll curLen back a curve
+    curLen -= curve.arcLength;
+    const subT = (desiredLength - curLen) / curve.arcLength;
+
+    return cur + subT;
   }
 
   private getCurveIndexFromT(t: number) {
@@ -276,7 +240,7 @@ export class CatmullRomSpline implements ParametricCurve {
     
     const curveIndex = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(curveIndex);
-    return curve.getPosition(t - curveIndex);
+    return curve.getPositionLut(t - curveIndex);
   }
 
   private getVelocityNoLookup(time: number) {
@@ -296,7 +260,7 @@ export class CatmullRomSpline implements ParametricCurve {
 
     const curveIndex = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(curveIndex);
-    return curve.getVelocity(t - curveIndex);
+    return curve.getVelocityLut(t - curveIndex);
   }
 
   private getNormalNoLookup(time: number, up?: vec3) {
@@ -315,29 +279,7 @@ export class CatmullRomSpline implements ParametricCurve {
 
     const index = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(index);
-    return curve.getNormal(t - Math.floor(t), up);
-  }
-
-  // recalculates length cache upto and including end
-  private recalculateLengthCache(start?: number, end?: number) {
-    // purge all t values equal to, or greater than, start point
-    let t = Math.max(Math.min(this.curveList.length, (start !== undefined ? start : 0)), 0);
-    // avoid rounding issues
-    const endT = (end !== undefined ? end : this.curveList.length) - (T_STEP / 2);
-    let ind = Math.round(t / T_STEP);
-    let startVec: vec3 = this.getPointNoLookup((ind - 1) * T_STEP);
-    while (t <= endT) {
-      t = (ind * T_STEP);
-      const last = (ind > 0 ? this.lenMap[ind - 1] : 0);
-      const end = this.getPointNoLookup(t);
-      const endDiff = vec3.fromValues(end[0], end[1], end[2]);
-      // TODO: halve computations :D
-      // end = end - start
-      vec3.sub(endDiff, end, startVec);
-      const dist = vec3.length(endDiff);
-      this.lenMap[ind++] = dist + last;
-      startVec = end;
-    }
+    return curve.getNormalLut(t - Math.floor(t), up);
   }
 
   // p0, p1, p2, p3

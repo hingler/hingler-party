@@ -115,9 +115,13 @@ export class DebugCurve extends GameObject {
       vec3.sub(cross, cross, vec3.scale(temp, normal, vec3.dot(cross, normal)));
       // modify cross to reduce overlap
       vec3.normalize(cross, cross);
+      vec3.copy(crossOld, cross);
+      vec3.copy(normalOld, normal);
+
+      vec3.scale(cross, cross, 0.2);
+      vec3.scale(normal, normal, 0.2);
 
       const origin = curve.getPosition(tStep * i);
-      console.log(origin);
       vec3.add(temp, origin, cross);
       positionBuffer.setFloatArray(cur, temp, true);
       vec3.add(temp, origin, normal);
@@ -128,9 +132,6 @@ export class DebugCurve extends GameObject {
       positionBuffer.setFloatArray(cur + 36, temp, true);
 
       cur += 48;
-      
-      vec3.copy(crossOld, cross);
-      vec3.copy(normalOld, normal);
       
       if (i >= 1) {
         for (let j = 0; j < 4; j++) {
