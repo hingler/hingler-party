@@ -64,32 +64,9 @@ export class BezierCurve extends ParametricCurve {
   }
 
   getPosition(time: number) : vec3 {
-    let x: number;
-    let y: number;
-    let z: number;
-
-    x = 0;
-    y = 0;
-    z = 0;
-
     const t = Math.max(Math.min(time, 1), 0);
 
-    x += this.p0[0] * Math.pow(1 - t, 3);
-    x += this.p1[0] * 3 * Math.pow(1 - t, 2) * t;
-    x += this.p2[0] * 3 * (1 - t) * Math.pow(t, 2);
-    x += this.p3[0] * Math.pow(t, 3);
-
-    y += this.p0[1] * Math.pow(1 - t, 3);
-    y += this.p1[1] * 3 * Math.pow(1 - t, 2) * t;
-    y += this.p2[1] * 3 * (1 - t) * Math.pow(t, 2);
-    y += this.p3[1] * Math.pow(t, 3);
-
-    z += this.p0[2] * Math.pow(1 - t, 3);
-    z += this.p1[2] * 3 * Math.pow(1 - t, 2) * t;
-    z += this.p2[2] * 3 * (1 - t) * Math.pow(t, 2);
-    z += this.p3[2] * Math.pow(t, 3);
-
-    return [x, y, z];
+    return vec3.bezier(vec3.create(), this.p0, this.p1, this.p2, this.p3, t);
   }
 
   getVelocity(time: number) : vec3 {

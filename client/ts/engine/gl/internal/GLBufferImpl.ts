@@ -308,6 +308,16 @@ export class GLBufferImpl implements GLBuffer {
     farr.set(arr);
   }
 
+  getRegionAsUint16Array(offset: number, length: number) {
+    this.ensureInBounds(offset + (2 * length) - 1);
+    return new Uint16Array(this.buf, offset, length);
+  }
+
+  getRegionAsFloat32Array(offset: number, length: number) {
+    this.ensureInBounds(offset + 4 * length - 1);
+    return new Float32Array(this.buf, offset, length);
+  }
+
   private ensureInBounds(offset: number) {
     const SIZE_MAX = 1073741824;
     this.dirty = true;

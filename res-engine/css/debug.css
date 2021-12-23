@@ -49,3 +49,7 @@
   color: white;
   white-space: nowrap;
 }
+
+.hidden {
+  display: none;
+}

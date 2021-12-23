@@ -117,7 +117,12 @@ export class DebugDisplay {
 
   update() {
     if (!this.ctx.debugger) {
+      if (!this.frame.classList.contains("hidden")) {
+        this.frame.classList.add("hidden");
+      }
       return;
+    } else if (this.frame.classList.contains("hidden")) {
+      this.frame.classList.remove("hidden");
     }
 
     const perf = getRenderPerf();
@@ -157,15 +162,10 @@ export class DebugDisplay {
     this.postQueue.enqueue(this.postTime);
     this.totalQueue.enqueue(this.totalTime);
 
-    if (this.ctx.debugger) {
-      this.frame.classList.remove("hidden");
-      this.updateTimeSpan.textContent = (`${this.updateQueue.getAverage().toFixed(3)}MS`);
-      this.shadowTimeSpan.textContent = (`${this.shadowQueue.getAverage().toFixed(3)}MS`);
-      this.finalTimeSpan.textContent = (`${this.finalQueue.getAverage().toFixed(3)}MS`);
-      this.postTimeSpan.textContent = (`${this.postQueue.getAverage().toFixed(3)}MS`);
-      this.totalTimeSpan.textContent = (`${this.totalQueue.getAverage().toFixed(3)}MS`);
-    } else {
-      this.frame.classList.add("hidden");
-    }
+    this.updateTimeSpan.textContent = (`${this.updateQueue.getAverage().toFixed(3)}MS`);
+    this.shadowTimeSpan.textContent = (`${this.shadowQueue.getAverage().toFixed(3)}MS`);
+    this.finalTimeSpan.textContent = (`${this.finalQueue.getAverage().toFixed(3)}MS`);
+    this.postTimeSpan.textContent = (`${this.postQueue.getAverage().toFixed(3)}MS`);
+    this.totalTimeSpan.textContent = (`${this.totalQueue.getAverage().toFixed(3)}MS`);
   }
 }

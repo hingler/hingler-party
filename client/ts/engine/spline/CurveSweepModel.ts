@@ -27,8 +27,8 @@ export class CurveSweepModel extends Model {
 
   private modelVersion: number;
 
-  private buffer: GLBuffer;
-  private index: GLBuffer;
+  private buffer: GLBufferImpl;
+  private index: GLBufferImpl;
 
   private maxStepCount : number;
 
@@ -123,6 +123,8 @@ export class CurveSweepModel extends Model {
     const positionBuffer = this.buffer;
     const indexBuffer = this.index;
 
+    const vertexMem = positionBuffer.getRegionAsFloat32Array(0, positions.length * stepCount * 11);
+
     let cur = 0;
     let indcur = 0;
 
@@ -204,7 +206,11 @@ export class CurveSweepModel extends Model {
         vec3.transformMat3(temp, point, curveMat);
         vec3.add(temp, temp, origin);
 
-        positionBuffer.setFloatArray(cur, temp, true);
+        // positionBuffer.setFloatArray(cur, temp, true);
+        const memOffset = 11 * (positions.length * i + j);
+        vertexMem[memOffset] = temp[0];
+        vertexMem[memOffset + 1] = temp[1];
+        vertexMem[memOffset + 2] = temp[2];
         cur += 12;
         
         vec3.zero(temp);
@@ -216,17 +222,25 @@ export class CurveSweepModel extends Model {
         vec3.normalize(temp, temp);
         
         // set normal
-        positionBuffer.setFloatArray(cur, temp, true);
+        // positionBuffer.setFloatArray(cur, temp, true);
+        vertexMem[memOffset + 3] = temp[0];
+        vertexMem[memOffset + 4] = temp[1];
+        vertexMem[memOffset + 5] = temp[2];
         cur += 12;
         
         // set tangent
-        positionBuffer.setFloatArray(cur, tangent, true);
+        // positionBuffer.setFloatArray(cur, tangent, true);
+        vertexMem[memOffset + 6] = tangent[0];
+        vertexMem[memOffset + 7] = tangent[1];
+        vertexMem[memOffset + 8] = tangent[2];
         cur += 12;
 
         // set texcoord
         texCoord[0] = (i * tStep) * this.texScale[0] + this.texOffset[0];
         texCoord[1] = (sweepDist / sweep.arcLength) * this.texScale[1] + this.texOffset[1];
-        positionBuffer.setFloatArray(cur, texCoord, true);
+        // positionBuffer.setFloatArray(cur, texCoord, true);
+        vertexMem[memOffset + 9] = texCoord[0];
+        vertexMem[memOffset + 10] = texCoord[1];
         cur += 8;
       }
     }
