@@ -22,7 +22,7 @@ export class SegmentedCurve extends ParametricCurve {
 
     for (let i = 1; i < vertexList.length; i++) {
       vec3.sub(temp, this.vertexList[i], this.vertexList[i - 1]);
-      this.pathLength = vec3.length(temp);
+      this.pathLength += vec3.length(temp);
     }
 
     this.loop = false;

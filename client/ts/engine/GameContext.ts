@@ -1,4 +1,4 @@
-import { SharedGPUTimer } from "./gl/internal/SharedGPUTimer";
+import { GPUTimer, SharedGPUTimer } from "./gl/internal/SharedGPUTimer";
 import { FileLoader } from "./loaders/FileLoader";
 import { GLTFLoader } from "./loaders/GLTFLoader";
 import type { Scene } from "./object/scene/Scene";
@@ -32,7 +32,7 @@ export interface GameContext {
    */
   readonly webglVersion : number;
 
-  getGPUTimer() : SharedGPUTimer;
+  getGPUTimer() : GPUTimer;
 
   /**
    * @returns the delta on the last frame, in seconds.

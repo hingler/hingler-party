@@ -30,10 +30,14 @@ export class CurveSweepModel extends Model {
   private buffer: GLBuffer;
   private index: GLBuffer;
 
-  private maxStepCount: GLBuffer;
+  private maxStepCount : number;
 
   // number of loop cuts along our curve
-  stepCount: number;
+  private stepCount_: number;
+  private flipNormals_: boolean;
+
+  // obscure behind a setter?
+  // so that we can update the model
 
   // offset ST generated tex coordinates
   texOffset: vec2;
@@ -59,7 +63,9 @@ export class CurveSweepModel extends Model {
     
     this.modelVersion = this.curve.versionnumber;
 
-    this.stepCount = 96;
+    this.stepCount_ = 96;
+    this.maxStepCount = 0;
+    this.flipNormals_ = false;
     
     this.texOffset = vec2.fromValues(0, 0);
     this.texScale = vec2.fromValues(1, 1);
@@ -67,20 +73,48 @@ export class CurveSweepModel extends Model {
     this.buildCurveGeometry();
   }
 
+  set stepCount(count: number) {
+    if (count !== this.stepCount_) {
+      this.stepCount_ = count;
+      // force a model update
+      this.modelVersion = -1;
+    }
+  }
+
+  set flipNormals(flip: boolean) {
+    if (flip !== this.flipNormals_) {
+      this.flipNormals_ = flip;
+      this.modelVersion = -1;
+    }
+  }
+
+  updateModel() {
+    if (this.curve.versionnumber !== this.modelVersion) {
+      this.buildCurveGeometry();
+    }
+
+    this.modelVersion = this.curve.versionnumber;
+  }
+
   private buildCurveGeometry() : void {
     const ctx = this.ctx;
     const gl = ctx.getGLContext();
     const curve = this.curve;
     const sweep = this.sweep;
-    const pointCount = this.sweep.getControlPointCount();
 
-    const curveLength = this.curve.arcLength;    
-    const sweepLength = this.sweep.arcLength;
+    const positions : Array<vec3> = [];
+    for (let i = 0; i < sweep.getControlPointCount(); i++) {
+      positions.push(sweep.getControlPoint(i));
+    }
+
+    if (sweep.loop) {
+      positions.push(sweep.getControlPoint(0));
+    }
 
     // push control points to a list
     // use list instead of fetching
 
-    let stepCount = Math.round(this.stepCount);
+    let stepCount = Math.round(this.stepCount_);
     if (stepCount < 2) {
       stepCount = 64;
     }
@@ -107,17 +141,30 @@ export class CurveSweepModel extends Model {
     // progress along our sweep
     let sweepDist : number;
 
-    let curveDist : number;
     let lastPoint : vec3;
 
     let texCoord = vec2.create();
 
     const bitan = this.getBitangents();
 
+    const curveMat = mat3.create();
+
+    // if curve update is slow, figure out how
+    // to isolate changed portions and only update geom there
+    // note2: step count should contain some preservation of locality.
+
+    // todo: perform these ops in wasm, port over?
+
+    // implementing curve consistency:
+    // use a position and tangent cache
+    // if the position and tangent both change by a value greater than some epsilon, rewrite the point
+    // otherwise, use the old point
+
+    // on long curves, this should keep relatively stationary points in place :D
+    // caveat: as our old curve and new curve converge, we may get some warping
+    // find a decent tradeoff ig :(
     for (let i = 0; i < stepCount; i++) {
-      // todo: avoid excessive memory allocation by passing in an output var?
       tangent = curve.getTangent(i * tStep);
-      // project last normal and last cross onto tangent plane
       vec3.sub(cross, crossOld, vec3.scale(temp, tangent, vec3.dot(crossOld, tangent)));
       vec3.sub(normal, normalOld, vec3.scale(temp, tangent, vec3.dot(normalOld, tangent)));
 
@@ -125,17 +172,28 @@ export class CurveSweepModel extends Model {
       vec3.normalize(cross, cross);
       vec3.normalize(normal, normal);
       
-      // adjust cross so that it is orthogonal to normal
       vec3.sub(cross, cross, vec3.scale(temp, normal, vec3.dot(cross, normal)));
 
       vec3.normalize(cross, cross);
       vec3.copy(crossOld, cross);
       vec3.copy(normalOld, normal);
 
+      // convert this to a mat3
+      curveMat[0] = normal[0];
+      curveMat[1] = normal[1];
+      curveMat[2] = normal[2];
+      curveMat[3] = tangent[0];
+      curveMat[4] = tangent[1];
+      curveMat[5] = tangent[2];
+      curveMat[6] = cross[0];
+      curveMat[7] = cross[1];
+      curveMat[8] = cross[2];
+
       const origin = curve.getPosition(i * tStep);
       sweepDist = 0;
-      for (let j = 0; j < pointCount; j++) {
-        const point = sweep.getControlPoint(j);
+      
+      for (let j = 0; j < positions.length; j++) {
+        const point = positions[j];
         if (j > 0) {
           vec3.sub(temp, point, lastPoint);
           sweepDist += vec3.length(temp);
@@ -143,43 +201,21 @@ export class CurveSweepModel extends Model {
 
         lastPoint = point;
 
-        vec3.zero(temp_scale);
+        vec3.transformMat3(temp, point, curveMat);
+        vec3.add(temp, temp, origin);
 
-        vec3.scale(temp_scale, normal, point[0]);
-        vec3.add(origin, origin, temp_scale);
-
-        vec3.scale(temp_scale, cross, point[2]);
-        vec3.add(origin, origin, temp_scale);
-        
-        vec3.scale(temp_scale, tangent, point[1]);
-        vec3.add(origin, origin, temp_scale);
-
-        positionBuffer.setFloatArray(cur, origin, true);
+        positionBuffer.setFloatArray(cur, temp, true);
         cur += 12;
         
-        // todo: set normals :D
+        vec3.zero(temp);
+
+        const bitangent = bitan[j % bitan.length];
+
+        vec3.transformMat3(temp, bitangent, curveMat);
+        vec3.cross(temp, tangent, temp);
+        vec3.normalize(temp, temp);
         
-        vec3.zero(origin);
-
-        vec3.scale(temp_scale, normal, bitan[i][0]);
-        vec3.add(origin, origin, temp_scale);
-
-        vec3.scale(temp_scale, cross, bitan[i][2]);
-        vec3.add(origin, origin, temp_scale);
-
-        vec3.scale(temp_scale, tangent, bitan[i][1]);
-        vec3.add(origin, origin, temp_scale);
-        
-        vec3.normalize(origin, origin);
-        // vertex bitangent is now in global coords
-        // tangent is also in global coords
-
-        // normal = tangent x bitangent
-        vec3.cross(temp, tangent, origin);
-        // bitangent is in curve space
-        // convert to model space by multiplying by our tangent transform
-
-        // todo: facing inwards or outwards
+        // set normal
         positionBuffer.setFloatArray(cur, temp, true);
         cur += 12;
         
@@ -193,33 +229,39 @@ export class CurveSweepModel extends Model {
         positionBuffer.setFloatArray(cur, texCoord, true);
         cur += 8;
       }
+    }
 
-      if (i >= 1) {
-        for (let j = 0; j < pointCount - 1; j++) {
+    if (stepCount > this.maxStepCount) {
+      console.log("index updated???");
+      for (let i = 1; i < stepCount; i++) {
+        for (let j = 0; j < positions.length - 1; j++) {
           for (let k = 0; k < INDEX_ARRAY.length; k++) {
+            // note: we only need to rebuild our index if the curve grows (step count inc) -- otherwise, we can just update the index object
             const ind = INDEX_ARRAY[k];
-            const input = Math.floor(ind / 2) * pointCount + (ind % 2) + j;
-            indexBuffer.setUint16(indcur, input + pointCount * (i - 1), true);
+            const input = Math.floor(ind / 2) * positions.length + (ind % 2) + j;
+            indexBuffer.setUint16(indcur, input + positions.length * (i - 1), true);
             indcur += 2;
           }
         }
       }
     }
 
+    this.maxStepCount = Math.max(this.maxStepCount, stepCount);
+
     const BYTE_STRIDE = 44;
 
-    const index = GLIndexImpl.createFromValues(indexBuffer, gl.UNSIGNED_SHORT, indcur / 2, 0);
-    const positionAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, curve.getControlPointCount() * stepCount, BYTE_STRIDE, 0);
-    const normalAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, curve.getControlPointCount() * stepCount, BYTE_STRIDE, 12);
-    const tangentAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, curve.getControlPointCount() * stepCount, BYTE_STRIDE, 24);
-    const texcoordAtt = GLAttributeImpl.createFromValues(positionBuffer, 2, gl.FLOAT, curve.getControlPointCount() * stepCount, BYTE_STRIDE, 36);
+    const index = GLIndexImpl.createFromValues(indexBuffer, gl.UNSIGNED_SHORT, (stepCount - 1) * (positions.length - 1) * INDEX_ARRAY.length, 0);
+
+    const positionAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 0, BYTE_STRIDE);
+    const normalAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 12, BYTE_STRIDE);
+    const tangentAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 24, BYTE_STRIDE);
+    const texcoordAtt = GLAttributeImpl.createFromValues(positionBuffer, 2, gl.FLOAT, positions.length * stepCount, 36, BYTE_STRIDE);
 
     this.model = new ModelImpl([{ positions: positionAtt, normals: normalAtt, tangents: tangentAtt, texcoords: texcoordAtt, indices: index }]);
   }
 
   private getBitangents() {
     const sweep = this.sweep;
-    const curve = this.curve;
 
     let controlPointList : Array<vec3> = [];
     
@@ -272,9 +314,18 @@ export class CurveSweepModel extends Model {
   }
 
   draw() {
+    // if we swap models, we have to rebind every attribute
     if (this.curve.versionnumber !== this.modelVersion || !this.model) {
+      const modelOld = this.model;
       this.buildCurveGeometry();
       this.modelVersion = this.curve.versionnumber;
+      const modelNew = this.model;
+      modelNew.posLocation = modelOld.posLocation;
+      modelNew.normLocation = modelOld.normLocation;
+      modelNew.texLocation = modelOld.texLocation;
+      modelNew.tangentLocation = modelOld.tangentLocation;
+      modelNew.weightLocation = modelOld.weightLocation;
+      modelNew.jointLocation = modelOld.jointLocation;
     }
 
     this.model.draw();

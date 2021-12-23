@@ -110,8 +110,6 @@ export class GLIndexImpl implements GLIndex {
         this.accessFunc = this.buffer.getFloat32.bind(buffer);
         break;
     }
-
-    console.log("start point: " + this.offset + ", elems: " + this.count + ", width: " + this.byteSize);
   }
 
   getIndex(offset: number) {

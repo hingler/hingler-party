@@ -11,7 +11,7 @@ import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
-import { QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { DummyGPUTimer, GPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -69,7 +69,7 @@ export class EngineContext implements GameContext {
 
   private updateTime: number;
 
-  private gpuTimer: SharedGPUTimer;
+  private gpuTimer: GPUTimerInternal;
 
   private getGLProxy(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     gl = new Proxy(gl, {
@@ -143,6 +143,9 @@ export class EngineContext implements GameContext {
           if (timing !== null) {
             const mgr = new QueryManagerWebGL2(gl2, timing);
             this.gpuTimer = new SharedGPUTimer(mgr);
+          } else {
+            // necessary plugins are missing - use this instead
+            this.gpuTimer = new DummyGPUTimer();
           }
         } else {
           this.setupWebGL1(init);
@@ -335,6 +338,7 @@ export class EngineContext implements GameContext {
       this.debug.updateTime = this.updateTime;
     }
     
+
     this.gpuTimer.invalidateAll();
     
     const renderTiming = this.renderer.getDebugTiming();
