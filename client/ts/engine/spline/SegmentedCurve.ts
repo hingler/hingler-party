@@ -7,6 +7,9 @@ import { ParametricCurve } from "./ParametricCurve";
 export class SegmentedCurve extends ParametricCurve {
   private vertexList : Array<vec3>;
   private pathLength : number;
+
+  loop : boolean;
+
   constructor(vertexList: Array<vec3>) {
     super();
     this.vertexList = [];
@@ -21,6 +24,8 @@ export class SegmentedCurve extends ParametricCurve {
       vec3.sub(temp, this.vertexList[i], this.vertexList[i - 1]);
       this.pathLength = vec3.length(temp);
     }
+
+    this.loop = false;
   }
 
   getPosition(time: number) {
