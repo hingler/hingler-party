@@ -46,6 +46,10 @@ export class BezierCurve extends ParametricCurve {
     return this.lut[this.lut.length - 1];
   }
 
+  get segmentCount() {
+    return 1;
+  }
+
   getControlPoint(point: number) : vec3 {
     if (point >= 0 && point <= 3) {
       return Array.from(this[`p${point}`]) as [number, number, number];
@@ -149,4 +153,12 @@ export class BezierCurve extends ParametricCurve {
   }
 
   getControlPointCount() { return 4; }
+
+  getSegmentLength(ind: number) {
+    if (ind !== 0) {
+      return 0;
+    }
+
+    return this.lut[this.lut.length - 1];
+  }
 }

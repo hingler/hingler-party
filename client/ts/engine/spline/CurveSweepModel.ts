@@ -45,6 +45,13 @@ export class CurveSweepModel extends Model {
   // modify texture coordinate scale
   texScale: vec2;
 
+  // move from "stepcount" to "quality"
+
+  // quality entails a number of steps per distance unit
+  // we will then break
+
+  private quality_: number;
+
   /**
    * Creates a new CurveSweepModel.
    * @param ctx - Game context
@@ -63,7 +70,8 @@ export class CurveSweepModel extends Model {
     
     this.modelVersion = this.curve.versionnumber;
 
-    this.stepCount_ = 96;
+    // est number of cuts per 10 units?
+    this.quality_ = 96;
     this.maxStepCount = 0;
     this.flipNormals_ = false;
     
@@ -73,10 +81,18 @@ export class CurveSweepModel extends Model {
     this.buildCurveGeometry();
   }
 
+  // deprecated :(
   set stepCount(count: number) {
     if (count !== this.stepCount_) {
       this.stepCount_ = count;
       // force a model update
+      this.modelVersion = -1;
+    }
+  }
+
+  set quality(val: number) {
+    if (val !== this.quality_) {
+      this.quality_ = val;
       this.modelVersion = -1;
     }
   }
@@ -102,6 +118,8 @@ export class CurveSweepModel extends Model {
     const curve = this.curve;
     const sweep = this.sweep;
 
+    const curveLength = this.curve.arcLength;
+
     const positions : Array<vec3> = [];
     for (let i = 0; i < sweep.getControlPointCount(); i++) {
       positions.push(sweep.getControlPoint(i));
@@ -114,23 +132,23 @@ export class CurveSweepModel extends Model {
     // push control points to a list
     // use list instead of fetching
 
-    let stepCount = Math.round(this.stepCount_);
-    if (stepCount < 2) {
-      stepCount = 64;
+    const curveSteps : Array<number> = [];
+    for (let i = 0; i < curve.segmentCount; i++) {
+      const steps = this.quality_ * (curve.getSegmentLength(i) / 10);
+      // curves encode their ends? if so first curve needs to encode its start
+      curveSteps.push(Math.round(Math.max(steps, 2)));
     }
 
+    const stepCount = curveSteps.reduce((prev, cur) => prev + (cur - 1)) + 1;
 
     const positionBuffer = this.buffer;
     const indexBuffer = this.index;
 
     const vertexMem = positionBuffer.getRegionAsFloat32Array(0, positions.length * stepCount * 11);
 
-    let cur = 0;
     let indcur = 0;
 
-    const tStep = 1.0 / (stepCount - 1);
     let temp = vec3.create();
-    let temp_scale = vec3.create();
 
     let tangent = curve.getTangent(0);
     let normal = curve.getNormal(0);
@@ -151,107 +169,104 @@ export class CurveSweepModel extends Model {
 
     const curveMat = mat3.create();
 
-    // if curve update is slow, figure out how
-    // to isolate changed portions and only update geom there
-    // note2: step count should contain some preservation of locality.
+    let curveDist = 0;
+    let vertexCount = 0;
+    let ringCount = 0;
 
-    // todo: perform these ops in wasm, port over?
+    for (let i = 0; i < curve.segmentCount; i++) {
+      const stepCountLocal = curveSteps[i];
+      const curveFract = curve.getSegmentLength(i) / curveLength;
+      const tStep = (curveFract / (stepCountLocal - 1));
+      const tOff = (curveDist / curveLength);
+      // start at 0 if first segment -- else, start one step ahead
+      for (let k = (i === 0 ? 0 : 1); k < stepCountLocal; k++) {
+        ringCount++;
+        const time = k * tStep + tOff;
+        tangent = curve.getTangent(time);
 
-    // implementing curve consistency:
-    // use a position and tangent cache
-    // if the position and tangent both change by a value greater than some epsilon, rewrite the point
-    // otherwise, use the old point
+        vec3.sub(cross, crossOld, vec3.scale(temp, tangent, vec3.dot(crossOld, tangent)));
+        vec3.sub(normal, normalOld, vec3.scale(temp, tangent, vec3.dot(normalOld, tangent)));
 
-    // on long curves, this should keep relatively stationary points in place :D
-    // caveat: as our old curve and new curve converge, we may get some warping
-    // find a decent tradeoff ig :(
-    for (let i = 0; i < stepCount; i++) {
-      tangent = curve.getTangent(i * tStep);
-      vec3.sub(cross, crossOld, vec3.scale(temp, tangent, vec3.dot(crossOld, tangent)));
-      vec3.sub(normal, normalOld, vec3.scale(temp, tangent, vec3.dot(normalOld, tangent)));
+        // normalize
+        vec3.normalize(cross, cross);
+        vec3.normalize(normal, normal);
+        
+        vec3.sub(cross, cross, vec3.scale(temp, normal, vec3.dot(cross, normal)));
 
-      // normalize
-      vec3.normalize(cross, cross);
-      vec3.normalize(normal, normal);
-      
-      vec3.sub(cross, cross, vec3.scale(temp, normal, vec3.dot(cross, normal)));
+        vec3.normalize(cross, cross);
+        vec3.copy(crossOld, cross);
+        vec3.copy(normalOld, normal);
 
-      vec3.normalize(cross, cross);
-      vec3.copy(crossOld, cross);
-      vec3.copy(normalOld, normal);
+        // convert this to a mat3
+        curveMat[0] = normal[0];
+        curveMat[1] = normal[1];
+        curveMat[2] = normal[2];
+        curveMat[3] = tangent[0];
+        curveMat[4] = tangent[1];
+        curveMat[5] = tangent[2];
+        curveMat[6] = cross[0];
+        curveMat[7] = cross[1];
+        curveMat[8] = cross[2];
 
-      // convert this to a mat3
-      curveMat[0] = normal[0];
-      curveMat[1] = normal[1];
-      curveMat[2] = normal[2];
-      curveMat[3] = tangent[0];
-      curveMat[4] = tangent[1];
-      curveMat[5] = tangent[2];
-      curveMat[6] = cross[0];
-      curveMat[7] = cross[1];
-      curveMat[8] = cross[2];
+        const origin = curve.getPosition(time);
 
-      const origin = curve.getPosition(i * tStep);
-      sweepDist = 0;
-      
-      for (let j = 0; j < positions.length; j++) {
-        const point = positions[j];
-        if (j > 0) {
-          vec3.sub(temp, point, lastPoint);
-          sweepDist += vec3.length(temp);
+        for (let j = 0; j < positions.length; j++) {
+          const point = positions[j];
+          if (j > 0) {
+            vec3.sub(temp, point, lastPoint);
+            sweepDist += vec3.length(temp);
+          }
+  
+          lastPoint = point;
+  
+          vec3.transformMat3(temp, point, curveMat);
+          vec3.add(temp, temp, origin);
+  
+          // positionBuffer.setFloatArray(cur, temp, true);
+          const memOffset = 11 * (vertexCount++);
+          vertexMem[memOffset] = temp[0];
+          vertexMem[memOffset + 1] = temp[1];
+          vertexMem[memOffset + 2] = temp[2];
+          
+          vec3.zero(temp);
+  
+          const bitangent = bitan[j % bitan.length];
+  
+          vec3.transformMat3(temp, bitangent, curveMat);
+          vec3.cross(temp, tangent, temp);
+          vec3.normalize(temp, temp);
+          
+          // set normal
+          // positionBuffer.setFloatArray(cur, temp, true);
+          vertexMem[memOffset + 3] = temp[0];
+          vertexMem[memOffset + 4] = temp[1];
+          vertexMem[memOffset + 5] = temp[2];
+          
+          // set tangent
+          // positionBuffer.setFloatArray(cur, tangent, true);
+          vertexMem[memOffset + 6] = tangent[0];
+          vertexMem[memOffset + 7] = tangent[1];
+          vertexMem[memOffset + 8] = tangent[2];
+  
+          // set texcoord
+          texCoord[0] = (i * tStep) * this.texScale[0] + this.texOffset[0];
+          texCoord[1] = (sweepDist / sweep.arcLength) * this.texScale[1] + this.texOffset[1];
+          // positionBuffer.setFloatArray(cur, texCoord, true);
+          vertexMem[memOffset + 9] = texCoord[0];
+          vertexMem[memOffset + 10] = texCoord[1];
         }
-
-        lastPoint = point;
-
-        vec3.transformMat3(temp, point, curveMat);
-        vec3.add(temp, temp, origin);
-
-        // positionBuffer.setFloatArray(cur, temp, true);
-        const memOffset = 11 * (positions.length * i + j);
-        vertexMem[memOffset] = temp[0];
-        vertexMem[memOffset + 1] = temp[1];
-        vertexMem[memOffset + 2] = temp[2];
-        cur += 12;
-        
-        vec3.zero(temp);
-
-        const bitangent = bitan[j % bitan.length];
-
-        vec3.transformMat3(temp, bitangent, curveMat);
-        vec3.cross(temp, tangent, temp);
-        vec3.normalize(temp, temp);
-        
-        // set normal
-        // positionBuffer.setFloatArray(cur, temp, true);
-        vertexMem[memOffset + 3] = temp[0];
-        vertexMem[memOffset + 4] = temp[1];
-        vertexMem[memOffset + 5] = temp[2];
-        cur += 12;
-        
-        // set tangent
-        // positionBuffer.setFloatArray(cur, tangent, true);
-        vertexMem[memOffset + 6] = tangent[0];
-        vertexMem[memOffset + 7] = tangent[1];
-        vertexMem[memOffset + 8] = tangent[2];
-        cur += 12;
-
-        // set texcoord
-        texCoord[0] = (i * tStep) * this.texScale[0] + this.texOffset[0];
-        texCoord[1] = (sweepDist / sweep.arcLength) * this.texScale[1] + this.texOffset[1];
-        // positionBuffer.setFloatArray(cur, texCoord, true);
-        vertexMem[memOffset + 9] = texCoord[0];
-        vertexMem[memOffset + 10] = texCoord[1];
-        cur += 8;
       }
+
+      curveDist += curve.getSegmentLength(i);
     }
 
-    if (stepCount > this.maxStepCount) {
+    if (ringCount > this.maxStepCount) {
       console.log("index updated???");
-      for (let i = 1; i < stepCount; i++) {
+      for (let i = 1; i < ringCount; i++) {
         for (let j = 0; j < positions.length - 1; j++) {
           for (let k = 0; k < INDEX_ARRAY.length; k++) {
             // note: we only need to rebuild our index if the curve grows (step count inc) -- otherwise, we can just update the index object
-            const ind = INDEX_ARRAY[k];
+            const ind = INDEX_ARRAY[(this.flipNormals_ ? 5 - k : k)];
             const input = Math.floor(ind / 2) * positions.length + (ind % 2) + j;
             indexBuffer.setUint16(indcur, input + positions.length * (i - 1), true);
             indcur += 2;
@@ -260,16 +275,16 @@ export class CurveSweepModel extends Model {
       }
     }
 
-    this.maxStepCount = Math.max(this.maxStepCount, stepCount);
+    this.maxStepCount = Math.max(this.maxStepCount, ringCount);
 
     const BYTE_STRIDE = 44;
 
-    const index = GLIndexImpl.createFromValues(indexBuffer, gl.UNSIGNED_SHORT, (stepCount - 1) * (positions.length - 1) * INDEX_ARRAY.length, 0);
+    const index = GLIndexImpl.createFromValues(indexBuffer, gl.UNSIGNED_SHORT, (ringCount - 1) * (positions.length - 1) * INDEX_ARRAY.length, 0);
 
-    const positionAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 0, BYTE_STRIDE);
-    const normalAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 12, BYTE_STRIDE);
-    const tangentAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * stepCount, 24, BYTE_STRIDE);
-    const texcoordAtt = GLAttributeImpl.createFromValues(positionBuffer, 2, gl.FLOAT, positions.length * stepCount, 36, BYTE_STRIDE);
+    const positionAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * ringCount, 0, BYTE_STRIDE);
+    const normalAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * ringCount, 12, BYTE_STRIDE);
+    const tangentAtt = GLAttributeImpl.createFromValues(positionBuffer, 3, gl.FLOAT, positions.length * ringCount, 24, BYTE_STRIDE);
+    const texcoordAtt = GLAttributeImpl.createFromValues(positionBuffer, 2, gl.FLOAT, positions.length * ringCount, 36, BYTE_STRIDE);
 
     this.model = new ModelImpl([{ positions: positionAtt, normals: normalAtt, tangents: tangentAtt, texcoords: texcoordAtt, indices: index }]);
   }

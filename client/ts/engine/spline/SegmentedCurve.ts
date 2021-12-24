@@ -99,7 +99,19 @@ export class SegmentedCurve extends ParametricCurve {
     }
   }
 
+  getSegmentLength(index: number): number {
+    if (index >= this.vertexList.length - 1 || index < 0) {
+      return 0;
+    }
+
+    return vec3.length(vec3.sub(([] as Array<number>) as vec3, this.vertexList[index + 1], this.vertexList[index]));
+  }
+
   get arcLength() {
     return this.pathLength;
+  }
+
+  get segmentCount() {
+    return Math.max(this.vertexList.length - 1, 0);
   }
 }

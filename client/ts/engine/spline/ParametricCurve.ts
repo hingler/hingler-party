@@ -3,6 +3,8 @@ import { ReadonlyVec3, vec3 } from "gl-matrix";
 // rudimentary interface for parametric curves
 export abstract class ParametricCurve {
 
+  abstract readonly segmentCount : number;
+
   constructor() {
     this.versionnumber_ = 0;
   }
@@ -42,6 +44,13 @@ export abstract class ParametricCurve {
   abstract setControlPoint(point: number, val: vec3) : void;
 
   abstract getControlPointCount() : number;
+
+  /**
+   * @param index - the segment whose length we are polling.
+   * @returns the length of the specified segment.
+   * Returns 0 if param is out of bounds.
+   */
+  abstract getSegmentLength(index: number) : number;
 
   // do we want to maintain an "update tracker" for our curves?
   // we uptick a value everytime the curve is modified, so that

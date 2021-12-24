@@ -54,10 +54,6 @@ export class CatmullRomSpline extends ParametricCurve {
     this.update();
   }
 
-  get pointLength() {
-    return this.curveList.length;
-  }
-
   get arcLength() {
     let res = 0;
     for (let i = 0; i < this.curveList.length; i++) {
@@ -197,6 +193,18 @@ export class CatmullRomSpline extends ParametricCurve {
     }
 
     return this.curveList.length + 1;
+  }
+
+  get segmentCount() {
+    return this.curveList.length;
+  }
+
+  getSegmentLength(ind: number) {
+    if (ind < 0 || ind > (this.getControlPointCount() - 1)) {
+      return 0;
+    }
+
+    return this.curveList.get(ind).arcLength;
   }
 
   // returns t on range (0, curvelist.length)

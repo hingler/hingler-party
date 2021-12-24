@@ -5,7 +5,7 @@ import { CatmullRomSpline } from "../client/ts/engine/spline/CatmullRomSpline"
 describe("CatmullRomSplineTest", function() {
   it("Should instantiate properly", function() {
     const curve = new CatmullRomSpline();
-    expect(curve.pointLength).to.equal(0);
+    expect(curve.segmentCount).to.equal(0);
     expect(curve.getControlPointCount()).to.equal(0);
     curve.addPoint(1, 2, 3);
     const pos = curve.getPosition(0);
