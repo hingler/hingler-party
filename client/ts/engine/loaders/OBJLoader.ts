@@ -1,4 +1,6 @@
 export class OBJLoader {
-  // load as path, return a parametric curve
-  // load a file
+  // fetch a segmented curve from file
+  // load model
+
+  // implement parsing functions here
 };

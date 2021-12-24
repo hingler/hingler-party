@@ -152,6 +152,11 @@ export class CurveSweepModel extends Model {
 
     let tangent = curve.getTangent(0);
     let normal = curve.getNormal(0);
+
+    if (this.flipNormals_) {
+      vec3.scale(normal, normal, -1);
+    }
+    
     let cross = vec3.create();
     vec3.cross(cross, tangent, normal);
 
