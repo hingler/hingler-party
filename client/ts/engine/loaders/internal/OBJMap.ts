@@ -1,12 +1,10 @@
 import { vec2, vec3, vec4 } from "gl-matrix";
 import { Hashable } from "../../../../../nekogirl-valhalla/Hashable";
-import { HashMap } from "../../../../../nekogirl-valhalla/HashMap";
+import { HashMap } from "../../../../../nekogirl-valhalla/map/HashMap";
 import { GameContext } from "../../GameContext";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";
-import { GLBuffer } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
-import { SegmentedCurve } from "../../spline/SegmentedCurve";
 import { ModelInstance } from "./ModelImpl";
 
 
@@ -14,7 +12,7 @@ const MAX_INT_32 = Math.pow(2, 32) - 1;
 
 const PLACEHOLDER = [0, 0, 0, 1];
 
-class vnt_triplet implements Hashable {
+class vnt_triplet implements Hashable<vnt_triplet> {
   vertex_index: number;
   normal_index: number;
   texcoord_index: number;
@@ -30,12 +28,21 @@ class vnt_triplet implements Hashable {
     return res;
   }
 
-  equals(other: Hashable) {
+  equals<T extends Hashable<T>>(other: Hashable<T>) {
     if (other instanceof vnt_triplet) {
       return this.equals_vnt(other);
     }
 
     return false;
+  }
+
+  copy() {
+    let res = new vnt_triplet();
+    res.vertex_index = this.vertex_index;
+    res.normal_index = this.normal_index;
+    res.texcoord_index = this.texcoord_index;
+
+    return res;
   }
 
   private equals_vnt(other: vnt_triplet) {

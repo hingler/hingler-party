@@ -2,10 +2,10 @@
 
 // ignore this for a bit -- i'll have to drop by again and fix it
 
+import { RingArray } from "../../../../../nekogirl-valhalla/array/RingArray";
 import { IDGenerator } from "../../../../../ts/util/IDGenerator";
 import { EXT_disjoint_timer_query_webgl2 } from "../../GameContext";
 import { Category, logRender, RenderType } from "../../internal/performanceanalytics";
-import { RingArray } from "./RingArray";
 
 let objCount : number = 0;
 
