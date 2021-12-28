@@ -1,12 +1,14 @@
 import { vec2, vec3, vec4 } from "gl-matrix";
-import { Hashable } from "../../../../../ts/Hashable";
-import { HashMap } from "../../../../../ts/util/HashMap";
+import { Hashable } from "../../../../../nekogirl-valhalla/Hashable";
+import { HashMap } from "../../../../../nekogirl-valhalla/HashMap";
 import { GameContext } from "../../GameContext";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";
 import { GLBuffer } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
+import { SegmentedCurve } from "../../spline/SegmentedCurve";
 import { ModelInstance } from "./ModelImpl";
+
 
 const MAX_INT_32 = Math.pow(2, 32) - 1;
 
@@ -56,9 +58,6 @@ export class OBJMap {
   private indices: Array<number>;
 
   private indexCount: number;
-
-  // what about lines???
-  // we don't want to bother with this map in that case
 
   private ctx: GameContext;
 
@@ -136,9 +135,6 @@ export class OBJMap {
   }
 
   convertVertexDataToModelInstance() : ModelInstance {
-    // indexCount stores number of unique indices
-    // note that the first index is always "1" so we want to decrement 1 when accessing actual data
-    // -1 will be replaced with a sufficient number of zeroes
     const geometryBuffer = new GLBufferImpl(this.ctx);
     const indexBuffer = new GLBufferImpl(this.ctx);
 
@@ -161,9 +157,9 @@ export class OBJMap {
       const t = triplet.key;
       const index = triplet.value;
 
-      position = this.positions[t.vertex_index];
-      texcoord = this.texcoords[t.texcoord_index];
-      normal = this.normals[t.normal_index];
+      position = this.positions[t.vertex_index - 1];
+      texcoord = this.texcoords[t.texcoord_index - 1];
+      normal = this.normals[t.normal_index - 1];
 
       if (!position) {
         position = PLACEHOLDER as vec4;

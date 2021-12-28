@@ -1,0 +1,3 @@
+[submodule "nekogirl-valhalla"]
+	path = nekogirl-valhalla
+	url = git@github.com:jamieboy1337/nekogirl-valhalla.git
