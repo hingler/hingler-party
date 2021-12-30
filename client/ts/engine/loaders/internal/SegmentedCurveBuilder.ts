@@ -3,8 +3,8 @@
 // we'll probably disambiguate with two different functions :3
 
 import { vec3 } from "gl-matrix";
-import { RingArray } from "../../../../../nekogirl-valhalla/array/RingArray";
 import { SegmentedCurve } from "../../spline/SegmentedCurve";
+import { RingArray } from "@nekogirl-valhalla/array/RingArray";
 
 /**
  * Builds a segmented curve based on inputs consistent with the OBJ spec.
@@ -29,9 +29,17 @@ export class SegmentedCurveBuilder {
   }
 
   addSegment(...segments: Array<number>) {
+    // i think the loop case is implicitly handled
+    // if we attempt to loop back, we'll obliterate a vertex?
+    // but then i think i should handle that :(
     for (let i = 1; i < segments.length; i++) {
-      this.mapAB.set(segments[i - 1], segments[i]);
-      this.mapBA.set(segments[i], segments[i - 1]);
+      if (!this.mapAB.has(segments[i - 1]) && !this.mapBA.has(segments[i])) {
+        // this should avoid the loop case altogether
+        this.mapAB.set(segments[i - 1], segments[i]);
+        this.mapBA.set(segments[i], segments[i - 1]);
+      } else {
+        console.warn("Bad branching encountered while building segmented curve!");
+      }
     }  
   }
 
@@ -73,6 +81,8 @@ export class SegmentedCurveBuilder {
       end = newEnd;
       endTemp = this.mapAB.get(end[1]);
     }
+
+    console.log(orderedSegments);
 
     // we now have an ordered list of segments
     // note: if we have a loop, we want to remove the last element and raise the loop flag.
