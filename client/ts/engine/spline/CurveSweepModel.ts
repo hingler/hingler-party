@@ -56,7 +56,7 @@ export class CurveSweepModel extends Model {
    * Creates a new CurveSweepModel.
    * @param ctx - Game context
    * @param curve - Curve we will sweep the inputted geometry on.
-   * @param sweep - Series of points in our geometry, Y-up.
+   * @param sweep - Series of points in our geometry, with Y direction being the tangent axis (ie "flat" geometry will lie on the xz plane)
    */
   constructor(ctx: GameContext, curve: ParametricCurve, sweep: SegmentedCurve) {
     super();
@@ -71,7 +71,7 @@ export class CurveSweepModel extends Model {
     this.modelVersion = this.curve.versionnumber;
 
     // est number of cuts per 10 units?
-    this.quality_ = 96;
+    this.quality_ = 16;
     this.maxStepCount = 0;
     this.flipNormals_ = false;
     
@@ -79,15 +79,6 @@ export class CurveSweepModel extends Model {
     this.texScale = vec2.fromValues(1, 1);
 
     this.buildCurveGeometry();
-  }
-
-  // deprecated :(
-  set stepCount(count: number) {
-    if (count !== this.stepCount_) {
-      this.stepCount_ = count;
-      // force a model update
-      this.modelVersion = -1;
-    }
   }
 
   set quality(val: number) {
@@ -158,7 +149,7 @@ export class CurveSweepModel extends Model {
     }
     
     let cross = vec3.create();
-    vec3.cross(cross, tangent, normal);
+    vec3.cross(cross, normal, tangent);
 
     let crossOld = vec3.copy(vec3.create(), cross);
     let normalOld = vec3.copy(vec3.create(), normal);
@@ -265,7 +256,7 @@ export class CurveSweepModel extends Model {
       curveDist += curve.getSegmentLength(i);
     }
 
-    if (ringCount > this.maxStepCount) {
+    if (ringCount > this.maxStepCount || this.modelVersion === -1) {
       console.log("index updated???");
       for (let i = 1; i < ringCount; i++) {
         for (let j = 0; j < positions.length - 1; j++) {
