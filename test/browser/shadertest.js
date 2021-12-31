@@ -4,7 +4,7 @@ import { FileLoader } from "../../client/ts/engine/loaders/FileLoader";
 
 describe("ShaderFileParser", function() {
   it("Should read a plain shader", async function() {
-    let loader = new FileLoader();
+    let loader = new FileLoader(null);
     let parser = new ShaderFileParser(loader);
 
     let file = await parser.parseShaderFile("../data/shader-a.txt");
@@ -12,7 +12,7 @@ describe("ShaderFileParser", function() {
   });
 
   it("Should handle include statements", async function() {
-    let loader = new FileLoader();
+    let loader = new FileLoader(null);
     let parser = new ShaderFileParser(loader);
 
     let file = await parser.parseShaderFile("../data/shader-b.txt");
