@@ -1,4 +1,7 @@
 import { ReadonlyVec3, vec3 } from "gl-matrix";
+import { GameContext } from "../GameContext";
+import { OBJFileData } from "../loaders/internal/OBJFileData";
+import { SegmentedCurveBuilder } from "../loaders/internal/SegmentedCurveBuilder";
 import { ParametricCurve } from "./ParametricCurve";
 
 /**
@@ -10,7 +13,7 @@ export class SegmentedCurve extends ParametricCurve {
 
   loop : boolean;
 
-  constructor(vertexList: Array<vec3>) {
+  constructor(vertexList: Array<ReadonlyVec3>) {
     super();
     this.vertexList = [];
     this.pathLength = 0;
@@ -26,6 +29,25 @@ export class SegmentedCurve extends ParametricCurve {
     }
 
     this.loop = false;
+  }
+
+  static async fromOBJ(ctx: GameContext, path: string) {
+    const data = new OBJFileData(ctx, path);
+    await data.waitUntilLoaded();
+    const builder = new SegmentedCurveBuilder();
+    // objs index starting from 1
+    // buffer w a null point so our segments line up >:)
+    builder.addVertex([0, 0, 0]);
+    for (let vert of data.positions()) {
+      // vert is vec4, convert to vec3 :(
+      builder.addVertex(vert as ReadonlyVec3);
+    }
+
+    for (let segment of data.lines()) {
+      builder.addSegment(...segment);
+    }
+
+    return builder.convertToSegmentedCurve();
   }
 
   getPosition(time: number) {

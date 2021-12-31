@@ -99,13 +99,12 @@ export class EngineContext implements GameContext {
   constructor(init: HTMLCanvasElement | EngineContext, scene: Scene, opts?: ContextOptions) {
     this.lastDelta = 0; 
     this.lastTimePoint = perf.now();
-    this.loader = new FileLoader(opts ? opts.useServiceWorker : true);
     this.varMap = new Map();
-
-    this.debugger = true;
-
     
-
+    this.debugger = true;
+    
+    
+    
     
     // copy over env???
     // nah we'll standardize its initialization
@@ -152,6 +151,7 @@ export class EngineContext implements GameContext {
         }
       }
       
+      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
       
       console.log(`Using WebGL Version ${this.webglVersion}`);
       

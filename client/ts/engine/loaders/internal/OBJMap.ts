@@ -1,4 +1,4 @@
-import { vec2, vec3, vec4 } from "gl-matrix";
+import { ReadonlyVec2, ReadonlyVec3, ReadonlyVec4, vec2, vec3, vec4 } from "gl-matrix";
 import { Hashable } from "nekogirl-valhalla";
 import { HashMap } from "@nekogirl-valhalla/map/HashMap";
 import { GameContext } from "../../GameContext";
@@ -57,9 +57,9 @@ class vnt_triplet implements Hashable<vnt_triplet> {
 export class OBJMap {
   // if performance is a concern: create an autosizing buffer class
   // integrate w glbuffer to avoid redundancy :(
-  private positions: Array<vec4>;
-  private normals: Array<vec3>;
-  private texcoords: Array<vec2>;
+  private positions: Array<ReadonlyVec4>;
+  private normals: Array<ReadonlyVec3>;
+  private texcoords: Array<ReadonlyVec2>;
 
   private vntMap: HashMap<vnt_triplet, number>;
   private indices: Array<number>;
@@ -87,7 +87,7 @@ export class OBJMap {
    * Adds a position to this map.
    * @param pos - vec4 specifying position.
    */
-  addPosition(pos: vec4) {
+  addPosition(pos: ReadonlyVec4) {
     this.positions.push(pos);
   }
 
@@ -95,7 +95,7 @@ export class OBJMap {
    * Adds a normal to this map.
    * @param norm - vec3 specifying a normal.
    */
-  addNormal(norm: vec3) {
+  addNormal(norm: ReadonlyVec3) {
     this.normals.push(norm);
   }
 
@@ -103,7 +103,7 @@ export class OBJMap {
    * Adds a texcoord to this map.
    * @param tex - vec2 specifying a texcoord.
    */
-  addTexcoord(tex: vec2) {
+  addTexcoord(tex: ReadonlyVec2) {
     this.texcoords.push(tex);
   }
 
@@ -153,9 +153,9 @@ export class OBJMap {
     // find its offset based on its assigned index
     // write the data it references to its specified location
 
-    let position: vec4;
-    let texcoord: vec2;
-    let normal  : vec3;
+    let position: ReadonlyVec4;
+    let texcoord: ReadonlyVec2;
+    let normal  : ReadonlyVec3;
 
     let vertexCount = 0;
     let indexCount = 0;

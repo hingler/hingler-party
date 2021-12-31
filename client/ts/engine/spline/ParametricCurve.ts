@@ -24,7 +24,7 @@ export abstract class ParametricCurve {
    * Returns a normal vector for the parametric curve.
    * @param time - desired time
    * @param up - if provided, specifies an up vector which is then used to calculate the normal.
-   *             otherwise, the Y+ unit vector is used, or if the curve is facing upwards, the Z+ unit vector.
+   *             otherwise, the Y+ unit vector is used, or if the curve is oriented along the Y axis, the Z+ unit vector.
    */
   abstract getNormal(time: number, up?: ReadonlyVec3) : vec3;
 

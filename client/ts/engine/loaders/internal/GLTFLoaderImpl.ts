@@ -86,6 +86,11 @@ export class GLTFLoaderImpl implements GLTFLoader {
     return res;
   }
 
+  /**
+   * deprecated
+   * @param path - path to image 
+   * @returns imagetexture object
+   */
   async loadTexture(path: string) {
     let tex = new ImageTexture(this.gl, path);
     await tex.waitUntilLoaded();
