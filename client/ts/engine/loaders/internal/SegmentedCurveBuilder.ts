@@ -43,25 +43,23 @@ export class SegmentedCurveBuilder {
     }  
   }
 
-  private recurse_buildCurve(visits: Set<number>, output: RingArray<[number, number]>, parent: number, ahead: boolean) {
+  private recurse_buildCurve(visits: Set<number>, output: RingArray<[number, number]>, parent: number, grandparent: number, ahead: boolean) {
     // parent represents the vertex we intend to branch from
-    // if parent is ahead of our starting segment, 
-    console.log(parent);
-    console.log(this.connections.get(parent));
+    // if parent is ahead of our starting segment
     visits.add(parent);
     const candidates = this.connections.get(parent);
     // figure out how to build multiple curves and splice them together
     // at these break points, we should generate a new RingArray and toss things into it
     // with multiple curves, we can capture break points along lines
     for (let vert of candidates) {
-      if (!visits.has(vert)) {
+      if (!visits.has(vert) && vert !== grandparent) {
         if (ahead) {
           output.push([parent, vert]);
         } else {
           output.enqueue([vert, parent]);
         }
 
-        this.recurse_buildCurve(visits, output, vert, ahead);
+        this.recurse_buildCurve(visits, output, vert, parent, ahead);
       }
     }
   }
@@ -82,11 +80,13 @@ export class SegmentedCurveBuilder {
     orderedSegments.push(res);
 
     let visitedPoints = new Set<number>();
-    visitedPoints.add(res[0]);
+    
+    this.recurse_buildCurve(visitedPoints, orderedSegments, res[1], res[0], true);
     visitedPoints.add(res[1]);
 
-    this.recurse_buildCurve(visitedPoints, orderedSegments, res[1], true);
-    this.recurse_buildCurve(visitedPoints, orderedSegments, res[0], false);
+    console.log("swap");
+    this.recurse_buildCurve(visitedPoints, orderedSegments, res[0], res[1], false);
+    visitedPoints.add(res[0]);
 
     // we now have an ordered list of segments
     // note: if we have a loop, we want to remove the last element and raise the loop flag.
