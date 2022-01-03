@@ -42,15 +42,7 @@ export abstract class PostProcessingFilter {
   }
 
   filterfunc(src: Framebuffer, dst: Framebuffer, rc: RenderContext) {
-    const start = perf.now();
     this.runFilter(src, dst, rc);
-    if (this.getContext().debugger) {
-      this.getContext().getGLContext().finish();
-    }
-    
-    const end = perf.now();
-
-    logRender(this.name, end - start);
   }
 
   /**

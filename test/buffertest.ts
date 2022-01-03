@@ -25,7 +25,23 @@ const ctxstub = new Proxy({} as GameContext, {
       return (..._: any) => null;
     }
   }
-})
+});
+
+function getCTXStub(gl: WebGLRenderingContext) {
+  const ctxstub = new Proxy({} as GameContext, {
+    get: function(target, prop, receiver) {
+      if (prop === "getGLContext") {
+        return (...temp: any) => gl;
+      }
+  
+      else {
+        return (..._: any) => null;
+      }
+    }
+  });
+
+  return ctxstub;
+}
 
 describe("GLBuffer", function() {
   it("Should instantiate itself without crashing", function() {
@@ -108,6 +124,7 @@ describe("GLBuffer", function() {
       }
     });
 
+    const ctxstub = getCTXStub(glProxy);
     let glbuf = new GLBufferImpl(ctxstub, buf);
     glbuf.bindToVertexAttribute(0, 2, DataType.FLOAT, false, 0, 0);
     glbuf.bindToVertexAttribute(1, 2, DataType.UNSIGNED_SHORT, false, 0, 0);

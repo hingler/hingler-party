@@ -2,8 +2,10 @@ import { mat4, vec3 } from "gl-matrix";
 import { perf } from "../../../../ts/performance";
 import { mobileCheck } from "../../../../ts/util/MobileCheck";
 import { PingQueue } from "../../../../ts/util/PingQueue";
+import { EXT_disjoint_timer_query_webgl2 } from "../GameContext";
 import { Framebuffer } from "../gl/Framebuffer";
 import { ColorFramebuffer } from "../gl/internal/ColorFramebuffer";
+import { SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { ColorDisplay } from "../material/ColorDisplay";
@@ -23,6 +25,7 @@ import { Scene } from "../object/scene/Scene";
 import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { DebugDisplay } from "./DebugDisplay";
 import { EngineContext } from "./EngineContext";
+import { RenderType } from "./performanceanalytics";
 
 export class RenderPerformanceInfo {
   readonly shadowTime: number;
@@ -70,7 +73,7 @@ class SpotLightRenderContext implements RenderContext {
  */
 export class Renderer {
   private ctx: EngineContext;
-  private gl: WebGLRenderingContext;
+  private gl: WebGLRenderingContext | WebGL2RenderingContext;
   private scene: Scene;
   private primaryFB: Framebuffer;
   private swapFB: Framebuffer;
@@ -89,6 +92,15 @@ export class Renderer {
 
   private totalRenderTime: number;
 
+  private maxTimeout: number;
+
+  private queryExt: EXT_disjoint_timer_query_webgl2;
+
+  private shadowQueue: PingQueue;
+  private finalQueue: PingQueue;
+  private postQueue: PingQueue;
+  private totalQueue: PingQueue;
+
   // tracks rendered textures
   private renderPasses: Array<TextureDisplay>;
   constructor(ctx: EngineContext, scene: Scene) {
@@ -104,15 +116,30 @@ export class Renderer {
     this.finalRenderTime = 0;
     this.postRenderTime = 0;
     this.totalRenderTime = 0;
+
+    this.shadowQueue = new PingQueue(64);
+    this.finalQueue = new PingQueue(64);
+    this.postQueue = new PingQueue(64);
+    this.totalQueue = new PingQueue(64);
+
+    
+    this.queryExt = null;
+
+    
+    if (ctx.webglVersion === 2) {
+      this.queryExt = ctx.getGLExtension("EXT_disjoint_timer_query_webgl2");
+      console.log(this.queryExt);
+    }
   }
 
   renderScene() {
+    const timer = this.ctx.getGPUTimer();
     if (!this.scene.isInitialized()) {
       console.info("Render skipped due to uninitialized scene...");
       return;
     }
 
-    const totalStart = perf.now();
+    const totalStart = timer.startQuery();
     
     let dims = this.ctx.getScreenDims();
     let old_dims = this.primaryFB.dims;
@@ -132,7 +159,9 @@ export class Renderer {
     gl.enable(gl.CULL_FACE);
     gl.cullFace(gl.FRONT);
 
-    const shadowStart = perf.now();
+    const shadowStart = timer.startQuery();
+
+    // shit.cleanBlockList();
 
     for (let light of lights) {
       // skip until spotlights are definitely working
@@ -150,7 +179,7 @@ export class Renderer {
       spotLightInfo.push(new SpotLightStruct(this.ctx, light));
     }
 
-    const shadowEnd = perf.now();
+    const shadowProm = timer.stopQuery(shadowStart);
 
     for (let light of ambLights) {
       ambLightInfo.push(new AmbientLightStruct(this.ctx, light));
@@ -231,7 +260,7 @@ export class Renderer {
       }
     }
 
-    const finalStart = perf.now();
+    const finalStart = timer.startQuery();
 
     this.primaryFB.bindFramebuffer(gl.FRAMEBUFFER);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
@@ -243,22 +272,22 @@ export class Renderer {
     }
 
     // draw skybox
+
+    const skyboxid = timer.startQuery();
+
     this.gl.disable(gl.CULL_FACE);
     this.skyboxMat.skyboxes = skyboxList;
     this.skyboxMat.persp = info.perspectiveMatrix;
     this.skyboxMat.view = info.viewMatrix;
     this.skyboxMat.drawMaterial(this.cube);
 
-    if (this.ctx.debugger) {
-      gl.finish();
-    }
+    timer.stopQueryAndLog(skyboxid, "SkyboxMaterial", RenderType.FINAL);
 
-    const finalEnd = perf.now();
+    const finalProm = timer.stopQuery(finalStart);
+    const postStart = timer.startQuery();
 
     // run our post processing passes
     let filters : Array<PostProcessingFilter> = [];
-
-    const postStart = perf.now();
     
     if (cam) {
       filters = cam.getFilters();
@@ -277,26 +306,34 @@ export class Renderer {
       usePrimaryAsSource = !usePrimaryAsSource;
     }
 
+
+
+
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.renderPasses.push(new ColorDisplay(this.ctx, dst.getColorTexture()));
 
-    if (this.ctx.debugger) {
-      this.gl.finish();
-    }
-    const postEnd = perf.now();
+    const postProm = timer.stopQuery(postStart);
+    const totalProm = timer.stopQuery(totalStart);
 
-    this.shadowRenderTime = shadowEnd - shadowStart;
-    this.finalRenderTime = finalEnd - finalStart;
-    this.postRenderTime = postEnd - postStart;
-    this.totalRenderTime = postEnd - totalStart;
+    shadowProm.then((res) => this.shadowQueue.enqueue(res));
+    finalProm.then((res) => this.finalQueue.enqueue(res));
+    postProm.then((res) => this.postQueue.enqueue(res));
+    totalProm.then((res) => this.totalQueue.enqueue(res));
+
+    // console.log(`SHADOW: ${this.shadowQueue.getAverage() / 1e6}`);
+    // console.log(`FINAL: ${this.finalQueue.getAverage() / 1e6}`);
+    // console.log(`POST: ${this.postQueue.getAverage() / 1e6}`);
   }
 
   getDebugTiming() {
+    const shadowTime = this.shadowQueue.getAverage() / 1e6;
+    const finalTime = this.finalQueue.getAverage() / 1e6;
+    const postTime = this.postQueue.getAverage() / 1e6;
     return {
-      shadowTime: this.shadowRenderTime,
-      finalTime: this.finalRenderTime,
-      postTime: this.postRenderTime,
-      totalTime: this.totalRenderTime
+      shadowTime: shadowTime,
+      finalTime: finalTime,
+      postTime: postTime,
+      totalTime: shadowTime + finalTime + postTime
     } as RenderPerformanceInfo;
   }
 

@@ -22,10 +22,6 @@ export class GameObject extends EngineObject {
   private dirty: boolean;
 
   constructor(ctx: GameContext) {
-    if (!ctx) {
-      throw Error("wtf");
-    }
-
     super(ctx);
     this.children = new Set();
     this.parent = null;
@@ -54,16 +50,9 @@ export class GameObject extends EngineObject {
 
   // renders itself and its children
   protected renderfunc(rc: RenderContext) {
-    const start = perf.now();
+    const timer = this.getContext().getGPUTimer();
     this.renderMaterial(rc);
-    
-    if (this.getContext().debugger) {
-      // when the debug context is open, add a flush call to ensure the render op finishes completely
-      this.getContext().getGLContext().finish();
-    }
-
-    const end = perf.now();
-    logRender(this.getDebugName(), end - start);
+    // overtime should round out :)
     for (let child of this.children) {
       child.renderfunc(rc);
     }

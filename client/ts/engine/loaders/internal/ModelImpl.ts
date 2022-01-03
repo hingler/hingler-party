@@ -108,6 +108,8 @@ export interface ModelInstance {
 export class ModelImpl extends Model {
   readonly instances: Array<ModelInstance>;
 
+  name: string;
+
   posLocation: number;
   normLocation: number;
   texLocation: number;

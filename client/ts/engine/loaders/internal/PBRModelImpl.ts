@@ -16,6 +16,8 @@ export class PBRModelImpl implements PBRModel {
 
   private shadowTex: ShadowNoTextureMaterial;
 
+  name: string;
+
   // swap to PBR
   constructor(ctx: GameContext, instances: Array<Model>, mats: Array<PBRMaterial>) {
     if (instances.length !== mats.length) {
@@ -25,7 +27,12 @@ export class PBRModelImpl implements PBRModel {
     this.instances = instances;
     this.mats = mats;
     this.shadowTex = new ShadowNoTextureMaterial(ctx);
+    this.name = undefined;
   }
+
+  setName(name: string) {
+    this.name = name;
+  } 
 
   bindAttribute(at: AttributeType, index: number) {
     for (let model of this.instances) {

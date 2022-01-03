@@ -18,3 +18,38 @@
 .debug-frame span {
   font-weight: 300;
 }
+
+.renderbars {
+  width: 256px;
+}
+
+.shadow {
+  background: rgb(96,88,79);
+  background: linear-gradient(0deg, rgba(96,88,79,.5) 0%, rgba(250,135,47,.5) 100%);  
+}
+
+.final {
+  background: rgb(80,96,79);
+  background: linear-gradient(0deg, rgba(80,96,79,.5) 0%, rgba(195,250,149,.5) 100%);
+}
+
+.post {
+  background: rgb(87,79,96);
+  background: linear-gradient(0deg, rgba(87,79,96,.5) 0%, rgba(239,149,250,.5) 100%);
+}
+
+.uncategorized {
+  background: rgb(82,79,96);
+  background: linear-gradient(0deg, rgba(82,79,96,.5) 0%, rgba(165,185,214,.5) 100%);
+}
+
+.renderbars .bar {
+  font-size: 10px; 
+  overflow: visible;
+  color: white;
+  white-space: nowrap;
+}
+
+.hidden {
+  display: none;
+}

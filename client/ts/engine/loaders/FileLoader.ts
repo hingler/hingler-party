@@ -1,22 +1,29 @@
 import { Future } from "../../../../ts/util/task/Future";
 import { Task } from "../../../../ts/util/task/Task";
+import { ImageTexture } from "../gl/internal/ImageTexture";
 import { FileLike } from "./FileLike";
 import { FileLikeWeb } from "./internal/FileLikeWeb";
 
 /**
  * Provides a convenient wrapper for loading files.
  * Tracks loading progress of a particular file.
+ * Move loading here, instead of GLTFLoader lmao
  */
 export class FileLoader {
 
   private loadedFiles: Map<string, FileLikeWeb>;
+  private imageTextures: Map<string, ImageTexture>;
   private workerPath: Promise<void>;
   private res: () => void;
   private rej: (_: any) => void;
   private static workerLoaded: Task<void> = null;
 
-  constructor(loadServiceWorker?: boolean) {
+  private gl: WebGLRenderingContext;
+
+  constructor(gl: WebGLRenderingContext, loadServiceWorker?: boolean) {
     this.loadedFiles = new Map();
+    this.imageTextures = new Map();
+    this.gl = gl;
     FileLoader.workerLoaded = null;
     if (loadServiceWorker === undefined || loadServiceWorker) {
       this.workerPath = new Promise((re, rj) => { this.res = re; this.rej = rj; });;
@@ -72,6 +79,19 @@ export class FileLoader {
 
     await res.waitUntilReady();
     return res;
+  }
+
+  async openTexture(path: string) {
+    let tex: ImageTexture;
+    if (this.imageTextures.has(path)) {
+      tex = this.imageTextures.get(path);
+    } else {
+      tex = new ImageTexture(this.gl, path);
+      this.imageTextures.set(path, tex);
+    }
+
+    await tex.waitUntilLoaded();
+    return tex;
   }
 
   getFractionLoaded() : number {

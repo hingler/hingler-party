@@ -3,6 +3,7 @@ import { RenderContext } from "../render/RenderContext";
 import { Model } from "./Model";
 
 export abstract class PBRModel extends Model {
+  readonly name: string;
   /**
    * Like draw(), but uses a PBR shader whose parameters are predetermined.
    * @param modelMatrix - the modelmatrix for the model being drawn.

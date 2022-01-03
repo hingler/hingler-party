@@ -7,7 +7,7 @@ const canvas = document.getElementById("test-canvas") as HTMLCanvasElement;
 
 describe("GLTFLoader", function() {
   it("Should read a plain scene", async function() {
-    let temp = new FileLoader();
+    let temp = new FileLoader(null);
     let ctx = new EngineContext(canvas, null);
     let loader = new GLTFLoaderImpl(temp, ctx);
     let res = await loader.loadGLTFModel("../data/test.glb");

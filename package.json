@@ -7,6 +7,7 @@
     "node": "12.x",
     "npm": "7.x"
   },
+  
   "scripts": {
     "build": "npm run clean && rm -rf ./client/js && rm -rf ./ts-out && tsc && npx webpack && cp node_modules/mocha/mocha.js test/browser/js/mocha.js && cp node_modules/chai/chai.js test/browser/js/chai.js && cp node_modules/mocha/mocha.css test/browser/mocha.css && cp node_modules/mocha/mocha.js.map test/browser/js/mocha.js.map && node copyProjectResources.ts ./test",
     "build-debug": "rm -rf ./client/js && rm -rf ./ts-out && tsc && npx webpack",
@@ -31,6 +32,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "gl-matrix": "^3.3.0",
+    "nekogirl-valhalla": "file:nekogirl-valhalla",
     "ws": "^7.4.6"
   },
   "devDependencies": {

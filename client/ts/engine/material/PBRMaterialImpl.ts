@@ -12,9 +12,10 @@ import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { Texture } from "../gl/Texture";
 import { getEnginePath } from "../internal/getEnginePath";
+import { RenderType } from "../internal/performanceanalytics";
 import { InstancedModel } from "../model/InstancedModel";
 import { AttributeType, Model } from "../model/Model";
-import { RenderContext, SkyboxInfo } from "../render/RenderContext";
+import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { CalculateNormalMatrixFromBuffer } from "./CalculateNormalMatrixFromBuffer";
 import { Material } from "./Material";
 import { PBRInstancedMaterial } from "./PBRInstancedMaterial";
@@ -564,5 +565,6 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
       model.draw();
     }
+    
   }
 }

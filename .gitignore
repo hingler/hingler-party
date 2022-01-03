@@ -18,6 +18,7 @@ cypress/reports/
 
 
 .nyc_output
+.vscode
 
 client/sw.js
 test/engine

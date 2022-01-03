@@ -3,11 +3,11 @@ import { perf } from "../../../../../ts/performance";
 import { GameContext } from "../../GameContext";
 import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
-import { logRender } from "../../internal/performanceanalytics";
+import { logRender, RenderType } from "../../internal/performanceanalytics";
 import { InstancedMaterial } from "../../material/InstancedMaterial";
 import { InstancedModel } from "../../model/InstancedModel";
 import { AttributeType } from "../../model/Model";
-import { RenderContext } from "../../render/RenderContext";
+import { RenderContext, RenderPass } from "../../render/RenderContext";
 import { ModelImpl } from "./ModelImpl";
 
 interface BufferRecord {
@@ -34,6 +34,10 @@ export class InstancedModelImpl implements InstancedModel {
   private enabledAttributes: Set<number>;
   private attributeToBuffer: Map<number, number>;
 
+  name: string;
+
+  private logname: string;
+
   constructor(ctx: GameContext, model: ModelImpl) {
     this.model = model;
     this.ctx = ctx;
@@ -46,6 +50,7 @@ export class InstancedModelImpl implements InstancedModel {
 
   setInstancedMaterial(material: InstancedMaterial) {
     this.mat = material;
+    this.logname = `${this.name}.${this.mat.constructor.name}`;
   }
 
   getReadOnlyBuffer(index: number) : GLBufferReadOnly {
@@ -71,7 +76,8 @@ export class InstancedModelImpl implements InstancedModel {
    * renders all currently stored instances to the screen.
    */
   flush(rc: RenderContext) {
-    const start = perf.now();
+    const timer = this.ctx.getGPUTimer();
+    const id = timer.startQuery();
     if (this.instanceCount > 0) {
       if (this.mat !== null) {
         // TODO: instead of just passing the instance count and the model,
@@ -112,16 +118,12 @@ export class InstancedModelImpl implements InstancedModel {
     for (let record of this.instances.values()) {
       record.offset = 0;
     }
-    
-    if (this.ctx.debugger) {
-      this.ctx.getGLContext().finish();
-    }
 
     this.enabledAttributes = new Set();
     this.attributeToBuffer = new Map();
-    const end = perf.now();
     let matname = (this.mat ? this.mat.constructor.name : "UnknownMaterial");
-    logRender(`InstancedModel:${matname}`, end - start);
+    // logRender(`InstancedModel:${matname}`, end - start);
+    timer.stopQueryAndLog(id, `InstancedModel.${this.model.name}.${matname}`, rc.getRenderPass() === RenderPass.SHADOW ? RenderType.SHADOW : RenderType.FINAL);
   }
   
   bindAttribute(at: AttributeType, location: number) {
