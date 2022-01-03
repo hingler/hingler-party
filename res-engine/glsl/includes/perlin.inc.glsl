@@ -1,15 +1,6 @@
 // implementation of perlin noise
 
-#define RAND_SEED vec3(144.22114, 81623.114, 2256.895)
-#define RAND_SEED_2D vec2(221.44, 14476.239)
-// calculates the gradient at a particular point
-float hash(vec3 corner) {
-  return fract(sin(dot(corner, RAND_SEED))) * 16.0;
-}
-
-float hash(vec2 corner) {
-  return fract(sin(dot(corner, RAND_SEED_2D))) * 4.0;
-}
+#include <random>
 
 float fade(float t) {
   return t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
@@ -25,7 +16,7 @@ vec2 fade(vec2 t) {
 
 // gets gradient for a corner
 float grad(vec3 corner, vec3 pos) {
-  float h = hash(corner);
+  float h = hash(corner) * 16.0;
   // 1 or -1 for each coord
   vec2 data = vec2(step(mod(h, 4.0), 2.0) * 2.0 - 1.0, step(mod(h, 2.0), 1.0) * 2.0 - 1.0);
   // use floor div 4 to determine which coords to use
@@ -45,7 +36,7 @@ float grad(vec3 corner, vec3 pos) {
 }
 
 float grad(vec2 corner, vec2 pos) {
-  float h = hash(corner);
+  float h = hash(corner) * 4.0;
   vec2 data = vec2(step(mod(h, 4.0), 2.0) * 2.0 - 1.0, step(mod(h, 2.0), 1.0) * 2.0 - 1.0);
   return dot(data, pos);
 }

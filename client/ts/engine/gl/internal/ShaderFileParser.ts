@@ -12,6 +12,7 @@ const DEFAULT_INCLUDES = [
   "attenuation",
   "compatibility",
   "spotlight",
+  "procedural",
   "ambient",
   "constants",
   "gradient",
@@ -28,6 +29,10 @@ const SPOTLIGHT_INCLUDES = [
   "light",
   "pbr"
 ];
+
+const PROCEDURAL_INCLUDES = [
+  "brick"
+]
 
 
 // fix dupe includes on env :(
@@ -98,6 +103,19 @@ export class ShaderFileParser {
                   }
                 } else {
                   output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl"), isVertexShader));
+                }
+                break;
+              case "procedural":
+                if (match[4] !== undefined) {
+                  if (PROCEDURAL_INCLUDES.indexOf(match[4]) !== -1) {
+                    output.push(await this.parseShaderFile_(getEnginePath(`engine/glsl/includes/procedural/${match[4]}.inc.glsl`), isVertexShader));
+                  } else {
+                    // if not a valid include, treat it as a normal path
+                    const relativePath = folder + match[1];
+                    output.push(await this.parseShaderFile_(relativePath, isVertexShader));
+                  }
+                } else {
+                  console.warn("cannot interpret plain procedural import -- ignoring...");
                 }
                 break;
               case "ambient":

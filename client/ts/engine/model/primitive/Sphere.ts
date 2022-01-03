@@ -26,9 +26,9 @@ export class Sphere extends ModelImpl {
 
     // poles have to be computed for each lat, since texcoords differ
     const buffer = geomBuffer.getRegionAsFloat32Array(0, 11 * (ringsLat + 1) * (ringsLong + 1));
-    for (let i = 0; i <= ringsLat; i++) {
+    for (let i = 0; i <= ringsLong; i++) {
       let phi = (-Math.PI / 2);
-      for (let j = 0; j <= ringsLong; j++) {
+      for (let j = 0; j <= ringsLat; j++) {
         // position is converted to spherical, * radius
         // normal is normalized position
         // tangent is normal projected onto xz plane, rotated 90 degrees ccw
@@ -57,8 +57,8 @@ export class Sphere extends ModelImpl {
         buffer[off + 7] = 0;
         buffer[off + 8] = Math.cos(theta);
 
-        buffer[off + 9] = (j / ringsLong);
-        buffer[off + 10] = (i / ringsLat);
+        buffer[off + 9] = (i / ringsLong);
+        buffer[off + 10] = (j / ringsLat);
         // note that we have to double-gen the last point, once with texcoord 0 and once with texcoord 1
         phi += latStep;
         vertexCount++;

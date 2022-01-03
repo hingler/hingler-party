@@ -49,6 +49,7 @@ export class BRDFLutDisplay {
       gl.vertexAttribPointer(this.posLoc, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.posLoc);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.disableVertexAttribArray(this.posLoc);
     }
   }
 }

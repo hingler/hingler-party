@@ -22,6 +22,7 @@ interface ProceduralTextureInterface_ {
 
 function ProceduralTextureCtorWrap(ctor: ProceduralTextureInterface_, ...args: any[]) {
   return (ctx: GameContext) => {
+    console.log(ctor);
     return new ctor(ctx, ...args);
   }
 }1
@@ -30,9 +31,9 @@ export class GameModelWrapper extends GameModel {
   private mat: PBRMaterialImpl;
   private shadow: ShadowNoTextureMaterial;
   
-  constructor(ctx: GameContext, model: Model | Future<Model> | string, name?: string) {
+  constructor(ctx: GameContext, model: Model | Future<Model> | string, mat: PBRMaterialImpl, name?: string) {
     super(ctx, model, name);
-    this.mat = new PBRMaterialImpl(ctx);
+    this.mat = mat;
     this.shadow = new ShadowNoTextureMaterial(ctx);
   }
 
@@ -47,9 +48,6 @@ export class GameModelWrapper extends GameModel {
     } else {
       this.mat.modelMat = this.getTransformationMatrix();
       this.mat.vpMat = info.vpMatrix;
-      this.mat.colorFactor = [1, 1, 1, 1];
-      this.mat.roughFactor = 0.4;
-      this.mat.metalFactor = 0.2;
       this.mat.cameraPos = info.cameraPosition;
       this.mat.setSkybox(rc.getSkybox());
       this.mat.setSpotLight(rc.getSpotLightInfo());
@@ -84,32 +82,42 @@ export class ProceduralTextureTestScene extends Scene {
   async initialize(ctx: GameContext): Promise<void> {
     const tex = this.texCallback(ctx);
     const model = new Sphere(ctx, 32, 32, 2);
-    const gamemodel = new GameModelWrapper(ctx, model, "SampleSphere");
-
+    
     const root = this.getGameObjectRoot();
-    root.addChild(gamemodel);
-    gamemodel.setPosition(0, 0, 0);
-
+    
     const cam = new GameCamera(ctx);
     cam.setPosition(0, 0, -6);
     cam.lookAt(0, 0, 0);
-
+    
     const norm = new NormOfTheNorth(ctx);
     norm.addChild(cam);
-
+    
     root.addChild(norm);
-
+    
     const light = new SpotLightObject(ctx);
     light.setPosition(-4, 3, -8);
     light.lookAt(0, 0, 0);
-
+    
     cam.setAsActive();
+    
+    const albedo = await tex.albedo();
+    const normal = await tex.normal();
+    const arm = await tex.arm();
 
-    const albedo = tex.albedo();
-    const normal = tex.normal();
-    const arm = tex.arm();
+    const mat = new PBRMaterialImpl(ctx);
+    mat.color = albedo;
+    mat.normal = normal;
+    // todo: integrate ambient
+    mat.metalRough = arm;
 
-
+    mat.colorFactor = tex.albedoFactor();
+    mat.metalFactor = tex.metalFactor();
+    mat.roughFactor = tex.roughFactor();
+    
+    const gamemodel = new GameModelWrapper(ctx, model, mat, "SampleSphere");
+    root.addChild(gamemodel);
+    gamemodel.setPosition(0, 0, 0);
+    
 
     const skybox = new SkyboxObject(ctx, getEnginePath("engine/res/cannon_2k.hdr"));
     root.addChild(skybox);
