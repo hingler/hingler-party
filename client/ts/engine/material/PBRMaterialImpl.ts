@@ -1,6 +1,6 @@
 // todo: replace instances of WebGLProgram with a version which keeps track of uniform locations
 
-import { mat3, mat4, vec3, vec4 } from "gl-matrix";
+import { mat3, mat4, ReadonlyMat4, vec3, vec4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { ColorCubemap } from "../gl/ColorCubemap";
 import { Cubemap } from "../gl/Cubemap";
@@ -63,8 +63,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
 
   private skyboxes: Array<SkyboxInfo>;
    
-  vpMat: mat4;
-  modelMat: mat4;
+  vpMat: ReadonlyMat4;
+  modelMat: ReadonlyMat4;
   
   color: Texture;
   colorFactor: vec4;
@@ -176,9 +176,6 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.modelMatrixIndex = -1;
     let gl = ctx.getGLContext();
     this.normalBuffer = new GLBufferImpl(ctx, undefined, gl.DYNAMIC_DRAW);
-
-    mat4.identity(this.vpMat);
-    mat4.identity(this.modelMat);
 
     new ShaderProgramBuilder(ctx)
       .withVertexShader(getEnginePath("engine/glsl/pbr/pbr.vert"))

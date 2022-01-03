@@ -10,6 +10,8 @@ export class ImageTexture extends Texture {
 
   private loadTask: Task<void>;
 
+  // todo: create an interface for readonly textures
+  // share w other components where necessaryt :D
   constructor(gl: WebGLRenderingContext, href: string) {
     super();
     this.gl = gl;
