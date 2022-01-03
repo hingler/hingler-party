@@ -4,6 +4,7 @@ import { ColorTexture } from "./ColorTexture";
 import { DepthTexture } from "./DepthTexture";
 import { FloatColorTexture } from "./FloatColorTexture";
 
+// need something like a color framebuffer, where i can just attach things to it ad hoc
 export class ColorFramebuffer implements Framebuffer {
   dims: [number, number];
 
@@ -12,6 +13,12 @@ export class ColorFramebuffer implements Framebuffer {
   private fb: WebGLFramebuffer;
   private gl: WebGLRenderingContext;
 
+  /**
+   * Creates a new ColorFramebuffer.
+   * @param ctx - game context
+   * @param dims - framebuffer dimensions
+   * @param floatAttach - float attachment
+   */
   constructor(ctx: GameContext, dims: [number, number], floatAttach?: boolean) {
     const floatsupport = !!(ctx.getGLExtension("WEBGL_color_buffer_float"));
     if (floatsupport && floatAttach) {

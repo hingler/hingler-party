@@ -1,4 +1,4 @@
-import { mat4, vec4, vec3, mat3 } from "gl-matrix";
+import { mat4, vec4, vec3, mat3, ReadonlyMat4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { GLBuffer, GLBufferReadOnly } from "../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../gl/internal/GLBufferImpl";
@@ -17,7 +17,7 @@ import { TextureDummy } from "./TextureDummy";
 // come up with a way to factor that reuse out
 export interface PBRInstancedMaterial extends InstancedMaterial, PBRInterface {
   
-  vpMat: mat4;
+  vpMat: ReadonlyMat4;
   
   color: Texture;
   colorFactor: vec4;
