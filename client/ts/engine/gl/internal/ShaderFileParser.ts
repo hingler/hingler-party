@@ -31,7 +31,8 @@ const SPOTLIGHT_INCLUDES = [
 ];
 
 const PROCEDURAL_INCLUDES = [
-  "brick"
+  "brick",
+  "bump"
 ]
 
 
@@ -40,6 +41,7 @@ export class ShaderFileParser {
   private loader: FileLoader;
   private ctx: GameContext;
   private pathRecord: Set<string>;
+  private programFlags: string[];
 
   constructor(ctx: GameContext) {
     this.loader = ctx.getFileLoader();
@@ -47,6 +49,10 @@ export class ShaderFileParser {
     if (ver === undefined) {
       ver = (this.ctx.webglVersion === 2 ? "#version 300 es" : "#version 100");
     }
+  }
+
+  setProgramFlags(flags: string[]) {
+    this.programFlags = Array.from(flags) as string[];
   }
 
   async parseShaderFile(path: string, isVertexShader?: boolean) {
@@ -83,6 +89,7 @@ export class ShaderFileParser {
               case "env":
                 output.push(this.ctx.getShaderEnv());
                 output.push(`#define VERT ${isVertexShader ? 1 : 0}`);
+                output.push(...(this.programFlags.map(val => `#define ${val}\n`)));
                 break;
               case "attenuation":
                 output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl"), isVertexShader));

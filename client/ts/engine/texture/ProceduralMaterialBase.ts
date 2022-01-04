@@ -14,12 +14,13 @@ export class ProceduralMaterialBase {
   private prog : WebGLProgram;
   private prom : Promise<void>;
 
-  constructor(ctx: GameContext, fragPath: string) {
+  constructor(ctx: GameContext, fragPath: string, ...flags: string[]) {
     this.ctx = ctx;
     this.buf = getFullScreenQuadBuffer(ctx);
     this.prom = new ShaderProgramBuilder(ctx)
       .withVertexShader(getEnginePath("engine/glsl/texturexfer/texturexfer.vert"))
       .withFragmentShader(fragPath)
+      .withFlags(...flags)
       .build()
       .then(this.configureProgram.bind(this));
   }
@@ -69,18 +70,3 @@ export class ProceduralMaterialBase {
 
   }
 }
-
-// create screen buffer
-
-// provide only a frag shader
-
-// after compilation ... 
-
-// call our private to get the pos loc
-// then call a protected nop to bind uniforms
-
-// on draw ...
-
-// set up our vertex arrays ...
-// call a protected nop so the implementer can specify any uniforms
-// then draw, cleanup, done!

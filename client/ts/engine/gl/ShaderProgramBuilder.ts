@@ -34,12 +34,14 @@ export class ShaderProgramBuilder {
   private vertPath: string;
   private fragPath: string;
 
+  private flags: string[];
+
   constructor(ctx: GameContext) {
     this.vertPath = null;
     this.fragPath = null;
     this.ctx = ctx;
     this.fileParser = new ShaderFileParser(this.ctx);
-
+    this.flags = [];
   }
 
   /**
@@ -63,6 +65,16 @@ export class ShaderProgramBuilder {
     return this;
   }
 
+  withFlags(...flags: string[]) {
+    this.flags.push(...flags);
+    this.fileParser.setProgramFlags(this.flags);
+    return this;
+  }
+
+  private getPathString() {
+    return `${this.vertPath}|${this.fragPath}:${this.flags.join(",")}`;
+  }
+
   buildFuture() : Future<WebGLProgram> {
     if (this.vertPath === null || this.fragPath === null) {
       let err = `Missing ${this.vertPath === null ? "vertex " : ""}${this.vertPath === null && this.fragPath === null ? "and " : ""}${this.fragPath === null ? "fragment " : ""}shader!`;
@@ -73,7 +85,8 @@ export class ShaderProgramBuilder {
     let progTask = new Task<WebGLProgram>();
     
     // errors from compilation will throw here
-    let pathString = `${this.vertPath}|${this.fragPath}`;
+    // `<vertpath>|<fragpath>:flagA,flagB,...,flagZ`
+    let pathString = this.getPathString();
 
     if (shaderCache.has(pathString)) {
       progTask.resolve(shaderCache.get(pathString));
@@ -108,7 +121,7 @@ export class ShaderProgramBuilder {
     const gl = this.ctx.getGLContext();
     
     // errors from compilation will throw here
-    let pathString = `${this.vertPath}|${this.fragPath}`;
+    let pathString = this.getPathString();
     if (shadersCompiling.has(pathString)) {
       await shadersCompiling.get(pathString);
       // shader is compiling -- wait for completion
@@ -130,7 +143,9 @@ export class ShaderProgramBuilder {
     
     let vertShader : WebGLShader;
     let fragShader : WebGLShader;
-    
+
+    this.fileParser.setProgramFlags(this.flags);
+
     try {
       vertShader = await this.createShaderFromFile_(this.vertPath, gl.VERTEX_SHADER);
       fragShader = await this.createShaderFromFile_(this.fragPath, gl.FRAGMENT_SHADER);
