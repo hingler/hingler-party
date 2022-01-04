@@ -77,3 +77,14 @@ float noise2d(vec2 point) {
 
   return mix(y_a, y_b, t.x);
 }
+
+float fractalPerlin2d(vec2 point, int octaves) {
+  float coll = 0.0;
+  vec2 samplePoint = vec2(point);
+  for (int i = 0; i < octaves; i++) {
+    coll += noise2d(samplePoint);
+    samplePoint *= 1.898;
+  }
+
+  return coll / float(octaves);
+}
