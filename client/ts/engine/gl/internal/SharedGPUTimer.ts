@@ -48,7 +48,7 @@ class QueryRecord {
   query: WebGLQuery;
   logDest: string;
   resolve: (value: number) => void;
-  reject: (value: number) => void;
+  reject: (value: any) => void;
 }
 
 export interface QueryManager {
@@ -88,7 +88,7 @@ export class QueryManagerWebGL2 implements QueryManager {
       const q = query.query;
 
       if (disjoint) {
-        query.reject(-1);
+        query.reject("Timer query was disjoint :(");
       }
 
       const avail = gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE);
@@ -208,7 +208,7 @@ export class SharedGPUTimer implements GPUTimerInternal {
 
   async stopQuery(queryId: number) : Promise<number> {
     if (this.test === false) {
-      return Promise.reject(-1);
+      return Promise.reject("No query was available");
     }
     
     let marker = -1;
@@ -224,7 +224,7 @@ export class SharedGPUTimer implements GPUTimerInternal {
     
     if (marker === -1) {
       // end query flag does not exist
-      return Promise.reject(-1);
+      return Promise.reject("Uh oh!!! Your ID is bad >:)");
     }
     
     const prom = this.word.stopQuery();

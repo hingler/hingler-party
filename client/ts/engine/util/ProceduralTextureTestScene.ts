@@ -1,3 +1,4 @@
+import { perf } from "@hingler-party/ts/performance";
 import { Future } from "@hingler-party/ts/util/task/Future";
 import { FXAAFilter } from "../filter/FXAAFilter";
 import { GameContext } from "../GameContext";
@@ -80,6 +81,7 @@ export class ProceduralTextureTestScene extends Scene {
   
   // accept proceduraltexture as a test
   async initialize(ctx: GameContext): Promise<void> {
+    let start = perf.now();
     const tex = this.texCallback(ctx);
     const model = new Sphere(ctx, 32, 32, 2);
     
@@ -99,7 +101,8 @@ export class ProceduralTextureTestScene extends Scene {
     light.lookAt(0, 0, 0);
     
     cam.setAsActive();
-    
+    // gpu wrenches control between calls i think
+    // might be impossible to bench :(
     const albedo = await tex.albedo();
     const normal = await tex.normal();
     const arm = await tex.arm();
@@ -113,7 +116,7 @@ export class ProceduralTextureTestScene extends Scene {
     mat.colorFactor = tex.albedoFactor();
     mat.metalFactor = tex.metalFactor();
     mat.roughFactor = tex.roughFactor();
-    
+
     const gamemodel = new GameModelWrapper(ctx, model, mat, "SampleSphere");
     root.addChild(gamemodel);
     gamemodel.setPosition(0, 0, 0);
@@ -124,5 +127,8 @@ export class ProceduralTextureTestScene extends Scene {
 
     const fxaa = new FXAAFilter(ctx);
     cam.addFilter(fxaa);
+
+    let end = perf.now();
+    console.log(`Procedural shader config time: ${(end - start) / 1000} MS`)
   }
 }
