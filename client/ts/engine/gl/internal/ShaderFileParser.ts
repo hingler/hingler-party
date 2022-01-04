@@ -32,7 +32,8 @@ const SPOTLIGHT_INCLUDES = [
 
 const PROCEDURAL_INCLUDES = [
   "brick",
-  "bump"
+  "bump",
+  "voronoi"
 ]
 
 
