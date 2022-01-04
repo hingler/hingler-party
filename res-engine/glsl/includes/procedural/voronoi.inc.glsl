@@ -3,8 +3,8 @@
 #include <random>
 
 float voronoiWiggle1D(vec3 seed, float t) {
-  float noise_floor = noise3d(vec3(seed.xy, seed.z + floor(t)));
-  float noise_ceil = noise3d(vec3(seed.xy, seed.z + ceil(t)));
+  float noise_floor = hash(vec3(seed.xy, seed.z + floor(t)));
+  float noise_ceil = hash(vec3(seed.xy, seed.z + ceil(t)));
   float mix_pct = fract(t);
   return smoothstep(noise_floor, noise_ceil, mix_pct);
 }
@@ -23,7 +23,7 @@ vec2 voronoiWiggle(vec2 seed, float t) {
 
 // l2 - l1 for simple edge distance
 
-float voronoi(vec2 pos, float scale, float t) {
+float voronoi(vec2 pos, float scale, float t, out float edgedist) {
   vec2 nearestPoint = vec2(0.0);
   float L1 = 99999.9;
   float L2 = 99999.9;
@@ -40,6 +40,7 @@ float voronoi(vec2 pos, float scale, float t) {
       voronoiCenter += 1.5 * voronoiWiggle(voronoiCenter, t);
       float dist = length(voronoiCenter - activePos);
       if (dist < L1) {
+        L2 = L1;
         L1 = dist;
         nearestPoint = voronoiCenter;
       } else if (dist < L2) {
@@ -47,6 +48,8 @@ float voronoi(vec2 pos, float scale, float t) {
       }
     }
   }
+
+  edgedist = abs(L2 - L1);
 
   return hash(nearestPoint);
 }
