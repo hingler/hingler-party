@@ -25,6 +25,10 @@ export class ProceduralMaterialBase {
       .then(this.configureProgram.bind(this));
   }
 
+  protected getContext() {
+    return this.ctx;
+  }
+
   async waitUntilCompiled() {
     await this.prom;
   }

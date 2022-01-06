@@ -33,6 +33,7 @@ const SPOTLIGHT_INCLUDES = [
 const PROCEDURAL_INCLUDES = [
   "brick",
   "bump",
+  "noise",
   "voronoi"
 ]
 
@@ -63,7 +64,7 @@ export class ShaderFileParser {
 
   private async parseShaderFile_(path: string, isVertexShader: boolean) {
     if (this.pathRecord.has(path)) {
-      console.info(path + " already included in program. Ignoring import...");
+      console.debug(path + " already included in program. Ignoring import...");
       return "";
     }
 
@@ -79,7 +80,7 @@ export class ShaderFileParser {
     
     for (let line of lines) {
       if (line.indexOf(includeHeader) !== -1) {
-        console.info("Encountered new include: " + line);
+        console.debug("Encountered new include: " + line);
         let match = includeExtract.exec(line);
         if (match !== null) {
           const name = match[2];
