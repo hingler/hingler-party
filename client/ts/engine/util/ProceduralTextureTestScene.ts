@@ -15,10 +15,10 @@ import { SpotLightObject } from "../object/game/light/SpotLightObject";
 import { SkyboxObject } from "../object/game/SkyboxObject";
 import { Scene } from "../object/scene/Scene";
 import { RenderContext, RenderPass } from "../render/RenderContext";
-import { ProceduralTexture } from "../texture/ProceduralTexture";
+import { ProceduralMaterial } from "../texture/ProceduralMaterial";
 
 interface ProceduralTextureInterface_ {
-  new (ctx: GameContext, ...args: any[]) : ProceduralTexture;
+  new (ctx: GameContext, ...args: any[]) : ProceduralMaterial;
 }
 
 function ProceduralTextureCtorWrap(ctor: ProceduralTextureInterface_, ...args: any[]) {
@@ -73,7 +73,7 @@ export class NormOfTheNorth extends GameObject {
 
 export class ProceduralTextureTestScene extends Scene {
   // tex probably requires a constructor
-  private texCallback: (ctx: GameContext) => ProceduralTexture;
+  private texCallback: (ctx: GameContext) => ProceduralMaterial;
   constructor(tex: ProceduralTextureInterface_, ...args: any[]) {
     super();
     this.texCallback = ProceduralTextureCtorWrap(tex, ...args);

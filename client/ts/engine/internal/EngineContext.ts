@@ -11,13 +11,12 @@ import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
-import { DummyGPUTimer, GPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { DummyGPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
   "WEBGL_depth_texture",
   "OES_texture_float",
-  "OES_texture_float_linear",
   "OES_texture_half_float",
   "OES_texture_half_float_linear",
   "OES_vertex_array_object",

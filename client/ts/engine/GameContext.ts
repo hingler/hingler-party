@@ -69,6 +69,8 @@ export interface GameContext {
   getGLExtension(name: "OES_standard_derivatives")        : OES_standard_derivatives        | null;
   getGLExtension(name: "WEBGL_color_buffer_float")        : WEBGL_color_buffer_float        | null;
   getGLExtension(name: "EXT_disjoint_timer_query_webgl2") : EXT_disjoint_timer_query_webgl2 | null;
+  getGLExtension(name: "OES_texture_half_float")          : OES_texture_half_float          | null;
+  getGLExtension(name: "OES_texture_half_float_linear")   : OES_texture_half_float_linear   | null;
   /**
    * @returns the present GL rendering context.
    */

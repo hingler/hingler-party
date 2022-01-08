@@ -1,6 +1,6 @@
 import { GameContext } from "../../GameContext";
 import { Framebuffer } from "../Framebuffer";
-import { ColorTexture } from "./ColorTexture";
+import { BitDepth, ColorTexture } from "./ColorTexture";
 import { DepthTexture } from "./DepthTexture";
 import { FloatColorTexture } from "./FloatColorTexture";
 
@@ -22,7 +22,7 @@ export class ColorFramebuffer implements Framebuffer {
   constructor(ctx: GameContext, dims: [number, number], floatAttach?: boolean) {
     const floatsupport = !!(ctx.getGLExtension("WEBGL_color_buffer_float"));
     if (floatsupport && floatAttach) {
-      this.colorTexture = new FloatColorTexture(ctx, dims);
+      this.colorTexture = new ColorTexture(ctx, dims, 4, BitDepth.FLOAT);
     } else {
       this.colorTexture = new ColorTexture(ctx, dims);
     }

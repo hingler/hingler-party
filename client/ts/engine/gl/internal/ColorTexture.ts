@@ -53,7 +53,7 @@ export class ColorTexture extends Texture {
       if (!this.floatsupport) {
         // try downgrading to half float
         // note: we do not necessarily want to downgrade
-        // adding a "force" field where artifacts appear would be neat
+        // adding a "force" field to tell the client to always use the provided vals would help
         // alternatively, exposing client support on binds would be neat too
         depthWrap = BitDepth.HALF_FLOAT;
       }
