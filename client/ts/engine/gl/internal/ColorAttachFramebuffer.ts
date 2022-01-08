@@ -61,9 +61,10 @@ export class ColorAttachFramebuffer implements Framebuffer {
 
     if (!vec2.equals(this.dims, tex.dims)) {
       this.depthTexture.setDimensions(tex.dims);
-      this.depthTexture.attachToFramebuffer(this.fb);
       vec2.copy(this.dims, tex.dims);
     }
+    
+    this.depthTexture.attachToFramebuffer(this.fb);
   }
 
   /**
@@ -72,6 +73,7 @@ export class ColorAttachFramebuffer implements Framebuffer {
    */
   unsetColorTexture() {
     const ret = this.colorTexture;
+    // const gl = this.ctx.getGLContext();
     this.colorTexture = null;
     return ret;
   }

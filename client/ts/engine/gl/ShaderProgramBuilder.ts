@@ -15,6 +15,10 @@ import { ShaderFileParser } from "./internal/ShaderFileParser";
 const shaderCache : Map<string, WebGLProgram> = new Map();
 const shadersCompiling : Map<string, Promise<void>> = new Map();
 
+// load shader async compile
+// use a static func to check the shadercache at the end of each frame,
+// and resolve any lingering promises
+
 export function isShaderCompiling() {
   return (shadersCompiling.size === 0);
 }
@@ -34,12 +38,14 @@ export class ShaderProgramBuilder {
   private vertPath: string;
   private fragPath: string;
 
+  private flags: string[];
+
   constructor(ctx: GameContext) {
     this.vertPath = null;
     this.fragPath = null;
     this.ctx = ctx;
     this.fileParser = new ShaderFileParser(this.ctx);
-
+    this.flags = [];
   }
 
   /**
@@ -63,6 +69,16 @@ export class ShaderProgramBuilder {
     return this;
   }
 
+  withFlags(...flags: string[]) {
+    this.flags.push(...flags);
+    this.fileParser.setProgramFlags(this.flags);
+    return this;
+  }
+
+  private getPathString() {
+    return `${this.vertPath}|${this.fragPath}:${this.flags.join(",")}`;
+  }
+
   buildFuture() : Future<WebGLProgram> {
     if (this.vertPath === null || this.fragPath === null) {
       let err = `Missing ${this.vertPath === null ? "vertex " : ""}${this.vertPath === null && this.fragPath === null ? "and " : ""}${this.fragPath === null ? "fragment " : ""}shader!`;
@@ -73,7 +89,8 @@ export class ShaderProgramBuilder {
     let progTask = new Task<WebGLProgram>();
     
     // errors from compilation will throw here
-    let pathString = `${this.vertPath}|${this.fragPath}`;
+    // `<vertpath>|<fragpath>:flagA,flagB,...,flagZ`
+    let pathString = this.getPathString();
 
     if (shaderCache.has(pathString)) {
       progTask.resolve(shaderCache.get(pathString));
@@ -108,7 +125,7 @@ export class ShaderProgramBuilder {
     const gl = this.ctx.getGLContext();
     
     // errors from compilation will throw here
-    let pathString = `${this.vertPath}|${this.fragPath}`;
+    let pathString = this.getPathString();
     if (shadersCompiling.has(pathString)) {
       await shadersCompiling.get(pathString);
       // shader is compiling -- wait for completion
@@ -126,11 +143,20 @@ export class ShaderProgramBuilder {
       rej = reject;
     });
 
+    // use futures for this
+    // parallel: linkprogram will be an async call
+    // perframe:
+    //  - check linkstatus
+    //    - note: we'll have to put the program somewhere where we can see what its up to
+    //  - if failed, log link log, then shader logs, reject.
+    //  - if succeed, resolve.
     shadersCompiling.set(pathString, progress);
     
-    let vertShader : WebGLShader;
-    let fragShader : WebGLShader;
-    
+    let vertShader : [WebGLShader, string];
+    let fragShader : [WebGLShader, string];
+
+    this.fileParser.setProgramFlags(this.flags);
+
     try {
       vertShader = await this.createShaderFromFile_(this.vertPath, gl.VERTEX_SHADER);
       fragShader = await this.createShaderFromFile_(this.fragPath, gl.FRAGMENT_SHADER);
@@ -140,13 +166,25 @@ export class ShaderProgramBuilder {
     }
 
     let prog = gl.createProgram();
-    gl.attachShader(prog, vertShader);
-    gl.attachShader(prog, fragShader);
+    gl.attachShader(prog, vertShader[0]);
+    gl.attachShader(prog, fragShader[0]);
     gl.linkProgram(prog);
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
       console.log("Encountered linking error: " + gl.getProgramParameter(prog, gl.LINK_STATUS));
       let info = gl.getProgramInfoLog(prog);
       console.error(info);
+
+      // only check compilation status if link fails
+      for (let tuple of [vertShader, fragShader]) {
+        const shader = tuple[0];
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          let log = gl.getShaderInfoLog(shader);
+          this.printParsedShaderWithLineNumbers(tuple[1], "");
+          console.error(log);
+          gl.deleteShader(shader);
+          throw Error(log);
+        }
+      }
       rej();
       throw Error(info);
     }
@@ -158,22 +196,14 @@ export class ShaderProgramBuilder {
     return prog;
   }
 
-  private async createShaderFromFile_(shaderPath: string, shaderType: number) : Promise<WebGLShader> {
+  private async createShaderFromFile_(shaderPath: string, shaderType: number) : Promise<[WebGLShader, string]> {
     const gl = this.ctx.getGLContext();
     let shader = gl.createShader(shaderType);
     let contents = await this.fileParser.parseShaderFile(shaderPath, (shaderType === gl.VERTEX_SHADER));
 
     gl.shaderSource(shader, contents);
     gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      let log = gl.getShaderInfoLog(shader);
-      console.error(log);
-      gl.deleteShader(shader);
-      this.printParsedShaderWithLineNumbers(contents, shaderPath);
-      throw Error(log);
-    }
-
-    return shader;
+    return [shader, contents];
   }
 
   private printParsedShaderWithLineNumbers(shader: string, path: string) {

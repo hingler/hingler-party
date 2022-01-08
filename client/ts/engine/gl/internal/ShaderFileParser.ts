@@ -12,6 +12,7 @@ const DEFAULT_INCLUDES = [
   "attenuation",
   "compatibility",
   "spotlight",
+  "procedural",
   "ambient",
   "constants",
   "gradient",
@@ -29,12 +30,20 @@ const SPOTLIGHT_INCLUDES = [
   "pbr"
 ];
 
+const PROCEDURAL_INCLUDES = [
+  "brick",
+  "bump",
+  "noise",
+  "voronoi"
+]
+
 
 // fix dupe includes on env :(
 export class ShaderFileParser {
   private loader: FileLoader;
   private ctx: GameContext;
   private pathRecord: Set<string>;
+  private programFlags: string[];
 
   constructor(ctx: GameContext) {
     this.loader = ctx.getFileLoader();
@@ -44,6 +53,10 @@ export class ShaderFileParser {
     }
   }
 
+  setProgramFlags(flags: string[]) {
+    this.programFlags = Array.from(flags) as string[];
+  }
+
   async parseShaderFile(path: string, isVertexShader?: boolean) {
     this.pathRecord = new Set();
     return await this.parseShaderFile_(path, !!isVertexShader);
@@ -51,7 +64,7 @@ export class ShaderFileParser {
 
   private async parseShaderFile_(path: string, isVertexShader: boolean) {
     if (this.pathRecord.has(path)) {
-      console.info(path + " already included in program. Ignoring import...");
+      console.debug(path + " already included in program. Ignoring import...");
       return "";
     }
 
@@ -67,7 +80,7 @@ export class ShaderFileParser {
     
     for (let line of lines) {
       if (line.indexOf(includeHeader) !== -1) {
-        console.info("Encountered new include: " + line);
+        console.debug("Encountered new include: " + line);
         let match = includeExtract.exec(line);
         if (match !== null) {
           const name = match[2];
@@ -78,6 +91,7 @@ export class ShaderFileParser {
               case "env":
                 output.push(this.ctx.getShaderEnv());
                 output.push(`#define VERT ${isVertexShader ? 1 : 0}`);
+                output.push(...(this.programFlags.map(val => `#define ${val}\n`)));
                 break;
               case "attenuation":
                 output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/attenuation.inc.glsl"), isVertexShader));
@@ -98,6 +112,19 @@ export class ShaderFileParser {
                   }
                 } else {
                   output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/spotlight/spotlight.inc.glsl"), isVertexShader));
+                }
+                break;
+              case "procedural":
+                if (match[4] !== undefined) {
+                  if (PROCEDURAL_INCLUDES.indexOf(match[4]) !== -1) {
+                    output.push(await this.parseShaderFile_(getEnginePath(`engine/glsl/includes/procedural/${match[4]}.inc.glsl`), isVertexShader));
+                  } else {
+                    // if not a valid include, treat it as a normal path
+                    const relativePath = folder + match[1];
+                    output.push(await this.parseShaderFile_(relativePath, isVertexShader));
+                  }
+                } else {
+                  console.warn("cannot interpret plain procedural import -- ignoring...");
                 }
                 break;
               case "ambient":

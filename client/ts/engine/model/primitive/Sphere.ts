@@ -26,16 +26,16 @@ export class Sphere extends ModelImpl {
 
     // poles have to be computed for each lat, since texcoords differ
     const buffer = geomBuffer.getRegionAsFloat32Array(0, 11 * (ringsLat + 1) * (ringsLong + 1));
-    for (let i = 0; i <= ringsLat; i++) {
+    for (let i = 0; i <= ringsLong; i++) {
       let phi = (-Math.PI / 2);
-      for (let j = 0; j <= ringsLong; j++) {
+      for (let j = 0; j <= ringsLat; j++) {
         // position is converted to spherical, * radius
         // normal is normalized position
         // tangent is normal projected onto xz plane, rotated 90 degrees ccw
         // texcoord is (i / ringsLat, j / ringsLong)
-        tempvec[0] = Math.cos(theta) * Math.cos(phi);
-        tempvec[1] = Math.sin(phi);
-        tempvec[2] = Math.sin(theta) * Math.cos(phi);
+        tempvec[0] = Math.cos(theta) * Math.cos(phi) * radius;
+        tempvec[1] = Math.sin(phi) * radius;
+        tempvec[2] = Math.sin(theta) * Math.cos(phi) * radius;
 
         // normal is normalized position
         const off = 11 * vertexCount;
@@ -48,17 +48,12 @@ export class Sphere extends ModelImpl {
         buffer[off + 4] = tempvec[1];
         buffer[off + 5] = tempvec[2];
 
-        // tangent compute
-        tempvec[0] = -Math.sin(theta);
-        tempvec[1] = 0;
-        tempvec[2] = Math.cos(theta);
-
         buffer[off + 6] = -Math.sin(theta);
         buffer[off + 7] = 0;
         buffer[off + 8] = Math.cos(theta);
 
-        buffer[off + 9] = (j / ringsLong);
-        buffer[off + 10] = (i / ringsLat);
+        buffer[off + 9] = (i / ringsLong);
+        buffer[off + 10] = 1.0 - (j / ringsLat);
         // note that we have to double-gen the last point, once with texcoord 0 and once with texcoord 1
         phi += latStep;
         vertexCount++;
@@ -75,15 +70,15 @@ export class Sphere extends ModelImpl {
     // if ringsLong * ringsLat > 2^16, use uint32??
     const indbuf = indBuffer.getRegionAsUint16Array(0, ringsLat * ringsLong * 6);
     let indexCount = 0;
-    for (let i = 1; i <= ringsLat; i++) {
-      for (let j = 1; j <= ringsLong; j++) {
-        indbuf[indexCount++] = i * (ringsLong + 1) + j;
-        indbuf[indexCount++] = i * (ringsLong + 1) + j - 1;
-        indbuf[indexCount++] = (i - 1) * (ringsLong + 1) + j;
+    for (let i = 1; i <= ringsLong; i++) {
+      for (let j = 1; j <= ringsLat; j++) {
+        indbuf[indexCount++] = i * (ringsLat + 1) + j;
+        indbuf[indexCount++] = i * (ringsLat + 1) + j - 1;
+        indbuf[indexCount++] = (i - 1) * (ringsLat + 1) + j;
 
-        indbuf[indexCount++] = (i - 1) * (ringsLong + 1) + j;
-        indbuf[indexCount++] = i * (ringsLong + 1) + j - 1;
-        indbuf[indexCount++] = (i - 1) * (ringsLong + 1) + j - 1;
+        indbuf[indexCount++] = (i - 1) * (ringsLat + 1) + j;
+        indbuf[indexCount++] = i * (ringsLat + 1) + j - 1;
+        indbuf[indexCount++] = (i - 1) * (ringsLat + 1) + j - 1;
       }
     }
 

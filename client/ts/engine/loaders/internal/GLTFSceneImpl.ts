@@ -206,14 +206,14 @@ export class GLTFSceneImpl implements GLTFScene {
     }
 
     if (mat.emissiveFactor) {
-      pbrMat.emissionFactor = vec4.create();
-      pbrMat.emissionFactor[0] = mat.emissiveFactor[0];
-      pbrMat.emissionFactor[1] = mat.emissiveFactor[1];
-      pbrMat.emissionFactor[2] = mat.emissiveFactor[2];
-      pbrMat.emissionFactor[3] = 1.0;
+      const fac = vec4.create();
+      fac[0] = mat.emissiveFactor[0];
+      fac[1] = mat.emissiveFactor[1];
+      fac[2] = mat.emissiveFactor[2];
+      fac[3] = 1.0;
+      pbrMat.emissionFactor = fac;
     } else {
-      pbrMat.emissionFactor = vec4.create();
-      vec4.zero(pbrMat.emissionFactor);
+      pbrMat.emissionFactor = vec4.zero(vec4.create());
     }
 
     return pbrMat;

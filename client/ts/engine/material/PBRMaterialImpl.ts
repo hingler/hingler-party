@@ -1,6 +1,6 @@
 // todo: replace instances of WebGLProgram with a version which keeps track of uniform locations
 
-import { mat3, mat4, ReadonlyMat4, vec3, vec4 } from "gl-matrix";
+import { mat3, mat4, ReadonlyMat4, ReadonlyVec4, vec3, vec4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { ColorCubemap } from "../gl/ColorCubemap";
 import { Cubemap } from "../gl/Cubemap";
@@ -47,6 +47,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   private spot: Array<SpotLightStruct>;
   private amb: Array<AmbientLightStruct>;
   private placeholder: TextureDummy;
+  private placeholderNorm: TextureDummy;
+  private placeholderARM: TextureDummy;
+  private placeholderEmission: TextureDummy;
 
   private modelMatrixIndex: number;
   private normalBuffer: GLBufferImpl;
@@ -67,7 +70,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   modelMat: ReadonlyMat4;
   
   color: Texture;
-  colorFactor: vec4;
+  colorFactor: ReadonlyVec4;
   normal: Texture;
   metalRough: Texture;
   metalFactor: number;
@@ -141,6 +144,10 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.prog = null;
 
     this.placeholder = new TextureDummy(ctx);
+    this.placeholderNorm = new TextureDummy(ctx);
+    this.placeholderARM = new TextureDummy(ctx);
+    this.placeholderEmission = new TextureDummy(ctx);
+
 
     this.vpMat = mat4.create();
     this.modelMat = mat4.create();
@@ -357,7 +364,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform1i(this.locs.useAttribute, 1);
 
       if (this.normal === null) {
-        this.placeholder.bindToUniform(this.locs.texNorm, 1);
+        this.placeholderNorm.bindToUniform(this.locs.texNorm, 1);
         gl.uniform1i(this.locs.useNorm, 0);
       } else {
         this.normal.bindToUniform(this.locs.texNorm, 1);
@@ -365,7 +372,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       }
 
       if (this.metalRough === null) {
-        this.placeholder.bindToUniform(this.locs.texMetalRough, 2);
+        this.placeholderARM.bindToUniform(this.locs.texMetalRough, 2);
         gl.uniform1i(this.locs.useRough, 0);
       } else {
         this.metalRough.bindToUniform(this.locs.texMetalRough, 2);
@@ -373,7 +380,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       }
 
       if (this.emission === null) {
-        this.placeholder.bindToUniform(this.locs.texEmission, 3);
+        this.placeholderEmission.bindToUniform(this.locs.texEmission, 3);
         gl.uniform1i(this.locs.useEmission, 0);
       } else {
         this.emission.bindToUniform(this.locs.texEmission, 3);
@@ -480,7 +487,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform1i(this.locs.lightCountNoShadow, noShadowSpot);
       gl.uniform3fv(this.locs.cameraPos, this.cameraPos);
 
-      if (this.color === null) {
+      if (!this.color) {
         this.placeholder.bindToUniform(this.locs.texAlbedo, 0);
         gl.uniform1i(this.locs.useAlbedo, 0);
       } else {  // this.color instanceof Texture*
@@ -490,16 +497,16 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       
       gl.uniform4fv(this.locs.albedoDef, this.colorFactor);
 
-      if (this.normal === null) {
-        this.placeholder.bindToUniform(this.locs.texNorm, 1);
+      if (!this.normal) {
+        this.placeholderNorm.bindToUniform(this.locs.texNorm, 1);
         gl.uniform1i(this.locs.useNorm, 0);
       } else {
         this.normal.bindToUniform(this.locs.texNorm, 1);
         gl.uniform1i(this.locs.useNorm, 1);
       }
 
-      if (this.metalRough === null) {
-        this.placeholder.bindToUniform(this.locs.texMetalRough, 2);
+      if (!this.metalRough) {
+        this.placeholderARM.bindToUniform(this.locs.texMetalRough, 2);
         gl.uniform1i(this.locs.useRough, 0);
       } else {
         this.metalRough.bindToUniform(this.locs.texMetalRough, 2);

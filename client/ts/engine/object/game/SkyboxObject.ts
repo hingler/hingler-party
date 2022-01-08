@@ -239,6 +239,7 @@ export class SkyboxObject extends GameObject {
     rb.attachToFramebuffer(fb);
     tex.attachToFramebuffer(fb, gl.COLOR_ATTACHMENT0);
     gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.viewport(0, 0, 512, 512);
     mat.draw();
 
     this.iblBRDF = tex;

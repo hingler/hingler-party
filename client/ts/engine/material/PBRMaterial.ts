@@ -1,4 +1,4 @@
-import { mat4, ReadonlyMat4, vec3, vec4 } from "gl-matrix";
+import { mat4, ReadonlyMat4, ReadonlyVec4, vec3, vec4 } from "gl-matrix";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { Texture } from "../gl/Texture";
 import { Model } from "../model/Model";
@@ -14,7 +14,7 @@ export interface PBRMaterial extends Material, PBRInterface {
   modelMat: ReadonlyMat4;
   
   color: Texture;
-  colorFactor: vec4;
+  colorFactor: ReadonlyVec4;
   normal: Texture;
   metalRough: Texture;
   metalFactor: number;
