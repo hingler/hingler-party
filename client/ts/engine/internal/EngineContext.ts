@@ -101,7 +101,7 @@ export class EngineContext implements GameContext {
     this.lastTimePoint = perf.now();
     this.varMap = new Map();
     
-    this.debugger = true;
+    this.debugger = false;
     // copy over env???
     // nah we'll standardize its initialization
     this.swapContext = null;
