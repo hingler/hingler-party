@@ -7,14 +7,13 @@ import { ParametricCurve } from "./ParametricCurve";
 /**
  * A path built out of several vertices :D
  */
-export class SegmentedCurve extends ParametricCurve {
+export class SegmentedCurve {
   private vertexList : Array<vec3>;
   private pathLength : number;
 
   loop : boolean;
 
   constructor(vertexList: Array<ReadonlyVec3>) {
-    super();
     this.vertexList = [];
     this.pathLength = 0;
     for (let i = 0; i < vertexList.length; i++) {

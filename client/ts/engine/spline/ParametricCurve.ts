@@ -35,14 +35,6 @@ export abstract class ParametricCurve {
    */
   abstract getControlPoint(point: number) : vec3;
 
-  /**
-   * Modifies a control point's value.
-   * @param point - the control point being modified.
-   * @param val - the new value to assign to this point.
-   *              If OOB, the point is ignored.
-   */
-  abstract setControlPoint(point: number, val: vec3) : void;
-
   abstract getControlPointCount() : number;
 
   /**
