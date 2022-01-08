@@ -28,9 +28,7 @@ export class ColorTexture extends Texture {
     const floatRenderSupport = this.ctx.getGLExtension("EXT_color_buffer_float");
     this.floatsupport === (floatTexSupport && floatRenderSupport);
     const gl2 = (this.ctx.webglVersion === 2);
-
     let depthWrap = (bitDepth ? bitDepth : BitDepth.BYTE);
-    
     
     if (!gl2) {
       this.halffloatsupport = !!this.ctx.getGLExtension("OES_texture_half_float");
@@ -177,13 +175,10 @@ export class ColorTexture extends Texture {
     }
 
     gl.bindTexture(gl.TEXTURE_2D, this.tex);
-    // todo: add some flexibility where we can just color it whatever
-    console.log(this.internalformat);
-    console.log(this.bitdepth);
     gl.texImage2D(gl.TEXTURE_2D, 0, this.internalformat, x, y, 0, this.format, this.bitdepth, null);
     
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     // gl_repeat incompatible with npot textures :(
     // have to solve it in shader if necessary :)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

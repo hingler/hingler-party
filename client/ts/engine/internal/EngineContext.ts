@@ -11,7 +11,7 @@ import { SceneSwapImpl } from "../object/scene/internal/SceneSwapImpl";
 import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
-import { DummyGPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { DummyGPUTimer, GPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -69,6 +69,7 @@ export class EngineContext implements GameContext {
   private updateTime: number;
 
   private gpuTimer: GPUTimerInternal;
+  private crappoTimer: GPUTimer;
 
   private getGLProxy(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     gl = new Proxy(gl, {
@@ -101,14 +102,8 @@ export class EngineContext implements GameContext {
     this.varMap = new Map();
     
     this.debugger = true;
-    
-    
-    
-    
     // copy over env???
     // nah we'll standardize its initialization
-    
-    
     this.swapContext = null;
     this.swapObject = null;
     
@@ -120,12 +115,14 @@ export class EngineContext implements GameContext {
     
     
     if (init instanceof EngineContext) {
-      this.canvas = init.canvas;
       this.glContext = init.glContext;
-      this.debug = init.debug;
+      this.canvas = init.canvas;
       this.webglVersion = init.webglVersion;
       this.extensionList = init.extensionList;
       this.gpuTimer = init.gpuTimer;
+
+      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
+      this.debug = init.debug;
     } else {
       this.canvas = init;
       this.extensionList = new Map();
@@ -150,12 +147,13 @@ export class EngineContext implements GameContext {
         }
       }
       
-      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
-      
       console.log(`Using WebGL Version ${this.webglVersion}`);
-      
+      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
       this.debug = new DebugDisplay(this);
     }
+
+    this.crappoTimer = new DummyGPUTimer();
+    
     
     this.gltfLoader = new GLTFLoaderImpl(this.loader, this);
     this.updateScreenDims();
@@ -205,7 +203,11 @@ export class EngineContext implements GameContext {
   }
 
   getGPUTimer() {
-    return this.gpuTimer;
+    if (this.debugger) {
+      return this.gpuTimer;
+    } else {
+      return this.crappoTimer;
+    }
   }
 
   // TODO: add method to switch scenes.
