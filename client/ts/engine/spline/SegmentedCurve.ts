@@ -2,7 +2,6 @@ import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { OBJFileData } from "../loaders/internal/OBJFileData";
 import { SegmentedCurveBuilder } from "../loaders/internal/SegmentedCurveBuilder";
-import { ParametricCurve } from "./ParametricCurve";
 
 /**
  * A path built out of several vertices :D

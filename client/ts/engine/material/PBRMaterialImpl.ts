@@ -284,6 +284,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     gl.uniform1f(loc.atten_const, s.attenuation.atten_const);
     gl.uniform1f(loc.atten_linear, s.attenuation.atten_linear);
     gl.uniform1f(loc.atten_quad, s.attenuation.atten_quad);
+    console.log(s.attenuation);
   }
 
   setSpotLight(light: Array<SpotLightStruct>) {

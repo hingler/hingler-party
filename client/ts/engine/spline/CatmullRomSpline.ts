@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { mat3, mat4, ReadonlyVec3, vec3 } from "gl-matrix";
 import { RingArray } from "@nekogirl-valhalla/array/RingArray";
 import { BezierCurve } from "./BezierCurve";
 import { ParametricCurve } from "./ParametricCurve";
@@ -80,7 +80,7 @@ export class CatmullRomSpline extends ParametricCurve {
     return vel;
   }
 
-  getNormal(time: number, up?: vec3) {
+  getNormal(time: number, up?: ReadonlyVec3) {
     const timeMap = Math.max(Math.min(1, time), 0);
 
     let t = this.reparameterizeTime(timeMap * this.curveList.length);
@@ -88,6 +88,15 @@ export class CatmullRomSpline extends ParametricCurve {
 
     vec3.normalize(norm, norm);
     return norm;
+  }
+
+  getTangentSpace(time: number, up?: ReadonlyVec3) {
+    const timeMap = Math.max(Math.min(1, time), 0);
+
+    let t = this.reparameterizeTime(timeMap * this.curveList.length);
+    const res = this.getTangentSpaceNoLookup(t, up);
+
+    return res;
   }
 
   popPoint() {
@@ -269,16 +278,13 @@ export class CatmullRomSpline extends ParametricCurve {
     }
 
     let t = Math.max(Math.min(time, this.curveList.length), 0);
-    if (this.curveList.length === 0) {
-      return [0, 0, 0] as vec3;
-    }
 
     const curveIndex = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(curveIndex);
     return curve.getVelocityLut(t - curveIndex);
   }
 
-  private getNormalNoLookup(time: number, up?: vec3) {
+  private getNormalNoLookup(time: number, up?: ReadonlyVec3) {
     if (this.curveList.length === 0) {
       if (this.initPoint === null) {
         return null;
@@ -288,13 +294,26 @@ export class CatmullRomSpline extends ParametricCurve {
     }
 
     let t = Math.max(Math.min(time, this.curveList.length), 0);
-    if (this.curveList.length === 0) {
-      return [0, 0, 0] as vec3;
-    }
+    
 
     const index = this.getCurveIndexFromT(t);
     const curve = this.curveList.get(index);
     return curve.getNormalLut(t - Math.floor(t), up);
+  }
+
+  private getTangentSpaceNoLookup(time: number, up: ReadonlyVec3) {
+    if (this.curveList.length === 0) {
+      if (this.initPoint === null) {
+        return null;
+      }
+    
+      return [0, 0, 0, 0, 0, 0, 0, 0, 0] as mat3;
+    }
+    
+    let t = Math.max(Math.min(time, this.curveList.length), 0);
+    const curveIndex = this.getCurveIndexFromT(t);
+    const curve = this.curveList.get(curveIndex);
+    return curve.getTangentSpaceLut(t - Math.floor(t), up);
   }
 
   // p0, p1, p2, p3

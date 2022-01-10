@@ -36,6 +36,10 @@ export class SpotLightObject extends GameObject implements SpotLight {
     this.intensity = 1;
     this.shadows = true;
 
+    this.atten_const = 1.0;
+    this.atten_linear = 0.0;
+    this.atten_quad = 0.0;
+
     this.dummy = new TextureDummy(ctx);
   }
 

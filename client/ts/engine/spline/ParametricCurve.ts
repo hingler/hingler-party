@@ -1,4 +1,4 @@
-import { ReadonlyVec3, vec3 } from "gl-matrix";
+import { mat3, ReadonlyVec3, vec3 } from "gl-matrix";
 
 // rudimentary interface for parametric curves
 export abstract class ParametricCurve {
@@ -29,6 +29,14 @@ export abstract class ParametricCurve {
   abstract getNormal(time: number, up?: ReadonlyVec3) : vec3;
 
   /**
+   * Returns a mat3 representing the tangent space at a given point in time.
+   * @param time - time of occurrence
+   * @param up - up vector for fetching normal and binormal.
+   * @returns mat3 tangent space
+   */
+  abstract getTangentSpace(time: number, up?: ReadonlyVec3) : mat3;
+
+  /**
    * Returns a control point on this curve.
    * @param point - the index of the desired point.
    * @returns the point, or null if the point is OOB.
@@ -44,10 +52,8 @@ export abstract class ParametricCurve {
    */
   abstract getSegmentLength(index: number) : number;
 
-  // do we want to maintain an "update tracker" for our curves?
-  // we uptick a value everytime the curve is modified, so that
-  // components down-wind can tell that it's been updated when we go to fetch contents
-
+  // updates the version number for this curve.
+  // used to track updates in components which read from this curve.
   protected update() { this.versionnumber_++; }
 
   get versionnumber() {

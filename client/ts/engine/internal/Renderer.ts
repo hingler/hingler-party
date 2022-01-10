@@ -60,7 +60,7 @@ class SpotLightRenderContext implements RenderContext {
   }
 
   getSkybox() {
-    return null;
+    return [];
   }
 
   getFramebuffer() {

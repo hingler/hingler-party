@@ -1,7 +1,7 @@
-import { ReadonlyVec3, vec2, vec3 } from "gl-matrix";
+import { mat3, ReadonlyVec3, vec2, vec3 } from "gl-matrix";
 import { ParametricCurve } from "./ParametricCurve";
 
-const DEFAULT_STEP_COUNT = 200;
+const DEFAULT_STEP_COUNT = 100;
 
 export class BezierCurve extends ParametricCurve {
   private p0: vec3;
@@ -93,7 +93,8 @@ export class BezierCurve extends ParametricCurve {
     return res;
   }
 
-  getNormal(time: number, up?: vec3) {
+  // creating an output variable for these would be neat -- todo ig
+  getNormal(time: number, up?: ReadonlyVec3) {
     const tangent = this.getTangent(time);
     let upVec = up;
     if (up === undefined) {
@@ -106,6 +107,27 @@ export class BezierCurve extends ParametricCurve {
 
     const res = vec3.create();
     vec3.cross(res, tangent, upVec);
+
+    return res;
+  }
+
+  getTangentSpace(time: number, up?: ReadonlyVec3) {
+    const res = mat3.create();
+    const norm = this.getNormal(time, up);
+    const tan = this.getTangent(time);
+    const cross = vec3.cross(vec3.create(), norm, tan);
+    // sidenote: work on reducing heap mem space
+    // mem frees are pretty fast, but it's going to be a problem
+
+    res[0] = norm[0];
+    res[1] = norm[1];
+    res[2] = norm[2];
+    res[3] = tan[0];
+    res[4] = tan[1];
+    res[5] = tan[2];
+    res[6] = cross[0];
+    res[7] = cross[1];
+    res[8] = cross[2];
 
     return res;
   }
@@ -144,8 +166,12 @@ export class BezierCurve extends ParametricCurve {
     return this.getTangent(this.reparameterizeTime(time));
   }
 
-  getNormalLut(time: number, up?: vec3) {
+  getNormalLut(time: number, up?: ReadonlyVec3) {
     return this.getNormal(this.reparameterizeTime(time), up);
+  }
+
+  getTangentSpaceLut(time: number, up?: ReadonlyVec3) {
+    return this.getTangentSpace(this.reparameterizeTime(time), up);
   }
 
   static fromVec3(p0: vec3, p1: vec3, p2: vec3, p3: vec3) {
