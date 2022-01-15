@@ -10,7 +10,7 @@ export class CatmullRomSpline extends ParametricCurve {
   private initPoint: vec3;
   constructor() {
     super();
-    this.curveList = new RingArray<BezierCurve>(256);
+    this.curveList = new RingArray<BezierCurve>(1024);
     this.initPoint = null;
   }
 

@@ -75,6 +75,7 @@ export class ProceduralTextureBase {
       gl.enableVertexAttribArray(this.pos);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       gl.disableVertexAttribArray(this.pos);
+      
       return res;
     } else {
       console.log("oops");

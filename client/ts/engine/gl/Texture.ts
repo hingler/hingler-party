@@ -11,7 +11,13 @@ export enum SamplingMode {
   LINEAR,
   LINEAR_MIPMAP_LINEAR,
   LINEAR_MIPMAP_NEAREST
-}
+};
+
+export enum WrapMode {
+  REPEAT,
+  CLAMP,
+  MIRRORED_REPEAT
+};
 
 export abstract class Texture {
   // texture dimensions
@@ -70,6 +76,23 @@ export abstract class Texture {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         break;
+    }
+  }
+
+  protected handleWrapMode(tex: WebGLTexture, gl: WebGLRenderingContext, wrapS: WrapMode, wrapT: WrapMode) {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrapModeToNumber(gl, wrapS));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrapModeToNumber(gl, wrapT));
+  }
+
+  private wrapModeToNumber(gl: WebGLRenderingContext, mode: WrapMode) {
+    switch (mode) {
+      case WrapMode.CLAMP:
+        return gl.CLAMP_TO_EDGE;
+      case WrapMode.REPEAT:
+        return gl.REPEAT;
+      case WrapMode.MIRRORED_REPEAT:
+        return gl.MIRRORED_REPEAT;
     }
   }
 

@@ -1,5 +1,5 @@
 import { GameContext } from "../../GameContext";
-import { SamplingMode, Texture, TextureFormat } from "../Texture";
+import { SamplingMode, Texture, TextureFormat, WrapMode } from "../Texture";
 
 export enum BitDepth {
   BYTE = 1,
@@ -136,6 +136,12 @@ export class ColorTexture extends Texture {
 
   setSamplingMode(mode: SamplingMode) {
     return this.handleTextureSampling(this.tex, this.gl, mode);
+  }
+
+  setWrapMode(modeS: WrapMode, modeT?: WrapMode) {
+    const wrapS = modeS;
+    const wrapT = (modeT === undefined ? modeS : modeT);
+    this.handleWrapMode(this.tex, this.gl, wrapS, wrapT);
   }
 
   bindToUniform(location: WebGLUniformLocation, index: number) {

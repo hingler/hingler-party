@@ -32,7 +32,7 @@ export abstract class ParametricCurve {
    * Returns a mat3 representing the tangent space at a given point in time.
    * @param time - time of occurrence
    * @param up - up vector for fetching normal and binormal.
-   * @returns mat3 tangent space
+   * @returns mat3 tangent space - x is normal, y is binormal, z is tangent
    */
   abstract getTangentSpace(time: number, up?: ReadonlyVec3) : mat3;
 
