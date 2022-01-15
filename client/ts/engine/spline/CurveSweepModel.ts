@@ -203,9 +203,11 @@ export class CurveSweepModel extends Model {
         curveMat[6] = cross[0];
         curveMat[7] = cross[1];
         curveMat[8] = cross[2];
-
+        
         const origin = curve.getPosition(time);
+        sweepDist = 0;
 
+        texCoord[0] = time * this.texScale[0] + this.texOffset[0];
         for (let j = 0; j < positions.length; j++) {
           const point = positions[j];
           if (j > 0) {
@@ -244,9 +246,8 @@ export class CurveSweepModel extends Model {
           vertexMem[memOffset + 7] = tangent[1];
           vertexMem[memOffset + 8] = tangent[2];
   
-          // set texcoord
-          texCoord[0] = (i * tStep) * this.texScale[0] + this.texOffset[0];
-          texCoord[1] = (sweepDist / sweep.arcLength) * this.texScale[1] + this.texOffset[1];
+          // need to flip texcoords for external texture
+          texCoord[1] = (this.flipNormals_ ? (sweepDist / sweep.arcLength) : 1.0 - (sweepDist / sweep.arcLength)) * this.texScale[1] + this.texOffset[1];
           // positionBuffer.setFloatArray(cur, texCoord, true);
           vertexMem[memOffset + 9] = texCoord[0];
           vertexMem[memOffset + 10] = texCoord[1];
@@ -257,7 +258,6 @@ export class CurveSweepModel extends Model {
     }
 
     if (ringCount > this.maxStepCount || this.modelVersion === -1) {
-      console.log("index updated???");
       for (let i = 1; i < ringCount; i++) {
         for (let j = 0; j < positions.length - 1; j++) {
           for (let k = 0; k < INDEX_ARRAY.length; k++) {

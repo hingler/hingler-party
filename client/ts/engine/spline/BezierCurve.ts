@@ -116,18 +116,21 @@ export class BezierCurve extends ParametricCurve {
     const norm = this.getNormal(time, up);
     const tan = this.getTangent(time);
     const cross = vec3.cross(vec3.create(), norm, tan);
+    vec3.normalize(norm, norm);
+    vec3.normalize(tan, tan);
+    vec3.normalize(cross, cross);
     // sidenote: work on reducing heap mem space
     // mem frees are pretty fast, but it's going to be a problem
 
     res[0] = norm[0];
     res[1] = norm[1];
     res[2] = norm[2];
-    res[3] = tan[0];
-    res[4] = tan[1];
-    res[5] = tan[2];
-    res[6] = cross[0];
-    res[7] = cross[1];
-    res[8] = cross[2];
+    res[3] = cross[0];
+    res[4] = cross[1];
+    res[5] = cross[2];
+    res[6] = tan[0];
+    res[7] = tan[1];
+    res[8] = tan[2];
 
     return res;
   }
