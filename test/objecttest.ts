@@ -1,10 +1,9 @@
 import { expect } from "chai";
 import { mat4, quat, vec3 } from "gl-matrix";
-import { EngineObject } from "../client/ts/engine/object/EngineObject";
 import { GameObject } from "../client/ts/engine/object/game/GameObject";
 import { RenderContext } from "../client/ts/engine/render/RenderContext";
 
-class stubObject extends EngineObject {
+class stubObject extends GameObject {
   getChild() {
     return null;
   }

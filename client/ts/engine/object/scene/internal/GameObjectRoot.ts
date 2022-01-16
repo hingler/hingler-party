@@ -14,6 +14,6 @@ export class GameObjectRoot extends GameObject {
   }
 
   updateChildren() {
-    this.updateFunc();
+    this.updatefunc();
   }
 }
