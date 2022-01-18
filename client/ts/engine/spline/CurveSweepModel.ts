@@ -9,7 +9,7 @@ import { GLBufferImpl } from "../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../gl/internal/GLIndexImpl";
 import { ModelImpl } from "../loaders/internal/ModelImpl";
 import { AttributeType, Model } from "../model/Model";
-import { ParametricCurve } from "./ParametricCurve";
+import { ParametricCurve } from "@nekogirl-valhalla/spline/ParametricCurve";
 import { SegmentedCurve } from "./SegmentedCurve";
 
 // temeplate for building geometry from curve pieces
