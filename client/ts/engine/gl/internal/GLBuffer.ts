@@ -64,6 +64,14 @@ export interface GLBuffer extends GLBufferReadOnly {
    */
   bindToInstancedVertexAttribute(location: number, components: number, type: number, normalize: boolean, stride: number, offset: number, divisor?: number) : void;
   
+  /**
+   * Specify a default value for an attribute if none is given.
+   * @param location - attribute location in question.
+   * @param components - number of components in the desired attribute.
+   * @param data - the data we want to give.
+   */
+  setDefaultAttributeValue(location: number, components: number, ...data: number[]) : void;
+
   disableVertexAttribute(location: number) : void;
 
   disableInstancedVertexAttribute(location: number) : void;

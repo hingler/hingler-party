@@ -95,6 +95,12 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     vpMat: WebGLUniformLocation,
     normalMat: WebGLUniformLocation,
     lightCount: WebGLUniformLocation,
+
+    jointMatrix: Array<WebGLUniformLocation>,
+    jointMatrixNormal: Array<WebGLUniformLocation>,
+
+    useSkeletalAnimation: WebGLUniformLocation,
+
     lightCountNoShadow: WebGLUniformLocation,
     ambientCount: WebGLUniformLocation,
     cameraPos: WebGLUniformLocation,
@@ -135,6 +141,10 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     norm: number,
     tex: number,
     tan: number,
+
+    joints: number,
+    weights: number,
+
     modelMat: number,
     normMat: number
   };
@@ -200,6 +210,11 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       vpMat: gl.getUniformLocation(prog, "vp_matrix"),
       normalMat: gl.getUniformLocation(prog, "normal_matrix"),
       lightCount: gl.getUniformLocation(prog, "spotlightCount"),
+
+      jointMatrix: [],
+      jointMatrixNormal: [],
+      useSkeletalAnimation: gl.getUniformLocation(prog, "useSkeletalAnimation"),
+
       lightCountNoShadow: gl.getUniformLocation(prog, "spotlightCount_no_shadow"),
       ambientCount: gl.getUniformLocation(prog, "ambientCount"),
       cameraPos: gl.getUniformLocation(prog, "camera_pos"),
@@ -235,9 +250,16 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       norm: gl.getAttribLocation(prog, "normal"),
       tex: gl.getAttribLocation(prog, "texcoord"),
       tan: gl.getAttribLocation(prog, "tangent"),
+      joints: gl.getAttribLocation(prog, "joints"),
+      weights: gl.getAttribLocation(prog, "weights"),
       modelMat: gl.getAttribLocation(prog, "a_model_matrix"),
       normMat: gl.getAttribLocation(prog, "a_normal_matrix")
     };
+
+    for (let i = 0; i < 32; i++) {
+      this.locs.jointMatrix.push(gl.getUniformLocation(prog, `jointMatrix[${i}]`));
+      this.locs.jointMatrixNormal.push(gl.getUniformLocation(prog, `jointMatrixNormal[${i}]`));
+    }
 
     this.progWrap = new GLProgramWrap(gl, this.prog);
 
@@ -431,6 +453,23 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       model.bindAttribute(AttributeType.TEXCOORD, this.attribs.tex);
       model.bindAttribute(AttributeType.TANGENT, this.attribs.tan);
 
+      if (model.getArmature()) {
+        gl.uniform1i(this.locs.useSkeletalAnimation, 1);
+
+        const bones = model.getArmature().getJointMatrices();
+        const bonesNormal = model.getArmature().getJointNormalMatrices();
+        for (let i = 0; i < bones.length && i < 32; i++) {
+          gl.uniformMatrix4fv(this.locs.jointMatrix[i], false, bones[i]);
+          gl.uniformMatrix3fv(this.locs.jointMatrixNormal[i], false, bonesNormal[i]);
+        }
+
+        model.bindAttribute(AttributeType.JOINT, this.attribs.joints);
+        model.bindAttribute(AttributeType.WEIGHT, this.attribs.weights);
+      } else {
+        gl.uniform1i(this.locs.useSkeletalAnimation, 0);
+
+      }
+
       for (let i = 0; i < 4; i++) {
         let loc = this.attribs.modelMat + i;
         let byteOffset = i * 16;
@@ -566,6 +605,23 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       model.bindAttribute(AttributeType.NORMAL, this.attribs.norm);
       model.bindAttribute(AttributeType.TEXCOORD, this.attribs.tex);
       model.bindAttribute(AttributeType.TANGENT, this.attribs.tan);
+
+      if (model.getArmature()) {
+        gl.uniform1i(this.locs.useSkeletalAnimation, 1);
+
+        const bones = model.getArmature().getJointMatrices();
+        const bonesNormal = model.getArmature().getJointNormalMatrices();
+        for (let i = 0; i < bones.length && i < 32; i++) {
+          gl.uniformMatrix4fv(this.locs.jointMatrix[i], false, bones[i]);
+          gl.uniformMatrix3fv(this.locs.jointMatrixNormal[i], false, bonesNormal[i]);
+        }
+
+        model.bindAttribute(AttributeType.JOINT, this.attribs.joints);
+        model.bindAttribute(AttributeType.WEIGHT, this.attribs.weights);
+      } else {
+        gl.uniform1i(this.locs.useSkeletalAnimation, 0);
+        
+      }
 
       model.draw();
     }

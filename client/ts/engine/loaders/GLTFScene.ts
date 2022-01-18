@@ -26,7 +26,7 @@ export interface GLTFScene {
   /**
    * Returns a game object representing the desired node -- contains no behavior.
    */
-  getNodeAsGameObject(name: string | number) : GameObject;
+  getNodeAsGameObject(name: string) : GameObject;
 
   /**
    * Returns a new InstancedModel.
@@ -36,21 +36,21 @@ export interface GLTFScene {
    * and draw.
    * @param name 
    */
-  getInstancedModel(name: string | number) : InstancedModel;
+  getInstancedModel(name: string) : InstancedModel;
 
   /**
    * 
    * @param model - either the name of the model, or the index associated with it.
    * @returns a new PBRModel.
    */
-  getPBRModel(model: string | number) : PBRModel;
+  getPBRModel(model: string) : PBRModel;
 
   /**
    * Creates an instance factory, which can be used to distribute and configure multiple instances
    * of an instanced model.
    * @param model - the model which we wish to instance.
    */
-  getPBRInstanceFactory(model: string | number) : PBRInstanceFactory;
+  getPBRInstanceFactory(model: string) : PBRInstanceFactory;
 
   /**
    * Returns number of meshes stored within the scene.

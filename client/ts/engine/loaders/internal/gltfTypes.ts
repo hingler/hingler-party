@@ -20,13 +20,14 @@ export interface Buffer {
   byteLength: number
 }
 
-export interface Node {
+export interface GLTFNode {
   name: string,
   rotation?: [number, number, number, number],
   translation?: [number, number, number],
   scale?: [number, number, number],
   mesh?: number,
-  skin?: number
+  skin?: number,
+  children?: Array<number>
 }
 
 export interface Primitive {
@@ -95,6 +96,12 @@ export interface Material {
   normalTexture?: MatNormalTexture
 };
 
+export interface GLTFSkin {
+  inverseBindMatrices?: number,
+  skeleton?: number,
+  joints: Array<number>;
+}
+
 // handle optional params
 export interface GLTFJson {
   accessors?: Array<Accessor>,
@@ -103,7 +110,8 @@ export interface GLTFJson {
   images?: Array<ImageSchema>,
   materials?: Array<Material>,
   meshes?: Array<Mesh>,
-  nodes?: Array<Node>,
+  nodes?: Array<GLTFNode>,
   samplers?: Array<Sampler>,
+  skins?: Array<GLTFSkin>,
   textures?: Array<TextureSchema>
 };

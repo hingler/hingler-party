@@ -150,6 +150,18 @@ export class GLAttributeImpl implements GLAttribute {
     this.buffer.bindToVertexAttribute(location, this.comps, this.type, false, this.stride, this.offset);
   }
 
+  setDefaultAttribute(location: number, ...data: number[]) {
+    if (data.length >= this.comps) {
+      this.buffer.setDefaultAttributeValue(location, this.comps, ...data);
+    }
+  }
+
+  setDefaultAttributeComps(location: number, comps: number, ...data: number[]) {
+    if (data.length >= comps) {
+      this.buffer.setDefaultAttributeValue(location, comps, ...data);
+    }
+  }
+
   disableAttribute() {
     if (this.location >= 0) {
       this.buffer.disableVertexAttribute(this.location);

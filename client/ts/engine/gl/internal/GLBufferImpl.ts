@@ -25,6 +25,8 @@ export class GLBufferImpl implements GLBuffer {
 
   dataMode: number;
 
+  private defaultMap: Map<number, number[]>;
+
   // TODO: assign a target on ctor? (array / element array / etc?)
   // we'd have a confusing dependency :( but even then it like won't matter
   // it's just a safeguard for me, so that we have a bit more info instead of just crashing out
@@ -124,6 +126,23 @@ export class GLBufferImpl implements GLBuffer {
     this.gl.vertexAttribPointer(location, components, type, normalize, stride, offset);
     
     this.glVertexAttribDivisor(location, divisor);
+  }
+
+  setDefaultAttributeValue(location: number, components: number, ...data: number[]) {
+    switch (components) {
+      case 1:
+        this.gl.vertexAttrib1fv(location, data);
+        break;
+      case 2:
+        this.gl.vertexAttrib2fv(location, data);
+        break;
+      case 3:
+        this.gl.vertexAttrib3fv(location, data);
+        break;
+      case 4:
+        this.gl.vertexAttrib4fv(location, data);
+        break;
+    }
   }
 
   private glVertexAttribDivisor(loc: number, div: number) {

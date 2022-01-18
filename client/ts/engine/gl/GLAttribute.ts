@@ -16,6 +16,10 @@ export interface GLAttribute {
    */
   pointToAttribute(location: number) : void;
 
+  setDefaultAttribute(location: number, ...data: number[]) : void;
+
+  setDefaultAttributeComps(location: number, comps: number, ...data: number[]) : void;
+
   /**
    * Disables the attribute.
    */

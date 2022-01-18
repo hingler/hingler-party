@@ -10,20 +10,10 @@ import { RenderType } from "../../internal/performanceanalytics";
 export class GamePBRModel extends GameObject {
   model_: PBRModel;
 
-  constructor(ctx: GameContext, init: string | PBRModel | Future<PBRModel>) {
+  constructor(ctx: GameContext, init: PBRModel | Future<PBRModel>) {
     super(ctx);
     this.model_ = null;
-    if (typeof init === "string") {
-      this.getContext().getGLTFLoader().loadAsGLTFScene(init)
-        .then((res : GLTFScene) => {
-          let model = res.getPBRModel(0);
-          if (model !== null) {
-            this.model = model;
-          } else {
-            console.error("Could not assign model :(");
-          }
-        });
-    } else if (init instanceof PBRModel) {
+    if (init instanceof PBRModel) {
       this.model = init;
     } else {
       if (init.valid()) {

@@ -32,6 +32,10 @@ class BufferStub implements GLBuffer {
     // nop
   }
 
+  setDefaultAttributeValue(location: number, components: number, ...data: number[]): void {
+    // nop
+  }
+
   arrayBuffer() {
     return this.data;
   }

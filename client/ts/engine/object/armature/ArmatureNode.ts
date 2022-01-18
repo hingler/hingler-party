@@ -1,4 +1,4 @@
-import { mat4, quat, ReadonlyMat4, ReadonlyQuat, ReadonlyVec3, vec3 } from "gl-matrix";
+import { mat3, mat4, quat, ReadonlyMat3, ReadonlyMat4, ReadonlyQuat, ReadonlyVec3, vec3 } from "gl-matrix";
 import { Nestable } from "../Nestable";
 import { NestableBase } from "../NestableBase";
 import { Transformable } from "../Transformable";
@@ -12,6 +12,7 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
 
   private transform_cache: mat4;
   private transform_cache_joint: mat4;
+  private transform_cache_joint_normal: mat3;
   private dirty: boolean;
 
   constructor(jointID: number, invbind: ReadonlyMat4) {
@@ -24,6 +25,9 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
 
     this.transform_cache_joint = mat4.create();
     mat4.identity(this.transform_cache_joint);
+
+    this.transform_cache_joint_normal = mat3.create();
+    mat3.identity(this.transform_cache_joint_normal);
   }
 
   getRotation(): ReadonlyQuat {
@@ -80,6 +84,9 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
     }
 
     mat4.mul(joint, res, this.inverseBindMatrix);
+    console.log(joint);
+
+    mat3.fromMat4(this.transform_cache_joint_normal, joint);
     this.dirty = false;
   }
 
@@ -97,5 +104,13 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
     }
 
     return this.transform_cache_joint;
+  }
+
+  getJointMatrixNormal() : ReadonlyMat3 {
+    if (this.dirty) {
+      this.updateMatrixCache();
+    }
+
+    return this.transform_cache_joint_normal;
   }
 }

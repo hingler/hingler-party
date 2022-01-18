@@ -86,6 +86,14 @@ class AttributeStub implements GLAttribute {
     this.boundAttribute = -1;
   }
 
+  setDefaultAttribute(location: number, ...data: number[]): void {
+    // nop
+  }
+
+  setDefaultAttributeComps(location: number, comps: number, ...data: number[]): void {
+    // nop
+  }
+
   [Symbol.iterator]() : Iterator<Float32Array> {
     return {
       "length": this.length,

@@ -1,3 +1,5 @@
+import { ArmatureManager } from "../object/armature/ArmatureManager";
+
 // triangle will bundle our attribs up into something like this
 export interface Vertex {
   readonly position: Float32Array;
@@ -47,4 +49,9 @@ export abstract class Model implements DrawOnlyModel {
   abstract bindAttribute(at: AttributeType, ...location: Array<number>) : void;
 
   abstract draw() : void;
+
+  /**
+   * @returns The armature manager associated with this model, if one exists.
+   */
+  abstract getArmature() : ArmatureManager;
 }

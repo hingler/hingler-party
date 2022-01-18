@@ -7,8 +7,10 @@ import { RenderContext, RenderPass } from "../../render/RenderContext";
 import { AttributeType, Model } from "../../model/Model";
 import { PBRModel } from "../../model/PBRModel";
 import { PBRMaterial } from "../../material/PBRMaterial";
+import { ArmatureManager } from "../../object/armature/ArmatureManager";
+import { ModelImpl } from "./ModelImpl";
 
-export class PBRModelImpl implements PBRModel {
+export class PBRModelImpl extends PBRModel {
   // split instances into individual models
   // each instance will be drawn with the PBR material
   readonly instances: Array<Model>;
@@ -16,10 +18,13 @@ export class PBRModelImpl implements PBRModel {
 
   private shadowTex: ShadowNoTextureMaterial;
 
+  private armature: ArmatureManager;
+
   name: string;
 
   // swap to PBR
-  constructor(ctx: GameContext, instances: Array<Model>, mats: Array<PBRMaterial>) {
+  constructor(ctx: GameContext, instances: Array<ModelImpl>, mats: Array<PBRMaterial>, armature?: ArmatureManager) {
+    super();
     if (instances.length !== mats.length) {
       throw Error("PBR model should contain one material per instance!");
     }
@@ -28,11 +33,21 @@ export class PBRModelImpl implements PBRModel {
     this.mats = mats;
     this.shadowTex = new ShadowNoTextureMaterial(ctx);
     this.name = undefined;
+    this.armature = (armature || null);
+
+    for (let model of instances) {
+      // ensure all models share the same base armature
+      model.setArmature(this.armature);
+    }
   }
 
   setName(name: string) {
     this.name = name;
   } 
+
+  getArmature() {
+    return this.armature;
+  }
 
   bindAttribute(at: AttributeType, index: number) {
     for (let model of this.instances) {

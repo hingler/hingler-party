@@ -48,6 +48,10 @@ export class InstancedModelImpl implements InstancedModel {
     this.mat = null;
   }
 
+  getArmature() {
+    return this.model.getArmature();
+  }
+
   setInstancedMaterial(material: InstancedMaterial) {
     this.mat = material;
     this.logname = `${this.name}.${this.mat.constructor.name}`;

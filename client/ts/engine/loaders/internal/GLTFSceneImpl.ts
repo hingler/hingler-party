@@ -12,13 +12,16 @@ import { PBRMaterialImpl } from "../../material/PBRMaterialImpl";
 import { InstancedModel } from "../../model/InstancedModel";
 import { Model } from "../../model/Model";
 import { PBRInstanceFactory } from "../../model/PBRInstanceFactory";
-import { GameModel } from "../../object/game/GameModel";
 import { GamePBRModel } from "../../object/game/GamePBRModel";
+import { ArmatureManager } from "../../object/armature/ArmatureManager";
 import { GLTFScene } from "../GLTFScene";
-import { GLTFJson, ImageSchema, Material, Mesh, Node, Primitive, TextureSchema } from "./gltfTypes";
+import { ArmatureBuilder } from "./ArmatureBuilder";
+import { GLTFJson, ImageSchema, Material, Mesh, GLTFNode, Primitive, TextureSchema } from "./gltfTypes";
 import { InstancedModelImpl } from "./InstancedModelImpl";
 import { ModelImpl, ModelInstance } from "./ModelImpl";
 import { PBRModelImpl } from "./PBRModelImpl";
+
+// todo: holy shit this needs cleanup
 
 export class GLTFSceneImpl implements GLTFScene {
   ctx         : EngineContext;
@@ -42,14 +45,58 @@ export class GLTFSceneImpl implements GLTFScene {
 
   }
 
-  // TODO: add function which fetches a pbr model
-  // the pbr model obscures all binding locations bc it always uses the same shader(s).
-  // I'm not up to speed on how the pbr shader is written but i think i can do it within a short span of time
+  // check nodes first
+  private getArmature(name: string | number) {
+    // number is a meshid
+    // string is a node name or mesh name
+    // check nodes for a skin id
+    if (typeof name === "string") {
+      if (this.data.nodes) {
+        for (let node of this.data.nodes) {
+          if (node.name === name && node.skin !== undefined) {
+            return this.getArmatureFromSkinID(node.skin);
+          }
+        }
+      }
+  
+      // then check meshes for matching string
+      if (this.data.meshes) {
+        for (let i = 0; i < this.data.meshes.length; i++) {
+          if (this.data.meshes[i].name === name) {
+            return this.getArmatureFromMeshID(i);
+          }
+        }
+      }
+    } else {
+      if (this.data.meshes && name < this.data.meshes.length) {
+        return this.getArmatureFromMeshID(name);
+      }
+    }
 
-  // this should not be the priority, though!
-  // our priority should be ensuring that our engine is usable.
+    // then check meshes for a matching number
+    return null;
+  }
+
+  // work off a string, or a number
+  private getArmatureFromMeshID(meshID: number) {
+    if (this.data.nodes) {
+      for (let node of this.data.nodes) {
+        if (node.mesh && node.mesh === meshID && node.skin !== undefined) {
+          return this.getArmatureFromSkinID(node.skin);
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  // load an armature as a manager
+  private getArmatureFromSkinID(skinID: number) {
+    return ArmatureBuilder.skinToArmature(this.data, skinID, this.buffers);
+  }
 
   getModel(name: string | number) : Model {
+    // nodes have skins
     let meshID = this.lookupMeshID(name);
 
     let mesh = this.data.meshes[meshID];
@@ -60,6 +107,8 @@ export class GLTFSceneImpl implements GLTFScene {
       models.push(inst);
     }
 
+    let armature: ArmatureManager = this.getArmature(name);
+
     let res = new ModelImpl(models);
 
     if (typeof name === "string") {
@@ -69,14 +118,14 @@ export class GLTFSceneImpl implements GLTFScene {
       res.name = this.getMeshName(meshID);
     }
 
-    console.log(name);
+    // figure out the skin, and nodeID, if relevant.
 
     return res;
 
   }
 
   getNodeAsGameObject(name: string | number) {
-    let targNode : Node;
+    let targNode : GLTFNode;
     if (!this.data.nodes) {
       return null;
     }
@@ -116,7 +165,7 @@ export class GLTFSceneImpl implements GLTFScene {
     return res;
   }
 
-  getInstancedModel(name: string | number) : InstancedModel {
+  getInstancedModel(name: string) : InstancedModel {
     // create the instanced model
     let model = this.getModel(name) as ModelImpl;
     let instModel = new InstancedModelImpl(this.ctx, model);
@@ -165,7 +214,6 @@ export class GLTFSceneImpl implements GLTFScene {
     let mesh = this.data.meshes[meshID];
     let models : Array<ModelImpl> = []; 
     for (let prim of mesh.primitives) {
-
       let inst = this.getInstance(prim);
       // caching is a mess
       // PBRArray should return models (from instances)
@@ -286,8 +334,9 @@ export class GLTFSceneImpl implements GLTFScene {
     let meshID = this.lookupMeshID(model); 
 
     let [models, materials] = [this.getInstancesAsModels(meshID), this.getPBRMaterials(meshID)];
+    let armature = this.getArmature(model);
 
-    let res = new PBRModelImpl(this.ctx, models, materials);
+    let res = new PBRModelImpl(this.ctx, models, materials, armature);
     if (typeof model === "string") {
       // probably the node name
       res.setName(model);
@@ -302,6 +351,8 @@ export class GLTFSceneImpl implements GLTFScene {
     // need multiple instances and materials
     let meshID = this.lookupMeshID(init);
     let [models, materials] = [this.getInstancesAsModels(meshID), this.getPBRMaterials(meshID)];
+
+    const armature = this.getArmature(init);
 
     // queue these up under the meshID
     let modelsInstanced = models.map((model) => {
@@ -389,17 +440,6 @@ export class GLTFSceneImpl implements GLTFScene {
     }
 
     return inst;
-  }
-
-  private meshToModel(mesh: Mesh) : ModelImpl {
-    const instances : Array<ModelInstance> = [];
-    for (let prim of mesh.primitives) {
-      let inst = this.getInstance(prim);
-
-      instances.push(inst);
-    }
-
-    return new ModelImpl(instances); 
   }
 
   private createAttributeFromJSON(data: GLTFJson, buffers: Array<GLBuffer>, accessor: number) {

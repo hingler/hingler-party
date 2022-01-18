@@ -1,6 +1,7 @@
 import { GLAttribute } from "../../gl/GLAttribute";
 import { GLIndex } from "../../gl/GLIndex";
 import { AttributeType, Model, Triangle, Vertex } from "../../model/Model";
+import { ArmatureManager } from "../../object/armature/ArmatureManager";
 
 // instanced pathway: draw all instances in one go?
 // if that's the case, then tiling gets a bit weird
@@ -116,8 +117,10 @@ export class ModelImpl extends Model {
   tangentLocation: number;
   jointLocation: Array<number>;
   weightLocation: Array<number>;
+
+  private armature: ArmatureManager;
   
-  constructor(instances: Array<ModelInstance>) {
+  constructor(instances: Array<ModelInstance>, armature?: ArmatureManager) {
     super();
     this.instances = instances;
     this.posLocation = -1;
@@ -126,6 +129,17 @@ export class ModelImpl extends Model {
     this.tangentLocation = -1;
     this.jointLocation = null;
     this.weightLocation = null;
+
+    this.armature = (armature || null);
+  }
+
+  // setting armature data?
+  getArmature() {
+    return this.armature;
+  }
+
+  setArmature(armature: ArmatureManager) {
+    this.armature = armature;
   }
 
   [Symbol.iterator]() : Iterator<Triangle> {
@@ -169,23 +183,40 @@ export class ModelImpl extends Model {
 
     if (inst.normals && this.normLocation >= 0) {
       inst.normals.pointToAttribute(this.normLocation);
+    } else if (this.normLocation >= 0) {
+      inst.positions.setDefaultAttributeComps(this.normLocation, 3, 0, 0, 1);
     }
 
     if (inst.texcoords && this.texLocation >= 0) {
       inst.texcoords.pointToAttribute(this.texLocation);
+    } else if (this.texLocation >= 0) {
+      inst.positions.setDefaultAttributeComps(this.texLocation, 2, 0, 0);
     }
 
     if (inst.tangents && this.tangentLocation >= 0) {
       inst.tangents.pointToAttribute(this.tangentLocation);
+    } else if (this.tangentLocation >= 0) {
+      inst.positions.setDefaultAttributeComps(this.tangentLocation, 3, 1, 0, 0);
     }
 
-    for (let i = 0; inst.joints && this.jointLocation && i < this.jointLocation.length && i < inst.joints.length; i++) {
-      inst.joints[i].pointToAttribute(this.jointLocation[i]);
+    if (inst.joints && this.jointLocation.length > 0) {
+      for (let i = 0; inst.joints && this.jointLocation && i < this.jointLocation.length && i < inst.joints.length; i++) {
+        inst.joints[i].pointToAttribute(this.jointLocation[i]);
+      }
+    } else if (inst.joints && this.jointLocation.length > 0) {
+      for (let i = 0; i < this.jointLocation.length; i++) {
+        inst.positions.setDefaultAttributeComps(this.jointLocation[i], 4, 0, 0, 0, 0);
+      }
     }
 
-
-    for (let i = 0; inst.weights && this.weightLocation && i < this.weightLocation.length && i < inst.weights.length; i++) {
-      inst.weights[i].pointToAttribute(this.weightLocation[i]);
+    if (inst.weights && this.weightLocation.length > 0) {
+      for (let i = 0; inst.weights && this.weightLocation && i < this.weightLocation.length && i < inst.weights.length; i++) {
+        inst.weights[i].pointToAttribute(this.weightLocation[i]);
+      }
+    } else if (inst.weights && this.weightLocation.length > 0) {
+      for (let i = 0; i < this.weightLocation.length; i++) {
+        inst.positions.setDefaultAttributeComps(this.weightLocation[i], 4, 0, 0, 0, 0);
+      }
     }
   }
 

@@ -33,6 +33,7 @@ export class GameModel extends GameObject {
         this.setDebugName(`${this.getDebugName()}:${init}`);
         
     } else if (init instanceof Model) {
+      // TODO: Model is abstract for type inf, roll it back bc future is abstract
       // init instanceof Model
       this.model = init;
     } else {

@@ -95,6 +95,10 @@ export class CurveSweepModel extends Model {
     }
   }
 
+  getArmature() {
+    return null;
+  }
+
   updateModel() {
     if (this.curve.versionnumber !== this.modelVersion) {
       this.buildCurveGeometry();
@@ -143,10 +147,6 @@ export class CurveSweepModel extends Model {
 
     let tangent = curve.getTangent(0);
     let normal = curve.getNormal(0);
-
-    if (this.flipNormals_) {
-      vec3.scale(normal, normal, -1);
-    }
     
     let cross = vec3.create();
     vec3.cross(cross, normal, tangent);
@@ -233,6 +233,10 @@ export class CurveSweepModel extends Model {
           vec3.transformMat3(temp, bitangent, curveMat);
           vec3.cross(temp, tangent, temp);
           vec3.normalize(temp, temp);
+
+          if (this.flipNormals_) {
+            vec3.scale(temp, temp, -1);
+          }
           
           // set normal
           // positionBuffer.setFloatArray(cur, temp, true);
