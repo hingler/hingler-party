@@ -15,6 +15,8 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
   private transform_cache_joint_normal: mat3;
   private dirty: boolean;
 
+  private nodeID_: number;
+
   constructor(jointID: number, invbind: ReadonlyMat4) {
     super(jointID);
     this.transform = new TransformableBase();
@@ -28,6 +30,14 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
 
     this.transform_cache_joint_normal = mat3.create();
     mat3.identity(this.transform_cache_joint_normal);
+  }
+
+  setNodeID(id: number) {
+    this.nodeID_ = id;
+  }
+
+  get nodeID() {
+    return this.nodeID_;
   }
 
   getRotation(): ReadonlyQuat {
@@ -84,7 +94,6 @@ export class ArmatureNode extends NestableBase<ArmatureNode> implements Transfor
     }
 
     mat4.mul(joint, res, this.inverseBindMatrix);
-    console.log(joint);
 
     mat3.fromMat4(this.transform_cache_joint_normal, joint);
     this.dirty = false;

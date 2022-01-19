@@ -8,7 +8,7 @@ import { Future } from "../../../../../ts/util/task/Future";
 import { RenderType } from "../../internal/performanceanalytics";
 
 export class GamePBRModel extends GameObject {
-  model_: PBRModel;
+  private model_: PBRModel;
 
   constructor(ctx: GameContext, init: PBRModel | Future<PBRModel>) {
     super(ctx);
@@ -35,6 +35,10 @@ export class GamePBRModel extends GameObject {
   set model(model: PBRModel) {
     this.model_ = model;
     this.updateDebugName();
+  }
+
+  get model() {
+    return this.model_;
   }
 
   setPBRModel(model: PBRModel | Future<PBRModel>) {

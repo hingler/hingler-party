@@ -6,7 +6,7 @@ export interface Accessor {
   count: number,
   min?: Array<number>,
   max?: Array<number>,
-  type: string
+  type: GLTFAccessorType
 };
 
 export interface BufferView {
@@ -21,7 +21,7 @@ export interface Buffer {
 }
 
 export interface GLTFNode {
-  name: string,
+  name?: string,
   rotation?: [number, number, number, number],
   translation?: [number, number, number],
   scale?: [number, number, number],
@@ -102,9 +102,49 @@ export interface GLTFSkin {
   joints: Array<number>;
 }
 
+export interface GLTFAnimation {
+  name?: string,
+  channels: Array<GLTFAnimationChannel>,
+  samplers: Array<GLTFAnimationSampler>
+};
+
+export interface GLTFAnimationChannel {
+  sampler: number,
+  target: GLTFAnimationChannelTarget
+}
+
+export interface GLTFAnimationSampler {
+  input: number,
+  interpolation: GLTFSamplerInterpolation,
+  output: number
+};
+
+export interface GLTFAnimationChannelTarget {
+  path: GLTFTargetPathType,
+  node: number
+}
+
+export enum GLTFTargetPathType {
+  TRANSLATION = "translation",
+  ROTATION = "rotation",
+  SCALE = "scale"
+}
+
+export enum GLTFAccessorType {
+  SCALAR = "SCALAR",
+  VEC2 = "VEC2",
+  VEC3 = "VEC3",
+  VEC4 = "VEC4"
+}
+
+export enum GLTFSamplerInterpolation {
+  LINEAR = "LINEAR"
+}
+
 // handle optional params
 export interface GLTFJson {
   accessors?: Array<Accessor>,
+  animations?: Array<GLTFAnimation>,
   buffers?: Array<Buffer>,
   bufferViews?: Array<BufferView>,
   images?: Array<ImageSchema>,

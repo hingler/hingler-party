@@ -3,11 +3,12 @@ import { GLBuffer } from "../../gl/internal/GLBuffer";
 import { ArmatureNode } from "../../object/armature/ArmatureNode";
 import { ArmatureManager } from "../../object/armature/ArmatureManager";
 import { GLTFJson, GLTFNode, GLTFSkin } from "./gltfTypes";
+import { GameContext } from "../../GameContext";
 
 export class ArmatureBuilder {
   // gltf data, skin index -> armaturenode
   // gltf data, skin index -> (unknown armature wrapper)
-  static skinToArmature(data: GLTFJson, skinIndex: number, buffers: Array<GLBuffer>) {
+  static skinToArmature(data: GLTFJson, skinIndex: number, buffers: Array<GLBuffer>, ctx: GameContext) {
     if (!data.skins) {
       // no skins to fetch
       console.warn(`No skins present in this GLTF file.`);
@@ -46,7 +47,7 @@ export class ArmatureBuilder {
     // DEBUG: so we can peek at it temporarily
     rootArmature.getJointMatrix();
     console.log(rootArmature);
-    return new ArmatureManager(rootArmature);
+    return new ArmatureManager(rootArmature, ctx);
     // animation manager
     // - just put the armature into the manager
     // (skipped for now)
@@ -140,7 +141,7 @@ export class ArmatureBuilder {
       }
 
       let armature : ArmatureNode;
-      armature = this.createArmatureNodeFromGLTFNode(node, i, inverseBindMatrices[i]);
+      armature = this.createArmatureNodeFromGLTFNode(node, i, inverseBindMatrices[i], nodeList[i]);
       nodeMap.set(nodeList[i], armature);
     }
 
@@ -176,7 +177,7 @@ export class ArmatureBuilder {
     return parentNode;
   }
 
-  private static createArmatureNodeFromGLTFNode(node: GLTFNode, id: number, invMat: ReadonlyMat4) {
+  private static createArmatureNodeFromGLTFNode(node: GLTFNode, id: number, invMat: ReadonlyMat4, nodeID: number) {
     const res = new ArmatureNode(id, invMat);
     if (node.translation) {
       res.setPosition(node.translation);
@@ -190,6 +191,7 @@ export class ArmatureBuilder {
       res.setScale(node.scale);
     }
 
+    res.setNodeID(nodeID);
     return res;
   }
 }

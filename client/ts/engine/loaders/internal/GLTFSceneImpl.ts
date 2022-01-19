@@ -20,6 +20,8 @@ import { GLTFJson, ImageSchema, Material, Mesh, GLTFNode, Primitive, TextureSche
 import { InstancedModelImpl } from "./InstancedModelImpl";
 import { ModelImpl, ModelInstance } from "./ModelImpl";
 import { PBRModelImpl } from "./PBRModelImpl";
+import { AnimationManager } from "../../animation/AnimationManager";
+import { GLTFAnimationBuilder } from "../../animation/GLTFAnimationBuilder";
 
 // todo: holy shit this needs cleanup
 
@@ -33,6 +35,8 @@ export class GLTFSceneImpl implements GLTFScene {
   modelCachePBR : Map<number, Array<ModelImpl>>;
   matCache      : Map<number, PBRMaterialImpl>;
 
+  private animationData: Map<string, AnimationManager>;
+
   constructor(ctx: EngineContext, data: GLTFJson, buffers: Array<GLBuffer>) {
     this.ctx = ctx;
     this.gl = ctx.getGLContext();
@@ -43,6 +47,7 @@ export class GLTFSceneImpl implements GLTFScene {
     this.modelCachePBR = new Map();
     this.matCache = new Map();
 
+    this.animationData = new Map();
   }
 
   // check nodes first
@@ -92,7 +97,29 @@ export class GLTFSceneImpl implements GLTFScene {
 
   // load an armature as a manager
   private getArmatureFromSkinID(skinID: number) {
-    return ArmatureBuilder.skinToArmature(this.data, skinID, this.buffers);
+    return ArmatureBuilder.skinToArmature(this.data, skinID, this.buffers, this.ctx);
+  }
+
+  
+  getAnimationData(animationName: string) {
+    if (this.animationData.has(animationName)) {
+      return this.animationData.get(animationName);
+    } else {
+      // need to build it!
+      if (!this.data.animations) {
+        return null;
+      }
+
+      for (let animation of this.data.animations) {
+        if (animation.name && animation.name === animationName) {
+          const anim = GLTFAnimationBuilder.buildAnimationManager(this.data, animation, this.buffers);
+          this.animationData.set(animationName, anim);
+          return anim;
+        }
+      }
+
+      return null;
+    }
   }
 
   getModel(name: string | number) : Model {
@@ -371,6 +398,8 @@ export class GLTFSceneImpl implements GLTFScene {
 
     return new PBRInstanceFactory(this.ctx, modelsInstanced, materials);
   }
+
+
   
   private texSchemaToTexture(texture: TextureSchema, img: ImageSchema) : Texture {
     if (!img.bufferView) {

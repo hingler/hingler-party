@@ -57,6 +57,7 @@ export class TransformableBase implements Transformable {
       this.setScaleNum_(x, y, z);
     } else {
       console.warn("Parameters to `setScale` cannot be interpreted.")
+      console.warn(x);
     }
   }
 
@@ -74,6 +75,7 @@ export class TransformableBase implements Transformable {
         this.setPositionNum_(x[0], x[1], x[2]);
     } else {
         console.warn("Parameters to `setPosition` cannot be interpreted.")
+        console.error(x);
       }
     }
   
