@@ -50,6 +50,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   private placeholderNorm: TextureDummy;
   private placeholderARM: TextureDummy;
   private placeholderEmission: TextureDummy;
+  private placeholderParallax: TextureDummy;
 
   private modelMatrixIndex: number;
   private normalBuffer: GLBufferImpl;
@@ -73,6 +74,11 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
   colorFactor: ReadonlyVec4;
   normal: Texture;
   metalRough: Texture;
+
+  heightMap: Texture;
+
+  heightScale: number;
+
   metalFactor: number;
   roughFactor: number;
 
@@ -109,11 +115,16 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     texNorm: WebGLUniformLocation,
     texMetalRough: WebGLUniformLocation,
     texEmission: WebGLUniformLocation,
+    
+    texParallax: WebGLUniformLocation,
+    parallaxHeightScale: WebGLUniformLocation,
 
     useAlbedo: WebGLUniformLocation,
     useNorm: WebGLUniformLocation,
     useRough: WebGLUniformLocation,
     useEmission: WebGLUniformLocation,
+
+    useParallax: WebGLUniformLocation,
 
     albedoDef: WebGLUniformLocation,
     roughDef: WebGLUniformLocation,
@@ -157,12 +168,14 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.placeholderNorm = new TextureDummy(ctx);
     this.placeholderARM = new TextureDummy(ctx);
     this.placeholderEmission = new TextureDummy(ctx);
+    this.placeholderParallax = new TextureDummy(ctx);
 
 
     this.vpMat = mat4.create();
     this.modelMat = mat4.create();
     this.normal = null;
     this.color = null;
+    this.heightMap = null;
     this.irridance = null;
     this.specular = null;
     this.brdf = null;
@@ -170,6 +183,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
     this.metalRough = null;
     this.metalFactor = 1.0;
     this.roughFactor = 1.0;
+    this.heightScale = 0.1;
     this.emissionFactor = vec4.create();
     this.emission = null;
     this.placeholderCube = new ColorCubemap(ctx, 8);
@@ -222,10 +236,15 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       texNorm: gl.getUniformLocation(prog, "tex_norm"),
       texMetalRough: gl.getUniformLocation(prog, "tex_metal_rough"),
       texEmission: gl.getUniformLocation(prog, "tex_emission"),
+      texParallax: gl.getUniformLocation(prog, "tex_parallax"),
+
+      parallaxHeightScale: gl.getUniformLocation(prog, "parallax_heightscale"),
+
       useAlbedo: gl.getUniformLocation(prog, "use_albedo"),
       useNorm: gl.getUniformLocation(prog, "use_norm"),
       useRough: gl.getUniformLocation(prog, "use_metal_rough"),
       useEmission: gl.getUniformLocation(prog, "use_emission"),
+      useParallax: gl.getUniformLocation(prog, "use_parallax"),
       albedoDef: gl.getUniformLocation(prog, "color_factor"),
       roughDef: gl.getUniformLocation(prog, "rough_factor"),
       metalDef: gl.getUniformLocation(prog, "metal_factor"),
@@ -347,7 +366,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
           if (this.spot[i].hasShadow() && shadowSpot < 3) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
+            this.spot[i].setShadowTextureIndex(shadowSpot + 5);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
@@ -407,6 +426,16 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       } else {
         this.emission.bindToUniform(this.locs.texEmission, 3);
         gl.uniform1i(this.locs.useEmission, 1);
+      }
+
+      gl.uniform1f(this.locs.parallaxHeightScale, this.heightScale);
+
+      if (this.heightMap === null) {
+        gl.uniform1i(this.locs.useParallax, 0);
+        this.placeholderParallax.bindToUniform(this.locs.texParallax, 4);
+      } else {
+        gl.uniform1i(this.locs.useParallax, 1);
+        this.heightMap.bindToUniform(this.locs.texParallax, 4);
       }
       
       gl.uniform1f(this.locs.roughDef, this.roughFactor);
@@ -512,7 +541,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       if (this.spot) {
         for (let i = 0; i < this.spot.length; i++) {
           if (this.spot[i].hasShadow() && shadowSpot < 3) {
-            this.spot[i].setShadowTextureIndex(shadowSpot + 4);
+            this.spot[i].setShadowTextureIndex(shadowSpot + 5);
             this.bindSpotLightStruct(this.spot[i], this.spotLightUniforms[shadowSpot]);
             shadowSpot++;
           } else {
@@ -550,6 +579,24 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       } else {
         this.metalRough.bindToUniform(this.locs.texMetalRough, 2);
         gl.uniform1i(this.locs.useRough, 1);
+      }
+
+      if (this.emission === null) {
+        this.placeholderEmission.bindToUniform(this.locs.texEmission, 3);
+        gl.uniform1i(this.locs.useEmission, 0);
+      } else {
+        this.emission.bindToUniform(this.locs.texEmission, 3);
+        gl.uniform1i(this.locs.useEmission, 1);
+      }
+
+      gl.uniform1f(this.locs.parallaxHeightScale, this.heightScale);
+
+      if (this.heightMap === null) {
+        gl.uniform1i(this.locs.useParallax, 0);
+        this.placeholderParallax.bindToUniform(this.locs.texParallax, 4);
+      } else {
+        gl.uniform1i(this.locs.useParallax, 1);
+        this.heightMap.bindToUniform(this.locs.texParallax, 4);
       }
       
       gl.uniform1f(this.locs.roughDef, this.roughFactor);

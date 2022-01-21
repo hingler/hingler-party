@@ -106,12 +106,15 @@ export class ProceduralTextureTestScene extends Scene {
     const albedo = await tex.albedo();
     const normal = await tex.normal();
     const arm = await tex.arm();
+    const height = await tex.height();
 
     const mat = new PBRMaterialImpl(ctx);
     mat.color = albedo;
     mat.normal = normal;
     // todo: integrate ambient
     mat.metalRough = arm;
+    mat.heightMap = height;
+    mat.heightScale = tex.heightScale();
 
     mat.colorFactor = tex.albedoFactor();
     mat.metalFactor = tex.metalFactor();

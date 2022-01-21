@@ -5,7 +5,7 @@
 import { ReadonlyVec2, vec2 } from "gl-matrix";
 import { GameContext } from "../GameContext";
 import { ColorAttachFramebuffer } from "../gl/internal/ColorAttachFramebuffer";
-import { ColorTexture } from "../gl/internal/ColorTexture";
+import { BitDepth, ColorTexture } from "../gl/internal/ColorTexture";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../internal/getEnginePath";
 import { getFullScreenQuadBuffer } from "../material/getFullScreenQuadBuffer";
@@ -58,10 +58,10 @@ export class ProceduralTextureBase {
   }
 
   // todo: overloads which increase color depth?
-  draw() : ColorTexture {
+  draw(channelCount?: number, bitdepth?: BitDepth) : ColorTexture {
     if (this.prog !== null) {
       const gl = this.ctx.getGLContext();
-      const res = new ColorTexture(this.ctx, Array.from(this.dims) as [number, number]);
+      const res = new ColorTexture(this.ctx, Array.from(this.dims) as [number, number], channelCount, bitdepth);
       this.fb.setColorTexture(res);
       this.fb.bindFramebuffer(gl.FRAMEBUFFER);
 

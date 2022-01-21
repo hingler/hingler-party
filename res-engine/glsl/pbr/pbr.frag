@@ -15,6 +15,8 @@ precision highp sampler2D;
 #include <../includes/ambient.inc.glsl>
 #include <../includes/spotlight/spotlight.inc.glsl>
 
+#include <parallax>
+
 uniform SpotLight spotlight[4];
 uniform sampler2D texture_spotlight[4];
 uniform int spotlightCount;
@@ -31,12 +33,17 @@ VARYING vec3 v_norm;
 VARYING vec2 v_tex;
 VARYING mat3 TBN;
 
+VARYING mat3 TBN_inv;
+
 uniform vec3 camera_pos;
 
 uniform sampler2D tex_albedo;
 uniform sampler2D tex_norm;
 uniform sampler2D tex_metal_rough;
 uniform sampler2D tex_emission;
+uniform sampler2D tex_parallax;
+
+uniform float parallax_heightscale;
 
 // 1 if the respective textures are to be used
 // 0 otherwise
@@ -44,6 +51,7 @@ uniform int use_albedo;
 uniform int use_norm;
 uniform int use_metal_rough;
 uniform int use_emission;
+uniform int use_parallax;
 
 // defaults for color and rough if not texture
 // (normal uses v_norm)
@@ -74,7 +82,16 @@ OUTPUT_FRAGCOLOR
 
 void main() {
   // get albedo map at tex, use as surf color, store in vec3 col;
-  vec4 colAlpha = TEXTURE2D(tex_albedo, v_tex);
+
+  vec2 texActual = v_tex;
+
+  vec3 viewVecTan = normalize(TBN_inv * (v_pos.xyz - camera_pos));
+
+  if (use_parallax == 1) {
+    texActual = parallaxSample(tex_parallax, texActual, viewVecTan, parallax_heightscale);
+  }
+
+  vec4 colAlpha = TEXTURE2D(tex_albedo, texActual);
   vec3 C = colAlpha.rgb * color_factor.rgb;
   if (use_albedo == 0) {
     C = color_factor.xyz;
@@ -84,11 +101,11 @@ void main() {
 
   vec3 N = v_norm;
   // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
-  vec3 norm_tex = normalize(TEXTURE2D(tex_norm, v_tex).rgb * 2.0 - 1.0);
+  vec3 norm_tex = normalize(TEXTURE2D(tex_norm, texActual).rgb * 2.0 - 1.0);
   N = TBN * norm_tex * step(0.5, float(use_norm)) + N * step(float(use_norm), 0.5);
 
   // get rough at tex, use as roughness, store in float rough;
-  vec2 metal_rough = TEXTURE2D(tex_metal_rough, v_tex).bg;
+  vec2 metal_rough = TEXTURE2D(tex_metal_rough, texActual).bg;
   float metal = metal_rough.x * metal_factor;
   float rough = metal_rough.y * rough_factor;
 
@@ -133,7 +150,7 @@ void main() {
   if (use_emission == 0) {
     col += vec4(emission_factor.rgb, 0.0);
   } else {
-    col += vec4(TEXTURE2D(tex_emission, v_tex).rgb, 0.0);
+    col += vec4(TEXTURE2D(tex_emission, texActual).rgb, 0.0);
   }
 
   fragColor = vec4(pow(col.xyz, vec3(1.0 / 2.2)), 1.0);

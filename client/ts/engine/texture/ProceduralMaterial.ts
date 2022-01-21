@@ -26,6 +26,8 @@ export abstract class ProceduralMaterial {
    */
   abstract arm() : Promise<Texture>;
 
+  abstract height() : Promise<Texture>;
+
   albedoFactor() : ReadonlyVec4 {
     return [1, 1, 1, 1];
   }
@@ -43,4 +45,8 @@ export abstract class ProceduralMaterial {
   roughFactor() : number {
     return 0.5;
   } 
+
+  heightScale() : number {
+    return 0.05;
+  }
 }
