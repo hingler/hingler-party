@@ -105,7 +105,7 @@ void main() {
   N = TBN * norm_tex * step(0.5, float(use_norm)) + N * step(float(use_norm), 0.5);
 
   // get rough at tex, use as roughness, store in float rough;
-  vec2 metal_rough = TEXTURE2D(tex_metal_rough, texActual).bg;
+  vec3 metal_rough = TEXTURE2D(tex_metal_rough, texActual).bgr;
   float metal = metal_rough.x * metal_factor;
   float rough = metal_rough.y * rough_factor;
 
@@ -140,7 +140,7 @@ void main() {
   }
 
   if (useIrridance > 0) { 
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0) * metal_rough.z;
   }
 
   if (useIrridance_l > 0) {
