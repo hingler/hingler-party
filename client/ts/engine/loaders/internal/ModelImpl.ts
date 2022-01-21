@@ -199,21 +199,21 @@ export class ModelImpl extends Model {
       inst.positions.setDefaultAttributeComps(this.tangentLocation, 3, 1, 0, 0);
     }
 
-    if (inst.joints && this.jointLocation.length > 0) {
+    if (inst.joints && this.jointLocation && this.jointLocation.length > 0) {
       for (let i = 0; inst.joints && this.jointLocation && i < this.jointLocation.length && i < inst.joints.length; i++) {
         inst.joints[i].pointToAttribute(this.jointLocation[i]);
       }
-    } else if (inst.joints && this.jointLocation.length > 0) {
+    } else if (this.jointLocation && this.jointLocation.length > 0) {
       for (let i = 0; i < this.jointLocation.length; i++) {
         inst.positions.setDefaultAttributeComps(this.jointLocation[i], 4, 0, 0, 0, 0);
       }
     }
 
-    if (inst.weights && this.weightLocation.length > 0) {
+    if (inst.weights && this.weightLocation && this.weightLocation.length > 0) {
       for (let i = 0; inst.weights && this.weightLocation && i < this.weightLocation.length && i < inst.weights.length; i++) {
         inst.weights[i].pointToAttribute(this.weightLocation[i]);
       }
-    } else if (inst.weights && this.weightLocation.length > 0) {
+    } else if (this.weightLocation && this.weightLocation.length > 0) {
       for (let i = 0; i < this.weightLocation.length; i++) {
         inst.positions.setDefaultAttributeComps(this.weightLocation[i], 4, 0, 0, 0, 0);
       }

@@ -1,3 +1,4 @@
+import { AnimationManager } from "../animation/AnimationManager";
 import { Texture } from "../gl/Texture";
 import { InstancedModel } from "../model/InstancedModel";
 import { Model } from "../model/Model";
@@ -27,6 +28,13 @@ export interface GLTFScene {
    * Returns a game object representing the desired node -- contains no behavior.
    */
   getNodeAsGameObject(name: string) : GameObject;
+
+  /**
+   * Fetches animation data associated with a named animation in this scene.
+   * @param animationName - name of the desired animation.
+   * @returns the animation if it exists, otherwise null.
+   */
+  getAnimationData(animationName: string) : AnimationManager;
 
   /**
    * Returns a new InstancedModel.

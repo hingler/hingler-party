@@ -5,9 +5,11 @@
 
 import { Cubemap } from "../gl/Cubemap";
 import { Framebuffer } from "../gl/Framebuffer";
+import { ColorTexture } from "../gl/internal/ColorTexture";
 import { FloatColorTexture } from "../gl/internal/FloatColorTexture";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
+import { Texture } from "../gl/Texture";
 import { CameraInfo } from "../object/game/Camera";
 
 /**
@@ -41,4 +43,7 @@ export interface RenderContext {
   getSkybox() : Array<SkyboxInfo>;
 
   getFramebuffer() : Framebuffer;
+
+  // returns a texture containing position data for the entire scene
+  getPositionData() : Texture;
 };

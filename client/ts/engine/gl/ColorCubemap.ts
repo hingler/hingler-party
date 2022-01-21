@@ -2,6 +2,8 @@ import { GameContext } from "../GameContext";
 import { Cubemap } from "./Cubemap";
 import { TextureFormat } from "./Texture";
 
+// would be nice to poll texture support?
+
 export class ColorCubemap implements Cubemap {
   private ctx: GameContext;
   private cube: WebGLTexture;
@@ -20,7 +22,7 @@ export class ColorCubemap implements Cubemap {
     this.cube = gl.createTexture();
 
     ctx.getGLExtension("OES_texture_float");
-    ctx.getGLExtension("OES_texture_float_linear");
+    const linear = !!ctx.getGLExtension("OES_texture_float_linear");
     // firefox complains about this???
     ctx.getGLExtension("WEBGL_color_buffer_float");
 
@@ -33,8 +35,8 @@ export class ColorCubemap implements Cubemap {
     gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
 
     // lule
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, linear ? gl.LINEAR : gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 

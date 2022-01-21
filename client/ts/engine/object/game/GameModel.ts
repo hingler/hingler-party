@@ -5,6 +5,9 @@ import { ShadowNoTextureMaterial } from "../../material/ShadowNoTextureMaterial"
 import { RenderContext, RenderPass } from "../../render/RenderContext";
 import { GameObject } from "./GameObject";
 import { Future } from "../../../../../ts/util/task/Future";
+import { ComponentType } from "../../component/ComponentType";
+import { IComponentProvider } from "../../component/IComponentProvider";
+import { ModelComponent } from "../../component/impl/ModelComponent";
 
 export class GameModel extends GameObject {
   model: Model;
@@ -14,6 +17,9 @@ export class GameModel extends GameObject {
     // pass by path? pass as arg?
     // ctor raw seems like a piss idea
     super(ctx);
+
+    this.addComponent(ComponentType.MODEL);
+
     this.model = null;
     this.shadowTex = new ShadowNoTextureMaterial(ctx);
     if (typeof init === "string") {
@@ -21,7 +27,7 @@ export class GameModel extends GameObject {
       this.getContext().getGLTFLoader().loadGLTFModel(init)
         .then((res: Model[]) => {
           if (res.length > 0) {
-            this.model = res[0];
+            this.setModel(res[0]);
           } else {
             console.error("could not assign model!");
           }
@@ -35,14 +41,14 @@ export class GameModel extends GameObject {
     } else if (init instanceof Model) {
       // TODO: Model is abstract for type inf, roll it back bc future is abstract
       // init instanceof Model
-      this.model = init;
+      this.setModel(init);
     } else {
       // init instanceof Future
       if (init.valid()) {
-        this.model = init.get();
+        this.setModel(init.get());
       } else {
         init.wait().then((res: Model) => {
-          this.model = res;
+          this.setModel(res);
         });
       }
     }
@@ -55,6 +61,8 @@ export class GameModel extends GameObject {
 
   setModel(model: Model) {
     this.model = model;
+    const mod = this.getComponent(ComponentType.MODEL);
+    mod.model = this.model;
   }
 
   // temp in case something is fucky here

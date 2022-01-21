@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Accessor, BufferView } from "../client/ts/engine/loaders/internal/gltfTypes";
+import { Accessor, BufferView, GLTFAccessorType } from "../client/ts/engine/loaders/internal/gltfTypes";
 import { DataType, DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
 import { GLIndexImpl } from "../client/ts/engine/gl/internal/GLIndexImpl";
 
@@ -200,7 +200,7 @@ describe("GLIndexImpl", function() {
       count: 30,
       min: [0],
       max: [15],
-      type: "SCALAR"
+      type: GLTFAccessorType.SCALAR
     };
 
     let view : BufferView = {

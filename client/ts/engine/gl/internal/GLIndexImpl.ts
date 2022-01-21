@@ -1,4 +1,4 @@
-import { Accessor, BufferView } from "../../loaders/internal/gltfTypes";
+import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLIndex } from "../GLIndex";
 import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
 
@@ -47,7 +47,7 @@ export class GLIndexImpl implements GLIndex {
       bufferView: -1,
       componentType: type,
       count: count,
-      type: "SCALAR"
+      type: GLTFAccessorType.SCALAR
     };
 
     const view : BufferView = {

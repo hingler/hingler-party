@@ -13,6 +13,10 @@ export class GameObjectRoot extends GameObject {
     this.renderfunc(rc);
   }
 
+  callbackChildren(cb: (child: GameObject) => void) {
+    this.childcallback(cb);
+  }
+
   updateChildren() {
     this.updatefunc();
   }

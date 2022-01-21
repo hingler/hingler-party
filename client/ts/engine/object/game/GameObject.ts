@@ -10,13 +10,19 @@ import { IDGenerator } from "@hingler-party/ts/util/IDGenerator";
 import { NestableBase } from "../NestableBase";
 import { perf } from "@hingler-party/ts/performance";
 import { logUpdate } from "../../internal/performanceanalytics";
+import { IComponentProvider } from "../../component/IComponentProvider";
+import { ComponentType } from "../../component/ComponentType";
+import { IComponent } from "../../component/IComponent";
+import { ModelComponent } from "../../component/impl/ModelComponent";
+import { ComponentManager } from "../../component/internal/ComponentManager";
+import { AlphaTextureComponent } from "../../component/impl/AlphaTextureComponent";
 
 const gen = new IDGenerator();
 
 /**
  * Game object rendered to a lovely 3d world.
  */
-export class GameObject extends NestableBase<GameObject> implements Transformable, Nestable<GameObject> {
+export class GameObject extends NestableBase<GameObject> implements Transformable, Nestable<GameObject>, IComponentProvider {
   private id_: number;
   private created: boolean;
   private context_: GameContext;
@@ -27,6 +33,12 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
 
   private dirty: boolean;
 
+  private componentList: Map<ComponentType, IComponent>;
+
+  // unfortunately we can't really track destruction of objects
+  // our engine will destroy, so we could maintain destruction through that
+  // remove destroy from gameobject, and attach it to scene
+  // then, we can clear resources by calling methods
   constructor(ctx: GameContext) {
     const id = gen.getNewID();
     super(id);
@@ -42,6 +54,7 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
     mat4.identity(this.transform_cache);
 
     this.dirty = true;
+    this.componentList = new Map();
   }
 
   protected getDebugName() {
@@ -78,11 +91,18 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
 
   // renders itself and its children
   protected renderfunc(rc: RenderContext) {
-    const timer = this.getContext().getGPUTimer();
     this.renderMaterial(rc);
     // overtime should round out :)
     for (let child of this.getChildren()) {
       child.renderfunc(rc);
+    }
+  }
+
+  protected childcallback(cb: (child: GameObject) => void) {
+    // this is hopefully fine?
+    cb(this);
+    for (let child of this.getChildren()) {
+      child.childcallback(cb);
     }
   }
 
@@ -218,5 +238,30 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
     }
 
     return this.transform_cache;
+  }
+
+  getComponent(type: ComponentType.MODEL)         : ModelComponent | null;
+  getComponent(type: ComponentType.ALPHATEXTURE)  : AlphaTextureComponent | null;
+  getComponent<T extends IComponent>(type: ComponentType) {
+    if (this.componentList.has(type)) {
+      return this.componentList.get(type) as T;
+    }
+    
+    return null;
+  }
+  
+  addComponent(type: ComponentType.MODEL)        : ModelComponent | null;
+  addComponent(type: ComponentType.ALPHATEXTURE) : AlphaTextureComponent | null;
+  addComponent<T extends IComponent>(type: ComponentType) {
+    if (this.componentList.has(type)) {
+      return this.componentList.get(type) as T;
+    }
+
+    const component = ComponentManager.getComponent(type) as T;
+    if (component) {
+      this.componentList.set(type, component);
+    }
+
+    return component;
   }
 }

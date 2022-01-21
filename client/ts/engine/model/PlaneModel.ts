@@ -4,7 +4,7 @@ import {GameContext} from "../GameContext";
 import {GLAttributeImpl} from "../gl/internal/GLAttributeImpl";
 import {GLBufferImpl} from "../gl/internal/GLBufferImpl";
 import {GLIndexImpl} from "../gl/internal/GLIndexImpl";
-import {Accessor, BufferView} from "../loaders/internal/gltfTypes";
+import {Accessor, BufferView, GLTFAccessorType} from "../loaders/internal/gltfTypes";
 import {ModelImpl, ModelInstance} from "../loaders/internal/ModelImpl";
 
 /**
@@ -108,7 +108,7 @@ export class PlaneModel extends ModelImpl {
       count: (korn * korn * 6),
       min: [0],
       max: [subs * subs],
-      type: "SCALAR"
+      type: GLTFAccessorType.SCALAR
     };
 
     const viewInd : BufferView = {

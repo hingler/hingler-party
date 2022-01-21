@@ -1,5 +1,5 @@
 import { assert, expect } from "chai";
-import { Accessor, BufferView } from "../client/ts/engine/loaders/internal/gltfTypes";
+import { Accessor, BufferView, GLTFAccessorType } from "../client/ts/engine/loaders/internal/gltfTypes";
 import { GLAttributeImpl } from "../client/ts/engine/gl/internal/GLAttributeImpl";
 import { DataType, DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
 
@@ -259,7 +259,7 @@ describe("GLAttributeImpl", function() {
       count: 4,
       min: [-2.414, 0.0, 0.0, 1.0],
       max: [1.0, 3.612, 4.23, 1.0],
-      type: "VEC4"
+      type: GLTFAccessorType.VEC4
     };
 
     let view : BufferView = {
@@ -296,7 +296,7 @@ describe("GLAttributeImpl", function() {
       count: 2,
       min: [0, 0],
       max: [512, 512],
-      type: "VEC2"
+      type: GLTFAccessorType.VEC2
     };
 
     let attrTexcoord = new GLAttributeImpl(buffer, view, accessorPos);
@@ -322,7 +322,7 @@ describe("GLAttributeImpl", function() {
       count: 4,
       min: [-2.414, 0.0, 0.0, 1.0],
       max: [1.0, 3.612, 4.23, 1.0],
-      type: "VEC4"
+      type: GLTFAccessorType.VEC4
     };
 
     let view : BufferView = {
@@ -354,7 +354,7 @@ describe("GLAttributeImpl", function() {
       count: 2,
       min: [0, 0],
       max: [512, 512],
-      type: "VEC2"
+      type: GLTFAccessorType.VEC2
     };
 
     let attrTexcoord = new GLAttributeImpl(buffer, view, accessorPos);
@@ -379,7 +379,7 @@ describe("GLAttributeImpl", function() {
       count: 4,
       min: [-2.414, 0.0, 0.0, 1.0],
       max: [1.0, 3.612, 4.23, 1.0],
-      type: "VEC4"
+      type: GLTFAccessorType.VEC4
     };
 
     let view : BufferView = {

@@ -1,4 +1,4 @@
-import { Accessor, BufferView } from "../../loaders/internal/gltfTypes";
+import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLAttribute } from "../GLAttribute";
 import { BufferTarget, DataType, GLBuffer } from "./GLBuffer";
 
@@ -47,19 +47,19 @@ export class GLAttributeImpl implements GLAttribute {
    * @param stride - stride between individual components.
    */
   static createFromValues(buffer: GLBuffer, components: number, type: number, num: number, offset?: number, stride?: number) {
-    let typeString : string;
+    let typeString : GLTFAccessorType;
     switch (components) {
       case 1:
-        typeString = "SCALAR";
+        typeString = GLTFAccessorType.SCALAR;
         break;
       case 2:
-        typeString = "VEC2";
+        typeString = GLTFAccessorType.VEC2;
         break;
       case 3:
-        typeString = "VEC3";
+        typeString = GLTFAccessorType.VEC3;
         break;
       case 4:
-        typeString = "VEC4";
+        typeString = GLTFAccessorType.VEC4;
         break;
     };
 
@@ -85,12 +85,12 @@ export class GLAttributeImpl implements GLAttribute {
   constructor(buffer: GLBuffer, view: BufferView, accessor: Accessor) {
     this.buffer = buffer;
     switch (accessor.type) {
-      case "SCALAR":
+      case GLTFAccessorType.SCALAR:
         this.comps = 1;
         break;
-      case "VEC2":
-      case "VEC3":
-      case "VEC4":
+      case GLTFAccessorType.VEC2:
+      case GLTFAccessorType.VEC3:
+      case GLTFAccessorType.VEC4:
         this.comps = Number.parseInt(accessor.type.charAt(3), 10);
         break;
       default:
