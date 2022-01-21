@@ -55,7 +55,7 @@ export class ColorAttachFramebuffer implements Framebuffer {
    * Attachesw a color texture to this framebuffer.
    * @param tex - the color texture we wish to attach.
    */
-  setColorTexture(tex: ColorTexture | FloatColorTexture) {
+  setColorTexture(tex: ColorTexture) {
     tex.attachToFramebuffer(this.fb);
     this.colorTexture = tex;
 

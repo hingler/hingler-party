@@ -1,14 +1,17 @@
-import { mat4, vec3 } from "gl-matrix";
-import { perf } from "../../../../ts/performance";
-import { mobileCheck } from "../../../../ts/util/MobileCheck";
+import { mat4, vec3, ReadonlyMat4 } from "gl-matrix";
 import { PingQueue } from "../../../../ts/util/PingQueue";
+import { ComponentType } from "../component/ComponentType";
 import { EXT_disjoint_timer_query_webgl2 } from "../GameContext";
 import { Framebuffer } from "../gl/Framebuffer";
+import { ColorAttachFramebuffer } from "../gl/internal/ColorAttachFramebuffer";
 import { ColorFramebuffer } from "../gl/internal/ColorFramebuffer";
-import { SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { BitDepth, ColorTexture } from "../gl/internal/ColorTexture";
 import { AmbientLightStruct } from "../gl/struct/AmbientLightStruct";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
+import { Texture } from "../gl/Texture";
+import { TextureCompatibility } from "../gl/TextureCompatibility";
 import { ColorDisplay } from "../material/ColorDisplay";
+import { PositionMaterial } from "../material/deferred/PositionMaterial";
 import { PostProcessingFilter } from "../material/PostProcessingFilter";
 import { ShadowDisplay } from "../material/ShadowDisplay";
 import { SkyboxMaterial } from "../material/SkyboxMaterial";
@@ -66,6 +69,10 @@ class SpotLightRenderContext implements RenderContext {
   getFramebuffer() {
     return this.fb;
   }
+
+  getPositionData() {
+    return null;
+  }
 }
 
 /**
@@ -101,6 +108,11 @@ export class Renderer {
   private postQueue: PingQueue;
   private totalQueue: PingQueue;
 
+  // for deferred rendering
+  private positionTex: ColorTexture;
+  private positionFB: ColorAttachFramebuffer;
+  private positionMaterial: PositionMaterial;
+
   // tracks rendered textures
   private renderPasses: Array<TextureDisplay>;
   constructor(ctx: EngineContext, scene: Scene) {
@@ -122,6 +134,12 @@ export class Renderer {
     this.postQueue = new PingQueue(64);
     this.totalQueue = new PingQueue(64);
 
+    this.positionFB = new ColorAttachFramebuffer(ctx);
+    this.positionTex = this.getPositionTex();
+
+    this.positionFB.setColorTexture(this.positionTex);
+
+    this.positionMaterial = new PositionMaterial(ctx);
     
     this.queryExt = null;
 
@@ -130,6 +148,21 @@ export class Renderer {
       this.queryExt = ctx.getGLExtension("EXT_disjoint_timer_query_webgl2");
       console.log(this.queryExt);
     }
+  }
+
+  private getPositionTex() {
+    const floatSupport = TextureCompatibility.supportFloatTexture(this.ctx);
+    if (floatSupport.supported && floatSupport.filterable && floatSupport.renderable) {
+      return new ColorTexture(this.ctx, this.ctx.getScreenDims(), 4, BitDepth.FLOAT);
+    }
+
+    const halfFloatSupport = TextureCompatibility.supportHalfFloatTexture(this.ctx);
+    if (halfFloatSupport.supported && halfFloatSupport.filterable && halfFloatSupport.renderable) {
+      return new ColorTexture(this.ctx, this.ctx.getScreenDims(), 4, BitDepth.HALF_FLOAT);
+    }
+
+    // todo: dump effects which require support for higher bit depth
+    throw Error("This machine does not support textures necessary to perform deferred rendering!");
   }
 
   renderScene() {
@@ -146,6 +179,7 @@ export class Renderer {
     if (dims[0] !== old_dims[0] || dims[1] !== old_dims[1]) {
       this.primaryFB.setFramebufferSize(dims);
       this.swapFB.setFramebufferSize(dims);
+      this.positionFB.setFramebufferSize(dims);
     }
     
     this.renderPasses = [];
@@ -233,6 +267,7 @@ export class Renderer {
     skyboxList.sort((a, b) => (b.intensity - a.intensity));
 
     const fb = this.primaryFB;
+    const pos = this.positionTex;
 
     let rc : RenderContext = {
       getRenderPass() {
@@ -257,19 +292,37 @@ export class Renderer {
 
       getFramebuffer() {
         return fb;
+      },
+
+      getPositionData() {
+        return pos;
       }
     }
 
     const finalStart = timer.startQuery();
 
-    this.primaryFB.bindFramebuffer(gl.FRAMEBUFFER);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     let dim = this.ctx.getScreenDims();
     this.gl.viewport(0, 0, dim[0], dim[1]);
+    
+    // renderer should get a tree of components instead of trusting this guy
+    this.positionFB.bindFramebuffer(gl.FRAMEBUFFER);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    this.scene.getGameObjectRoot().callbackChildren((this.drawPosition.bind(this, info.vpMatrix)));
+    
+    this.gl.viewport(0, 0, dim[0], dim[1]);
+
+    this.primaryFB.bindFramebuffer(gl.FRAMEBUFFER);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     this.scene.getGameObjectRoot().renderChildren(rc);
     for (let model of this.ctx.getGLTFLoader().getInstancedModels()) {
       model.flush(rc);
     }
+
+    // problem: how do we deferred draw flushed models?
+    // - use an InstancedModel component.
+    // - grab it, draw its contents (instancedmodel + instancedposmat)
+    // note that we lose drawing order if we do this. that's probably for the best?
+
 
     // draw skybox
 
@@ -306,9 +359,6 @@ export class Renderer {
       usePrimaryAsSource = !usePrimaryAsSource;
     }
 
-
-
-
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
     this.renderPasses.push(new ColorDisplay(this.ctx, dst.getColorTexture()));
 
@@ -319,10 +369,15 @@ export class Renderer {
     finalProm.then((res) => this.finalQueue.enqueue(res));
     postProm.then((res) => this.postQueue.enqueue(res));
     totalProm.then((res) => this.totalQueue.enqueue(res));
+  }
 
-    // console.log(`SHADOW: ${this.shadowQueue.getAverage() / 1e6}`);
-    // console.log(`FINAL: ${this.finalQueue.getAverage() / 1e6}`);
-    // console.log(`POST: ${this.postQueue.getAverage() / 1e6}`);
+  private drawPosition(mat: ReadonlyMat4, obj: GameObject) {
+    const model = obj.getComponent(ComponentType.MODEL);
+    if (model) {
+      this.positionMaterial.modelMat = obj.getTransformationMatrix();
+      this.positionMaterial.vpMat = mat;
+      this.positionMaterial.drawMaterial(model.model);
+    }
   }
 
   getDebugTiming() {

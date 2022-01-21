@@ -18,19 +18,32 @@ export class ColorTexture extends Texture {
   private bitdepth: number;
   private floatsupport: boolean;
   private halffloatsupport: boolean;
+
+  private floatlinearsupport: boolean;
+  private floatrendersupport: boolean;
+
+  private halffloatlinearsupport: boolean;
+  private halffloatrendersupport: boolean;
+
+  private depth: BitDepth;
   
   constructor(ctx: GameContext, dims: [number, number], channelCount?: number, bitDepth?: BitDepth) {
     super();
     this.ctx = ctx;
     this.gl = ctx.getGLContext();
     this.tex = null;
+    // not necc
     const floatTexSupport = this.ctx.getGLExtension("OES_texture_float_linear");
+    this.floatlinearsupport = !!floatTexSupport;
     const floatRenderSupport = this.ctx.getGLExtension("EXT_color_buffer_float");
-    this.floatsupport === (floatTexSupport && floatRenderSupport);
+    this.floatrendersupport = !!floatRenderSupport;
+    // always supported in gl2
+    this.floatsupport = true;
     const gl2 = (this.ctx.webglVersion === 2);
     let depthWrap = (bitDepth ? bitDepth : BitDepth.BYTE);
     
     if (!gl2) {
+      this.floatsupport = !!this.ctx.getGLExtension("OES_texture_float");
       this.halffloatsupport = !!this.ctx.getGLExtension("OES_texture_half_float");
       this.halffloatsupport &&= !!this.ctx.getGLExtension("OES_texture_half_float_linear");
     } else {
@@ -49,10 +62,6 @@ export class ColorTexture extends Texture {
       }
 
       if (!this.floatsupport) {
-        // try downgrading to half float
-        // note: we do not necessarily want to downgrade
-        // adding a "force" field to tell the client to always use the provided vals would help
-        // alternatively, exposing client support on binds would be neat too
         depthWrap = BitDepth.HALF_FLOAT;
       }
     }
@@ -81,9 +90,9 @@ export class ColorTexture extends Texture {
     console.log(this.bitdepth);
     console.log(this.internalformat);
     console.log(this.format);
-
-
     this.setDimensions(dims);
+
+    this.depth = depthWrap;
   }
 
   private setFormatAndInternalFormat_WEBGL2(gl: WebGL2RenderingContext, channelCount?: number, depth?: BitDepth) {
@@ -132,6 +141,10 @@ export class ColorTexture extends Texture {
 
   getTextureFormat() {
     return TextureFormat.RGBA;
+  }
+
+  getBitDepth() {
+    return this.depth;
   }
 
   setSamplingMode(mode: SamplingMode) {

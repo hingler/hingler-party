@@ -1,3 +1,4 @@
+import { ComponentType } from "./component/ComponentType";
 import { GPUTimer, SharedGPUTimer } from "./gl/internal/SharedGPUTimer";
 import { FileLoader } from "./loaders/FileLoader";
 import { GLTFLoader } from "./loaders/GLTFLoader";
@@ -71,6 +72,7 @@ export interface GameContext {
   getGLExtension(name: "EXT_disjoint_timer_query_webgl2") : EXT_disjoint_timer_query_webgl2 | null;
   getGLExtension(name: "OES_texture_half_float")          : OES_texture_half_float          | null;
   getGLExtension(name: "OES_texture_half_float_linear")   : OES_texture_half_float_linear   | null;
+  getGLExtension(name: "EXT_color_buffer_half_float")     : EXT_color_buffer_half_float     | null;
   /**
    * @returns the present GL rendering context.
    */

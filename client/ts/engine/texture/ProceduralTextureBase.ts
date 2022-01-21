@@ -57,6 +57,7 @@ export class ProceduralTextureBase {
     // nop
   }
 
+  // todo: overloads which increase color depth?
   draw() : ColorTexture {
     if (this.prog !== null) {
       const gl = this.ctx.getGLContext();

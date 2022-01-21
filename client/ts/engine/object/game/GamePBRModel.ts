@@ -6,12 +6,14 @@ import { GameObject } from "./GameObject";
 import { Model } from "../../model/Model";
 import { Future } from "../../../../../ts/util/task/Future";
 import { RenderType } from "../../internal/performanceanalytics";
+import { ComponentType } from "../../component/ComponentType";
 
 export class GamePBRModel extends GameObject {
   private model_: PBRModel;
 
   constructor(ctx: GameContext, init: PBRModel | Future<PBRModel>) {
     super(ctx);
+    this.addComponent(ComponentType.MODEL);
     this.model_ = null;
     if (init instanceof PBRModel) {
       this.model = init;
@@ -34,6 +36,8 @@ export class GamePBRModel extends GameObject {
 
   set model(model: PBRModel) {
     this.model_ = model;
+    const mod = this.getComponent(ComponentType.MODEL);
+    mod.model = model;
     this.updateDebugName();
   }
 
