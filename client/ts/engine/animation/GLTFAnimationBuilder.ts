@@ -1,9 +1,9 @@
 import { GLBuffer } from "../gl/internal/GLBuffer";
 import { GLTFAccessorType, GLTFAnimation, GLTFAnimationChannel, GLTFJson, GLTFSamplerInterpolation, GLTFTargetPathType } from "../loaders/internal/gltfTypes";
 import { vec3, quat } from "gl-matrix";
-import { LinearVectorSampler } from "@hingler-party/nekogirl-valhalla/ts/animation/samplers/LinearVectorSampler";
-import { LinearQuatSampler } from "@nekogirl-valhalla/animation/samplers/LinearQuatSampler";
-import { AnimationSampler } from "@hingler-party/nekogirl-valhalla/ts/animation/AnimationSampler";
+import { LinearVectorSampler } from "nekogirl-valhalla/animation/samplers/LinearVectorSampler";
+import { LinearQuatSampler } from "nekogirl-valhalla/animation/samplers/LinearQuatSampler";
+import { AnimationSampler } from "nekogirl-valhalla/animation/AnimationSampler";
 import { GLTFAnimationManager } from "./internal/GLTFAnimationManager";
 
 export class GLTFAnimationBuilder {

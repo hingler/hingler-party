@@ -6,7 +6,7 @@
     "target": "ES2015",
     "paths": {
       "@hingler-party/*": ["./*"],
-      "@nekogirl-valhalla/*": ["./nekogirl-valhalla/ts/*"]
+      "@nekogirl-valhalla/*": ["./nekogirl-valhalla/*"]
     }
   },
 

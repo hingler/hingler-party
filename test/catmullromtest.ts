@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { vec3 } from "gl-matrix";
-import { CatmullRomSpline } from "@nekogirl-valhalla/spline/CatmullRomSpline"
+import { CatmullRomSpline } from "nekogirl-valhalla/spline/CatmullRomSpline"
 
 describe("CatmullRomSplineTest", function() {
   it("Should instantiate properly", function() {
