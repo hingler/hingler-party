@@ -1,5 +1,5 @@
 import { ReadonlyVec2, ReadonlyVec3, ReadonlyVec4, vec2, vec3, vec4 } from "gl-matrix";
-import { Hashable } from "nekogirl-valhalla";
+import { Hashable } from "nekogirl-valhalla/Hashable";
 import { HashMap } from "nekogirl-valhalla/map/HashMap";
 import { GameContext } from "../../GameContext";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";

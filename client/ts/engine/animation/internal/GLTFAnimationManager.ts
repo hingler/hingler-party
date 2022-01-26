@@ -1,4 +1,4 @@
-import { AnimationSampler } from "@hingler-party/nekogirl-valhalla/ts/animation/AnimationSampler";
+import { AnimationSampler } from "nekogirl-valhalla/animation/AnimationSampler";
 import { quat, vec3 } from "gl-matrix";
 import { AnimationData, AnimationManager } from "../AnimationManager";
 
