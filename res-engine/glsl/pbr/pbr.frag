@@ -140,7 +140,7 @@ void main() {
   }
 
   if (useIrridance > 0) { 
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0) * metal_rough.z;
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0);
   }
 
   if (useIrridance_l > 0) {
