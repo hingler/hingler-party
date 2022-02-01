@@ -17,7 +17,7 @@ export class ProceduralTextureBase {
   private prog : WebGLProgram;
   private prom : Promise<void>;
   private fb: ColorAttachFramebuffer;
-  private dims: ReadonlyVec2;
+  private dims: vec2;
 
   constructor(ctx: GameContext, fragPath: string, dims: ReadonlyVec2, ...flags: string[]) {
     this.ctx = ctx;
@@ -32,6 +32,10 @@ export class ProceduralTextureBase {
     this.dims = Array.from(dims) as [number, number];
 
     this.fb = new ColorAttachFramebuffer(ctx);
+  }
+
+  setDims(dims: ReadonlyVec2) {
+    vec2.copy(this.dims, dims);
   }
 
   protected getContext() {
