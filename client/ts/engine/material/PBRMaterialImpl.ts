@@ -19,6 +19,7 @@ import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { CalculateNormalMatrixFromBuffer } from "./CalculateNormalMatrixFromBuffer";
 import { Material } from "./Material";
 import { PBRInstancedMaterial } from "./PBRInstancedMaterial";
+import { PBRInterface } from "./PBRInterface";
 import { PBRMaterial } from "./PBRMaterial";
 import { TextureDummy } from "./TextureDummy";
 
@@ -40,7 +41,7 @@ interface SpotLightUniform {
 
 // todo: merge this and instanced?
 // create a single unified material which supports instancing
-export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMaterial { 
+export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMaterial, PBRInterface { 
   private progWrap: GLProgramWrap;
   private prog: WebGLProgram; 
   private ctx: GameContext;

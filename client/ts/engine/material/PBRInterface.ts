@@ -6,6 +6,10 @@ export interface PBRInterface {
   color: Texture,
   colorFactor: ReadonlyVec4,
   normal: Texture,
+
+  heightMap: Texture,
+  heightScale: number,
+  
   metalRough: Texture,
   metalFactor: number,
   roughFactor: number,
