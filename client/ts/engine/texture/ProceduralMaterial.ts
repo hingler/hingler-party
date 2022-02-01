@@ -1,6 +1,7 @@
 import { ReadonlyVec4, vec4 } from "gl-matrix";
 import { GameContext } from "../GameContext";
-import { Texture } from "../gl/Texture";
+import { SamplingMode, Texture, WrapMode } from "../gl/Texture";
+import { ProceduralTextureBase } from "./ProceduralTextureBase";
 
 export abstract class ProceduralMaterial {
 
@@ -26,6 +27,8 @@ export abstract class ProceduralMaterial {
    */
   abstract arm() : Promise<Texture>;
 
+  abstract height() : Promise<Texture>;
+
   albedoFactor() : ReadonlyVec4 {
     return [1, 1, 1, 1];
   }
@@ -34,13 +37,28 @@ export abstract class ProceduralMaterial {
    * @returns the metal factor for this material.
    */
   metalFactor() : number {
-    return 0.5;
+    return 1.0;
   }
 
   /**
    * @returns the roughness factor for this material.
    */
   roughFactor() : number {
-    return 0.5;
+    return 1.0;
   } 
+
+  heightScale() : number {
+    return 0.05;
+  }
+
+  protected async drawTex(mat: ProceduralTextureBase, pot: boolean) {
+    await mat.waitUntilCompiled();
+    const res = mat.draw();
+    if (pot) {
+      res.setWrapMode(WrapMode.REPEAT);
+      res.setSamplingMode(SamplingMode.LINEAR_MIPMAP_LINEAR);
+    }
+
+    return res;
+  }
 }

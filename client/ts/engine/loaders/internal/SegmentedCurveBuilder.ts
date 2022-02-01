@@ -4,7 +4,7 @@
 
 import { ReadonlyVec3, vec3 } from "gl-matrix";
 import { SegmentedCurve } from "../../spline/SegmentedCurve";
-import { RingArray } from "@nekogirl-valhalla/array/RingArray";
+import { RingArray } from "nekogirl-valhalla/array/RingArray";
 
 /**
  * Builds a segmented curve based on inputs consistent with the OBJ spec.

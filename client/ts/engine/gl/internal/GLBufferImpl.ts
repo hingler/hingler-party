@@ -1,4 +1,4 @@
-import { ReadonlyMat4 } from "gl-matrix";
+import { ReadWriteBuffer } from "nekogirl-valhalla/buffer/ReadWriteBuffer";
 import { GameContext } from "../../GameContext";
 import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
 
@@ -13,9 +13,8 @@ let ext : ANGLE_instanced_arrays = undefined;
  *       I won't worry about it for now because this class is internal only
  */
 export class GLBufferImpl implements GLBuffer {
-  buf: ArrayBuffer;
+  private buf: ReadWriteBuffer;
   glBuf: WebGLBuffer;
-  view: DataView;
   ctx: GameContext;
   gl: WebGLRenderingContext;
   target: BufferTarget;
@@ -31,20 +30,13 @@ export class GLBufferImpl implements GLBuffer {
   // we'd have a confusing dependency :( but even then it like won't matter
   // it's just a safeguard for me, so that we have a bit more info instead of just crashing out
   constructor(ctx: GameContext, buffer?: ArrayBuffer | number, dataMode?: number) {
-    if (typeof buffer === "number") {
-      this.buf = new ArrayBuffer(buffer);
-    } else if (buffer instanceof ArrayBuffer) {
-      this.buf = buffer;
-    } else {
-      this.buf = new ArrayBuffer(16);
-    }
+    this.buf = new ReadWriteBuffer(buffer);
 
     this.ctx = ctx;
     this.gl = ctx.getGLContext();
     const gl = this.gl;
 
     this.glBuf = gl.createBuffer();
-    this.view = new DataView(this.buf);
     this.target = BufferTarget.UNBOUND;
 
     this.dirty = true;
@@ -74,12 +66,12 @@ export class GLBufferImpl implements GLBuffer {
     }
 
     gl.bindBuffer(targ, this.glBuf);
-
-    if (this.dirty && this.glBufferSize < this.buf.byteLength) {
-      gl.bufferData(targ, this.buf, this.dataMode);
-      this.glBufferSize = this.buf.byteLength;
+    const buf = this.buf.arrayBuffer();
+    if (this.dirty && this.glBufferSize < buf.byteLength) {
+      gl.bufferData(targ, buf, this.dataMode);
+      this.glBufferSize = buf.byteLength;
     } else if (this.dirty) {
-      gl.bufferSubData(targ, 0, this.buf);
+      gl.bufferSubData(targ, 0, buf);
     }
 
     this.dirty = false;
@@ -255,115 +247,87 @@ export class GLBufferImpl implements GLBuffer {
   }
 
   getInt8(offset: number) {
-    return this.view.getInt8(offset);
+    return this.buf.getInt8(offset);
   }
 
   getUint8(offset: number) {
-    return this.view.getUint8(offset);
+    return this.buf.getUint8(offset);
   }
 
   getInt16(offset: number, littleEndian?: boolean) {
-    return this.view.getInt16(offset, littleEndian);
+    return this.buf.getInt16(offset, littleEndian);
   }
 
   getUint16(offset: number, littleEndian?: boolean) {
-    return this.view.getUint16(offset, littleEndian);
+    return this.buf.getUint16(offset, littleEndian);
   }
 
   getInt32(offset: number, littleEndian?: boolean) {
-    return this.view.getInt32(offset, littleEndian);
+    return this.buf.getInt32(offset, littleEndian);
   }
 
   getUint32(offset: number, littleEndian?: boolean) {
-    return this.view.getUint32(offset, littleEndian);
+    return this.buf.getUint32(offset, littleEndian);
   }
   
   getFloat32(offset: number, littleEndian?: boolean) {
-    return this.view.getFloat32(offset, littleEndian);
+    return this.buf.getFloat32(offset, littleEndian);
   }
 
   getFloat32Array(offset: number, num: number) {
-    return new Float32Array(this.buf, offset, num);
+    return this.buf.getFloat32Array(offset, num);
   }
 
   setInt8(offset: number, value: number) {
-    this.ensureInBounds(offset);
-    this.view.setInt8(offset, value);
+    this.buf.setInt8(offset, value);
   }
 
   setUint8(offset: number, value: number) {
-    this.ensureInBounds(offset);
-    this.view.setUint8(offset, value);
+    this.buf.setUint8(offset, value);
   }
 
   setInt16(offset: number, value: number, littleEndian?: boolean) {
-    this.ensureInBounds(offset + 1);
-    this.view.setInt16(offset, value, littleEndian);
+    this.buf.setInt16(offset, value, littleEndian);
   }
 
   setUint16(offset: number, value: number, littleEndian?: boolean) {
-    this.ensureInBounds(offset + 1);
-    this.view.setUint16(offset, value, littleEndian);
+    this.buf.setUint16(offset, value, littleEndian);
   }
 
   setInt32(offset: number, value: number, littleEndian?: boolean) {
-    this.ensureInBounds(offset + 3);
-    this.view.setInt32(offset, value, littleEndian);
+    this.buf.setInt32(offset, value, littleEndian);
   }
 
   setUint32(offset: number, value: number, littleEndian?: boolean) {
-    this.ensureInBounds(offset + 3);
-    this.view.setUint32(offset, value, littleEndian);
+    this.buf.setUint32(offset, value, littleEndian);
   }
 
   setFloat32(offset: number, value: number, littleEndian?: boolean) {
-    this.ensureInBounds(offset + 3);
-    this.view.setFloat32(offset, value, littleEndian);
+    this.buf.setFloat32(offset, value, littleEndian);
   }
 
   setFloatArray(offset: number, arr: ArrayLike<number>, littleEndian?: boolean) {
-    this.ensureInBounds(offset + (4 * arr.length));
-    let farr = new Float32Array(this.buf, offset, arr.length);
-    farr.set(arr);
+    this.buf.setFloatArray(offset, arr, littleEndian);
   }
 
   getRegionAsUint16Array(offset: number, length: number) {
-    this.ensureInBounds(offset + (2 * length) - 1);
-    return new Uint16Array(this.buf, offset, length);
+    return this.buf.getRegionAsUint16Array(offset, length);
   }
 
   getRegionAsFloat32Array(offset: number, length: number) {
-    this.ensureInBounds(offset + 4 * length - 1);
-    return new Float32Array(this.buf, offset, length);
-  }
-
-  private ensureInBounds(offset: number) {
-    const SIZE_MAX = 1073741824;
-    this.dirty = true;
-
-    if (this.buf.byteLength <= offset) {
-      let bufNew = new ArrayBuffer(Math.min(offset * 2, SIZE_MAX));
-      if (offset > SIZE_MAX) {
-        throw Error("Too much space reserved for array buffer :sade:");
-      }
-
-      new Uint8Array(bufNew).set(new Uint8Array(this.buf), 0);
-      this.buf = bufNew;
-
-      this.view = new DataView(this.buf);
-    }
+    return this.buf.getRegionAsFloat32Array(offset, length);
   }
 
   size() {
-    return this.buf.byteLength;
+    return this.buf.size();
   }
 
   arrayBuffer() {
-    return this.buf;
+    return this.buf.arrayBuffer();
   }
   
   copy() : GLBuffer {
-    return new GLBufferImpl(this.ctx, this.buf, this.dataMode);
+    return new GLBufferImpl(this.ctx, this.buf.arrayBuffer(), this.dataMode);
   }
 }
 

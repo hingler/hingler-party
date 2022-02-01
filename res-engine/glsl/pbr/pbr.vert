@@ -32,6 +32,7 @@ VARYING vec4 v_pos;
 VARYING vec2 v_tex;
 VARYING vec3 v_norm;
 VARYING mat3 TBN;
+VARYING mat3 TBN_inv;
 
 uniform mat4 model_matrix;
 uniform mat4 vp_matrix;
@@ -95,6 +96,7 @@ void main() {
   v_norm = N;
 
   TBN = mat3(T, B, N);
+  TBN_inv = transpose(TBN);
 
   for (int i = 0; i < 4; i++) {
     if (i >= spotlightCount) {

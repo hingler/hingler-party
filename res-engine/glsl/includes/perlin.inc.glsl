@@ -81,7 +81,10 @@ float noise2d(vec2 point) {
 float fractalPerlin2d(vec2 point, int octaves) {
   float coll = 0.0;
   vec2 samplePoint = vec2(point);
-  for (int i = 0; i < octaves; i++) {
+  for (int i = 0; i < 16; i++) {
+    if (i >= octaves) {
+      break;
+    }
     coll += noise2d(samplePoint);
     samplePoint *= 1.898;
   }

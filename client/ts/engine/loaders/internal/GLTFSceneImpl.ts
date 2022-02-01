@@ -432,7 +432,7 @@ export class GLTFSceneImpl implements GLTFScene {
     // we ultimately need the arraybuffer to gen an image
     // delegating that responsibility to the glbuffer is not to our benefit
     // the glbuffer replaces our "GL BUFFERS" (yeah everything is but whatever)
-       let arrbuf = buffer.arrayBuffer();
+    let arrbuf = buffer.arrayBuffer();
     let off = view.byteOffset ? view.byteOffset : 0;
     let imgbuf = arrbuf.slice(off, view.byteLength + off);
     return new GLTFTexture(this.gl, imgbuf, sampler, img.mimeType);

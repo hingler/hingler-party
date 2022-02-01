@@ -13,6 +13,7 @@ const DEFAULT_INCLUDES = [
   "compatibility",
   "spotlight",
   "procedural",
+  "parallax",
   "ambient",
   "constants",
   "gradient",
@@ -138,6 +139,9 @@ export class ShaderFileParser {
                 break;
               case "opensimplex":
                 output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/opensimplex.inc.glsl"), isVertexShader));
+                break;
+              case "parallax":
+                output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/parallax.inc.glsl"), isVertexShader));
                 break;
               case "perlin":
                 output.push(await this.parseShaderFile_(getEnginePath("engine/glsl/includes/perlin.inc.glsl"), isVertexShader));
