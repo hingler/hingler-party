@@ -115,7 +115,6 @@ export class ProceduralTextureTestScene extends Scene {
     mat.metalRough = arm;
     mat.heightMap = height;
     mat.heightScale = tex.heightScale();
-
     mat.colorFactor = tex.albedoFactor();
     mat.metalFactor = tex.metalFactor();
     mat.roughFactor = tex.roughFactor();

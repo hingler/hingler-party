@@ -108,13 +108,16 @@ void main() {
   vec3 metal_rough = TEXTURE2D(tex_metal_rough, texActual).bgr;
   float metal = metal_rough.x * metal_factor;
   float rough = metal_rough.y * rough_factor;
+  float ao = metal_rough.z;
 
   metal += metal_factor * float(1 - use_metal_rough);
   rough += rough_factor * float(1 - use_metal_rough);
+  ao += float(1 - use_metal_rough);
 
   if (use_metal_rough == 0) {
     metal = metal_factor;
     rough = rough_factor;
+    ao = 1.0;
   }
 
   vec4 col = vec4(0.0);
@@ -140,11 +143,11 @@ void main() {
   }
 
   if (useIrridance > 0) { 
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance, specular, brdf, C, N, rough, metal, specSize).rgb * skyboxIntensity * ao, 0.0);
   }
 
   if (useIrridance_l > 0) {
-    col += vec4(pbr(v_pos.xyz, camera_pos, irridance_l, specular_l, brdf, C, N, rough, metal, specSize_l).rgb * skyboxIntensity_l, 0.0);
+    col += vec4(pbr(v_pos.xyz, camera_pos, irridance_l, specular_l, brdf, C, N, rough, metal, specSize_l).rgb * skyboxIntensity_l * ao, 0.0);
   }
 
   if (use_emission == 0) {
