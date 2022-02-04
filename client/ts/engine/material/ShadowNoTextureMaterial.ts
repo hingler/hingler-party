@@ -1,9 +1,10 @@
 import { mat4, ReadonlyMat4 } from "gl-matrix";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { GameContext } from "../GameContext";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { Material } from "./Material";
 import { getEnginePath } from "../internal/getEnginePath";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 export class ShadowNoTextureMaterial implements Material {
   private prog: WebGLProgram;

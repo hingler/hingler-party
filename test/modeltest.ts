@@ -4,10 +4,10 @@
 
 import { assert, expect } from "chai";
 import { ModelImpl, ModelInstance } from "../client/ts/engine/loaders/internal/ModelImpl";
-import { AttributeType } from "../client/ts/engine/model/Model";
 import { GLAttribute } from "../client/ts/engine/gl/GLAttribute";
 import { GLIndex } from "../client/ts/engine/gl/GLIndex";
-import { DataType } from "../client/ts/engine/gl/internal/GLBuffer";
+import { DataType } from "nekogirl-valhalla/model/DataType";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 // 
 class IndexStub implements GLIndex {

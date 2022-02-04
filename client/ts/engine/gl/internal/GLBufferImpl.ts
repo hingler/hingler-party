@@ -1,6 +1,7 @@
 import { ReadWriteBuffer } from "nekogirl-valhalla/buffer/ReadWriteBuffer";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 import { GameContext } from "../../GameContext";
-import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
+import { BufferTarget, DrawMode, GLBuffer } from "./GLBuffer";
 
 
 let ext : ANGLE_instanced_arrays = undefined;

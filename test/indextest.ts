@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { Accessor, BufferView, GLTFAccessorType } from "../client/ts/engine/loaders/internal/gltfTypes";
-import { DataType, DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
+import { DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
 import { GLIndexImpl } from "../client/ts/engine/gl/internal/GLIndexImpl";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 
 interface IndexRecord {
   offset: number,

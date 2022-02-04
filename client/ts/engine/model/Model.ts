@@ -1,4 +1,5 @@
 import { ArmatureManager } from "../object/armature/ArmatureManager";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 // triangle will bundle our attribs up into something like this
 export interface Vertex {
@@ -12,15 +13,6 @@ export interface Vertex {
 export interface Triangle {
   readonly vertices: Array<Vertex>;
 }
-
-export enum AttributeType {
-  POSITION = 0,
-  NORMAL = 1,
-  TEXCOORD = 2,
-  JOINT = 3,
-  WEIGHT = 4,
-  TANGENT = 5
-};
 
 /**
  * Model which does not enable binding of attributes. Draw only.

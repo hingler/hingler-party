@@ -1,6 +1,7 @@
 import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLAttribute } from "../GLAttribute";
-import { BufferTarget, DataType, GLBuffer } from "./GLBuffer";
+import { BufferTarget, GLBuffer } from "./GLBuffer";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 
 // type informs what information we're returning
 // we'll cast to the proper return type when we create one

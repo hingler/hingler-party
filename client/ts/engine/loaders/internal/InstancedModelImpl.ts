@@ -1,4 +1,5 @@
 import { ReadonlyMat3, ReadonlyMat4 } from "gl-matrix";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 import { perf } from "../../../../../ts/performance";
 import { GameContext } from "../../GameContext";
 import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
@@ -6,7 +7,6 @@ import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { logRender, RenderType } from "../../internal/performanceanalytics";
 import { InstancedMaterial } from "../../material/InstancedMaterial";
 import { InstancedModel } from "../../model/InstancedModel";
-import { AttributeType } from "../../model/Model";
 import { RenderContext, RenderPass } from "../../render/RenderContext";
 import { ModelImpl } from "./ModelImpl";
 

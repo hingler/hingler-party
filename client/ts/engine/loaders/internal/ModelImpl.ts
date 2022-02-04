@@ -1,6 +1,8 @@
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
+import { GLModelSpec } from "nekogirl-valhalla/model/GLModelSpec";
 import { GLAttribute } from "../../gl/GLAttribute";
 import { GLIndex } from "../../gl/GLIndex";
-import { AttributeType, Model, Triangle, Vertex } from "../../model/Model";
+import { Model, Triangle, Vertex } from "../../model/Model";
 import { ArmatureManager } from "../../object/armature/ArmatureManager";
 
 // instanced pathway: draw all instances in one go?
@@ -105,6 +107,14 @@ export interface ModelInstance {
   weights?: Array<GLAttribute>;
   indices: GLIndex;
 }
+
+// export function createModelInstanceFromModelSpec(spec: GLModelSpec) {
+//   const list = spec.getAttributes();
+//   const res = {} as ModelInstance;
+//   for (let pair of list) {
+//     res.
+//   }
+// }
 
 export class ModelImpl extends Model {
   readonly instances: Array<ModelInstance>;

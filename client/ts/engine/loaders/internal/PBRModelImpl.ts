@@ -4,11 +4,12 @@ import { Material } from "../../material/Material";
 import { PBRMaterialImpl } from "../../material/PBRMaterialImpl";
 import { ShadowNoTextureMaterial } from "../../material/ShadowNoTextureMaterial";
 import { RenderContext, RenderPass } from "../../render/RenderContext";
-import { AttributeType, Model } from "../../model/Model";
+import { Model } from "../../model/Model";
 import { PBRModel } from "../../model/PBRModel";
 import { PBRMaterial } from "../../material/PBRMaterial";
 import { ArmatureManager } from "../../object/armature/ArmatureManager";
 import { ModelImpl } from "./ModelImpl";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 export class PBRModelImpl extends PBRModel {
   // split instances into individual models

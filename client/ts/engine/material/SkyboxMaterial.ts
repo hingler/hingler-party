@@ -1,10 +1,11 @@
 import { mat3, mat4, ReadonlyMat4 } from "gl-matrix";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 import { GameContext } from "../GameContext";
 import { ColorCubemap } from "../gl/ColorCubemap";
 import { Cubemap } from "../gl/Cubemap";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../internal/getEnginePath";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { SkyboxInfo } from "../render/RenderContext";
 import { Material } from "./Material";
 

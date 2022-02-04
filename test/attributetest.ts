@@ -1,7 +1,8 @@
 import { assert, expect } from "chai";
 import { Accessor, BufferView, GLTFAccessorType } from "../client/ts/engine/loaders/internal/gltfTypes";
 import { GLAttributeImpl } from "../client/ts/engine/gl/internal/GLAttributeImpl";
-import { DataType, DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
+import { DrawMode, GLBuffer } from "../client/ts/engine/gl/internal/GLBuffer";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 
 interface AttribRecord {
   stride: number;
