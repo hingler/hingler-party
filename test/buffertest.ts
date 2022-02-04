@@ -1,6 +1,6 @@
 import { assert, expect } from "chai";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 import { GameContext } from "../client/ts/engine/GameContext";
-import { DataType } from "../client/ts/engine/gl/internal/GLBuffer";
 import { GLBufferImpl } from "../client/ts/engine/gl/internal/GLBufferImpl";
 
 

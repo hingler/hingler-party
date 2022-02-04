@@ -1,10 +1,10 @@
 import { mat4 } from "gl-matrix";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 import { GameContext } from "../GameContext";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../internal/getEnginePath";
 import { InstancedModel } from "../model/InstancedModel";
-import { AttributeType } from "../model/Model";
 import { RenderContext } from "../render/RenderContext";
 import { InstancedMaterial } from "./InstancedMaterial";
 

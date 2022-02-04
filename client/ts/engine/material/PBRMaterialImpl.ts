@@ -1,6 +1,7 @@
 // todo: replace instances of WebGLProgram with a version which keeps track of uniform locations
 
 import { mat3, mat4, ReadonlyMat4, ReadonlyVec4, vec3, vec4 } from "gl-matrix";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 import { GameContext } from "../GameContext";
 import { ColorCubemap } from "../gl/ColorCubemap";
 import { Cubemap } from "../gl/Cubemap";
@@ -14,7 +15,7 @@ import { Texture } from "../gl/Texture";
 import { getEnginePath } from "../internal/getEnginePath";
 import { RenderType } from "../internal/performanceanalytics";
 import { InstancedModel } from "../model/InstancedModel";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { RenderContext, RenderPass, SkyboxInfo } from "../render/RenderContext";
 import { CalculateNormalMatrixFromBuffer } from "./CalculateNormalMatrixFromBuffer";
 import { Material } from "./Material";

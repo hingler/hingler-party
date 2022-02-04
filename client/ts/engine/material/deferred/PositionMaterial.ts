@@ -3,7 +3,8 @@ import { ReadonlyMat4 } from "gl-matrix";
 import { Material } from "../Material";
 import { ShaderProgramBuilder } from "../../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../../internal/getEnginePath";
-import { AttributeType, Model } from "../../model/Model";
+import { Model } from "../../model/Model";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 export class PositionMaterial implements Material {
   private prog: WebGLProgram;

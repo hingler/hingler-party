@@ -2,8 +2,9 @@ import { mat3, mat4 } from "gl-matrix";
 import { EngineContext } from "../../client/ts/engine/internal/EngineContext";
 import { FileLoader } from "../../client/ts/engine/loaders/FileLoader";
 import { GLTFLoaderImpl } from "../../client/ts/engine/loaders/internal/GLTFLoaderImpl";
-import { AttributeType, Model } from "../../client/ts/engine/model/Model";
+import { Model } from "../../client/ts/engine/model/Model";
 import { ShaderProgramBuilder } from "../../client/ts/engine/gl/ShaderProgramBuilder";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 window.addEventListener("load", main);
 

@@ -1,8 +1,9 @@
 import { mat4, ReadonlyMat4, vec4 } from "gl-matrix";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 import { GameContext } from "../GameContext";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { getEnginePath } from "../internal/getEnginePath";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { Material } from "./Material";
 
 export class FillMaterial implements Material {

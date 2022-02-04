@@ -2,10 +2,11 @@ import { mat3, mat4, ReadonlyMat4, vec3, vec4 } from "gl-matrix";
 import { ShaderProgramBuilder } from "../gl/ShaderProgramBuilder";
 import { SpotLightStruct } from "../gl/struct/SpotLightStruct";
 import { GameContext } from "../GameContext";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { Material } from "./Material";
 import { GLProgramWrap } from "../gl/internal/GLProgramWrap";
 import { getEnginePath } from "../internal/getEnginePath";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 // temp
 export interface Light {

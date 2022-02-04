@@ -8,9 +8,10 @@ import { GLBuffer } from "../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../gl/internal/GLIndexImpl";
 import { ModelImpl } from "../loaders/internal/ModelImpl";
-import { AttributeType, Model } from "../model/Model";
+import { Model } from "../model/Model";
 import { ParametricCurve } from "nekogirl-valhalla/spline/ParametricCurve";
 import { SegmentedCurve } from "./SegmentedCurve";
+import { AttributeType } from "nekogirl-valhalla/model/AttributeType";
 
 // temeplate for building geometry from curve pieces
 // add (floor(n / 2) * (path point count) to mod(n, 2)), plus point count

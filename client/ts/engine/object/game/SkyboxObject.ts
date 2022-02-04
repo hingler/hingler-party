@@ -1,10 +1,10 @@
 import { vec3 } from "gl-matrix";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 import {GameContext} from "../../GameContext";
 import { ColorCubemap } from "../../gl/ColorCubemap";
 import { DepthStencilRenderbuffer } from "../../gl/internal/DepthStencilRenderbuffer";
 import { FloatColorTexture } from "../../gl/internal/FloatColorTexture";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";
-import { DataType } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
 import { HDRTexture } from "../../gl/internal/HDRTexture";

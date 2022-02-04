@@ -1,6 +1,7 @@
 import { ReadWriteBuffer } from "nekogirl-valhalla/buffer/ReadWriteBuffer";
+import { DataType } from "nekogirl-valhalla/model/DataType";
 import { GameContext } from "../../GameContext";
-import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
+import { BufferTarget, DrawMode, GLBuffer } from "./GLBuffer";
 
 
 let ext : ANGLE_instanced_arrays = undefined;
@@ -29,8 +30,12 @@ export class GLBufferImpl implements GLBuffer {
   // TODO: assign a target on ctor? (array / element array / etc?)
   // we'd have a confusing dependency :( but even then it like won't matter
   // it's just a safeguard for me, so that we have a bit more info instead of just crashing out
-  constructor(ctx: GameContext, buffer?: ArrayBuffer | number, dataMode?: number) {
-    this.buf = new ReadWriteBuffer(buffer);
+  constructor(ctx: GameContext, buffer?: ReadWriteBuffer | ArrayBuffer | number, dataMode?: number) {
+    if (buffer instanceof ReadWriteBuffer) {
+      this.buf = buffer;
+    } else {
+      this.buf = new ReadWriteBuffer(buffer);
+    }
 
     this.ctx = ctx;
     this.gl = ctx.getGLContext();

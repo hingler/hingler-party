@@ -1,6 +1,7 @@
+import { DataType } from "nekogirl-valhalla/model/DataType";
 import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLIndex } from "../GLIndex";
-import { BufferTarget, DataType, DrawMode, GLBuffer } from "./GLBuffer";
+import { DrawMode, GLBuffer } from "./GLBuffer";
 
 class IndexIterator implements Iterator<number> {
   accessFunc: (offset: number, littleEndian?: boolean) => number;
