@@ -77,7 +77,7 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
       vec3 specSample = TEXTURECUBE(specCube, R, lod - mipGuess).rgb;
     #endif
 
-    vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 F = fresnelRough(NdotV, F0, roughness);
 
     vec3 ks = F;
@@ -109,7 +109,7 @@ vec3 _pbrHigh(vec3 pos, vec3 cam_pos, vec3 light_pos, vec3 light_color, vec3 alb
   // if med: use a function which doesn't cost as much :D
   float NDF = distributionGGX(NdotH, roughness);
   float G = schlickSmith(NdotV, NdotL, roughness);
-  vec3 F0 = mix(vec3(0.04 * step(0.001, metallic)), albedo, metallic);
+  vec3 F0 = mix(vec3(0.04), albedo, metallic);
   vec3 F = fresnel(HdotV, F0);
 
   vec3 ks = F;
