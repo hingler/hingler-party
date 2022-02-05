@@ -62,13 +62,14 @@ export class InstancedShadowMaterial implements InstancedMaterial {
 
   prepareAttributes(model: InstancedModel, instances: number, rc: RenderContext) {
     let gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     if (this.prog === null) {
       const err = "Shadow material not yet compiled -- cannot prepare!";
       throw Error(err);
     }
 
     if (this.prog !== null) {
-      gl.useProgram(this.prog);
+      wrap.useProgram(this.prog);
 
       gl.uniformMatrix4fv(this.locs.shadow_matrix, false, rc.getActiveCameraInfo().vpMatrix);
       model.bindAttribute(AttributeType.POSITION, this.attribs.position);

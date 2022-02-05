@@ -50,7 +50,7 @@ export class HDRTexture extends Texture {
   }
 
   setSamplingMode(mode: SamplingMode) {
-    return this.handleTextureSampling(this.tex, this.ctx.getGLContext(), mode);
+    return this.handleTextureSampling(this.tex, this.ctx, mode);
   }
 
   getTextureFormat() {
@@ -66,9 +66,9 @@ export class HDRTexture extends Texture {
 
     // todo: calling shader draw before texture is loaded!?
     if (this.tex !== null) {
-      gl.activeTexture(gl.TEXTURE0 + index);
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.uniform1i(location, index);
+      const wrap = this.ctx.getGL();
+
+      wrap.bindTexture(this.tex, gl.TEXTURE_2D, location);
     } else {
       console.log("oops");
     }
@@ -89,7 +89,9 @@ export class HDRTexture extends Texture {
     this.dims_ = dims;
 
     this.tex = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    const wrap = this.ctx.getGL();
+
+    gl.activeTexture(wrap.bindTexture(this.tex, gl.TEXTURE_2D));
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, this.internalFormat, dims[1], dims[0], 0, gl.RGB, gl.FLOAT, data);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

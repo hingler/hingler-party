@@ -31,7 +31,8 @@ export class ShadowDisplay extends TextureDisplay {
       };
     }
 
-    gl.useProgram(prog);
+    const wrap = this.getContext().getGL();
+    wrap.useProgram(prog);
 
     gl.uniform1f(this.locsShadow.near, this.near);
     gl.uniform1f(this.locsShadow.far, this.far);

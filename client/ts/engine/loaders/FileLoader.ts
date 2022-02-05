@@ -1,5 +1,6 @@
 import { Future } from "../../../../ts/util/task/Future";
 import { Task } from "../../../../ts/util/task/Task";
+import { GameContext } from "../GameContext";
 import { ImageTexture } from "../gl/internal/ImageTexture";
 import { FileLike } from "./FileLike";
 import { FileLikeWeb } from "./internal/FileLikeWeb";
@@ -19,11 +20,13 @@ export class FileLoader {
   private static workerLoaded: Task<void> = null;
 
   private gl: WebGLRenderingContext;
+  private ctx: GameContext;
 
-  constructor(gl: WebGLRenderingContext, loadServiceWorker?: boolean) {
+  constructor(ctx: GameContext, loadServiceWorker?: boolean) {
     this.loadedFiles = new Map();
     this.imageTextures = new Map();
-    this.gl = gl;
+    this.gl = ctx.getGLContext();
+    this.ctx = ctx;
     FileLoader.workerLoaded = null;
     if (loadServiceWorker === undefined || loadServiceWorker) {
       this.workerPath = new Promise((re, rj) => { this.res = re; this.rej = rj; });;
@@ -86,7 +89,7 @@ export class FileLoader {
     if (this.imageTextures.has(path)) {
       tex = this.imageTextures.get(path);
     } else {
-      tex = new ImageTexture(this.gl, path);
+      tex = new ImageTexture(this.ctx, path);
       this.imageTextures.set(path, tex);
     }
 

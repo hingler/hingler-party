@@ -74,6 +74,7 @@ export class FXAAFilter extends PostProcessingFilter {
     const id = timer.startQuery();
     if (this.aaShader !== null && this.lumaShader !== null) {
       const gl = this.getContext().getGLContext();
+      const wrap = this.getContext().getGL();
       
       const oldDims = this.lumaFramebuffer.dims;
       const newDims = this.getContext().getScreenDims();
@@ -83,7 +84,7 @@ export class FXAAFilter extends PostProcessingFilter {
 
       gl.viewport(0, 0, newDims[0], newDims[1]);
 
-      gl.useProgram(this.lumaShader);
+      wrap.useProgram(this.lumaShader);
       this.lumaFramebuffer.bindFramebuffer(gl.FRAMEBUFFER);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
       src.getColorTexture().bindToUniform(this.lumaTex, 1);
@@ -95,7 +96,7 @@ export class FXAAFilter extends PostProcessingFilter {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       gl.disableVertexAttribArray(this.lumaPos);
 
-      gl.useProgram(this.aaShader);
+      wrap.useProgram(this.aaShader);
       dst.bindFramebuffer(gl.FRAMEBUFFER);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       this.lumaFramebuffer.getColorTexture().bindToUniform(this.unifs.lum, 0);

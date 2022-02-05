@@ -1,3 +1,4 @@
+import { GameContext } from "../GameContext";
 import { Sampler } from "../loaders/internal/gltfTypes";
 
 export enum TextureFormat {
@@ -43,9 +44,13 @@ export abstract class Texture {
     return !(n & (n - 1));
   }
 
-  protected handleTextureSampling(tex: WebGLTexture, gl: WebGLRenderingContext, mode: SamplingMode) {
+  protected handleTextureSampling(tex: WebGLTexture, ctx: GameContext, mode: SamplingMode) {
     const pot = Texture.pot(this.dims[0]) && Texture.pot(this.dims[1]);
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    
+    const gl = ctx.getGLContext();
+    const wrap = ctx.getGL();
+    gl.activeTexture(wrap.bindTexture(tex, gl.TEXTURE_2D));
+    
     switch (mode) {
       case SamplingMode.LINEAR:
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -79,8 +84,10 @@ export abstract class Texture {
     }
   }
 
-  protected handleWrapMode(tex: WebGLTexture, gl: WebGLRenderingContext, wrapS: WrapMode, wrapT: WrapMode) {
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+  protected handleWrapMode(tex: WebGLTexture, ctx: GameContext, wrapS: WrapMode, wrapT: WrapMode) {
+    const gl = ctx.getGLContext();
+    const wrap = ctx.getGL();
+    gl.activeTexture(wrap.bindTexture(tex, gl.TEXTURE_2D));
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, this.wrapModeToNumber(gl, wrapS));
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, this.wrapModeToNumber(gl, wrapT));
   }
@@ -96,14 +103,17 @@ export abstract class Texture {
     }
   }
 
-  protected static createTextureFromImage(gl: WebGLRenderingContext, img: HTMLImageElement, sampler?: Sampler) : [[number, number], WebGLTexture] {
+  protected static createTextureFromImage(ctx: GameContext, img: HTMLImageElement, sampler?: Sampler) : [[number, number], WebGLTexture] {
     if (!sampler) {
       sampler = {};
     }
     
+    const gl = ctx.getGLContext();
+    const wrap = ctx.getGL();
+
     let dims : [number, number] = [img.width, img.height];
     let tex : WebGLTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.activeTexture(wrap.bindTexture(tex, gl.TEXTURE_2D));
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
     let mag = (sampler.magFilter ? sampler.magFilter : gl.LINEAR);

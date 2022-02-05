@@ -44,8 +44,8 @@ export class BRDFLutDisplay {
       
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       gl.vertexAttribPointer(this.posLoc, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.posLoc);
       gl.drawArrays(gl.TRIANGLES, 0, 6);

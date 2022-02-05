@@ -435,7 +435,7 @@ export class GLTFSceneImpl implements GLTFScene {
     let arrbuf = buffer.arrayBuffer();
     let off = view.byteOffset ? view.byteOffset : 0;
     let imgbuf = arrbuf.slice(off, view.byteLength + off);
-    return new GLTFTexture(this.gl, imgbuf, sampler, img.mimeType);
+    return new GLTFTexture(this.ctx, imgbuf, sampler, img.mimeType);
   }
 
   private getInstance(prim: Primitive) {

@@ -61,7 +61,8 @@ export class TextureAlbedoMaterial implements Material {
   drawMaterial(model: Model) {
     let gl = this.ctx.getGLContext();
     if (this.prog !== null) {
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       gl.uniformMatrix4fv(this.locs.modelMat, false, this.modelMat);
       gl.uniformMatrix4fv(this.locs.vpMat, false, this.vpMat);
       

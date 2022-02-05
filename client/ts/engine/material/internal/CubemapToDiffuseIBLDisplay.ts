@@ -72,8 +72,8 @@ export class CubemapToDiffuseIBLDisplay implements CubemapCoords {
   
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-  
-      gl.useProgram(prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(prog);
       gl.uniform3fv(this.unifs.center, this.center);
       gl.uniform3fv(this.unifs.right, this.right);
       gl.uniform3fv(this.unifs.up, this.up);

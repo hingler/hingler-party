@@ -37,7 +37,7 @@ export class DepthTexture extends Texture {
   }
 
   setSamplingMode(mode: SamplingMode) {
-    return this.handleTextureSampling(this.tex, this.gl, mode);
+    return this.handleTextureSampling(this.tex, this.ctx, mode);
   }
 
   bindToUniform(location: WebGLUniformLocation, index: number) {
@@ -47,9 +47,8 @@ export class DepthTexture extends Texture {
       throw Error("OOB index");
     }
     
-    gl.activeTexture(gl.TEXTURE0 + index);
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
-    gl.uniform1i(location, index);
+    const wrap = this.ctx.getGL();
+    wrap.bindTexture(this.tex, gl.TEXTURE_2D, location);
   }
 
   setDimensions(dim_a: [number, number] | number, dim_b?: number) {
@@ -99,7 +98,9 @@ export class DepthTexture extends Texture {
     }
 
 
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    const wrap = this.ctx.getGL();
+
+    gl.activeTexture(wrap.bindTexture(this.tex, gl.TEXTURE_2D));
     gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, x, y, 0, gl.DEPTH_COMPONENT, type, null);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);

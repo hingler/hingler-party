@@ -59,8 +59,9 @@ export class ShadowNoTextureMaterial implements Material {
 
   drawMaterial(model: Model) {
     let gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     if (this.prog !== null) {
-      gl.useProgram(this.prog);
+      wrap.useProgram(this.prog);
       gl.uniformMatrix4fv(this.locs.model_matrix, false, this.modelMat);
       gl.uniformMatrix4fv(this.locs.shadow_matrix, false, this.shadowMat);
       model.bindAttribute(AttributeType.POSITION, this.attribs.position);

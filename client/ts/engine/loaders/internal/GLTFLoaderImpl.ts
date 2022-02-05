@@ -92,7 +92,7 @@ export class GLTFLoaderImpl implements GLTFLoader {
    * @returns imagetexture object
    */
   async loadTexture(path: string) {
-    let tex = new ImageTexture(this.gl, path);
+    let tex = new ImageTexture(this.ctx, path);
     await tex.waitUntilLoaded();
     return tex;
   }

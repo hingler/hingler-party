@@ -22,7 +22,7 @@ class TextureDemo extends GameObject {
   constructor(ctx: GameContext) {
     super(ctx);
     this.tex = new HDRTexture(ctx, "../data/turning_area_1k.hdr");
-    this.texBackup = new ImageTexture(ctx.getGLContext(), "../data/gunishment.png");
+    this.texBackup = new ImageTexture(ctx, "../data/gunishment.png");
     this.disp = new ColorDisplay(ctx, this.tex);
   }
 

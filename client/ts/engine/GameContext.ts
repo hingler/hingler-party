@@ -1,4 +1,5 @@
 import { ComponentType } from "./component/ComponentType";
+import { GLContextI } from "./gl/GLContextI";
 import { GPUTimer, SharedGPUTimer } from "./gl/internal/SharedGPUTimer";
 import { FileLoader } from "./loaders/FileLoader";
 import { GLTFLoader } from "./loaders/GLTFLoader";
@@ -77,6 +78,11 @@ export interface GameContext {
    * @returns the present GL rendering context.
    */
   getGLContext() : WebGLRenderingContext | WebGL2RenderingContext;
+
+  /**
+   * @returns a GLContext which mirrors GL state.
+   */
+  getGL() : GLContextI;
 
   /**
    * @returns the XY size of the window, in pixels

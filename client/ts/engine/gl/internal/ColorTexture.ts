@@ -148,13 +148,13 @@ export class ColorTexture extends Texture {
   }
 
   setSamplingMode(mode: SamplingMode) {
-    return this.handleTextureSampling(this.tex, this.gl, mode);
+    return this.handleTextureSampling(this.tex, this.ctx, mode);
   }
 
   setWrapMode(modeS: WrapMode, modeT?: WrapMode) {
     const wrapS = modeS;
     const wrapT = (modeT === undefined ? modeS : modeT);
-    this.handleWrapMode(this.tex, this.gl, wrapS, wrapT);
+    this.handleWrapMode(this.tex, this.ctx, wrapS, wrapT);
   }
 
   bindToUniform(location: WebGLUniformLocation, index: number) {
@@ -164,9 +164,8 @@ export class ColorTexture extends Texture {
       throw Error("OOB index");
     }
     
-    gl.activeTexture(gl.TEXTURE0 + index);
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
-    gl.uniform1i(location, index);
+    // ignore index completely >:)
+    this.ctx.getGL().bindTexture(this.tex, gl.TEXTURE_2D, location);
   }
 
   setDimensions(dim_a: [number, number] | number, dim_b?: number) {
@@ -183,7 +182,9 @@ export class ColorTexture extends Texture {
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    const wrap = this.ctx.getGL();
+
+    gl.activeTexture(wrap.bindTexture(this.tex, gl.TEXTURE_2D));
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.tex, 0);
   }
 
@@ -193,7 +194,9 @@ export class ColorTexture extends Texture {
       this.tex = gl.createTexture();
     }
 
-    gl.bindTexture(gl.TEXTURE_2D, this.tex);
+    const wrap = this.ctx.getGL();
+
+    gl.activeTexture(wrap.bindTexture(this.tex, gl.TEXTURE_2D));
     gl.texImage2D(gl.TEXTURE_2D, 0, this.internalformat, x, y, 0, this.format, this.bitdepth, null);
     
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);

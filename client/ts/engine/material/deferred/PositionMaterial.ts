@@ -61,7 +61,8 @@ export class PositionMaterial implements Material {
   drawMaterial(model: Model) {
     let gl = this.ctx.getGLContext();
     if (this.prog !== null) {
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       gl.uniformMatrix4fv(this.locs.modelMatrix, false, this.modelMat);
       gl.uniformMatrix4fv(this.locs.vpMatrix, false, this.vpMat);
 

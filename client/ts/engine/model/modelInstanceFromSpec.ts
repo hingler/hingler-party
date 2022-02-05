@@ -22,11 +22,6 @@ export function modelInstanceFromSpec(ctx: GameContext, spec: GLModelSpec) : Mod
   const attribs = spec.getAttributes();
   const index = spec.getIndex();
 
-  console.log(attribs);
-  console.log(index);
-
-  console.log(spec);
-
   if (!index || !attribs.has(AttributeType.POSITION)) {
     return null;
   }
@@ -56,8 +51,6 @@ export function modelInstanceFromSpec(ctx: GameContext, spec: GLModelSpec) : Mod
   const indBuffer = glBuffers.get(index.buffer);
   const ind = GLIndexImpl.createFromValues(indBuffer, index.type, index.count, index.offset);
   res.indices = ind;
-
-  console.log(res);
 
   return res;
 }

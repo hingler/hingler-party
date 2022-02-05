@@ -53,7 +53,8 @@ export class FillMaterial implements Material {
   drawMaterial(model: Model) {
     if (this.prog !== null) {
       const gl = this.ctx.getGLContext();
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       model.bindAttribute(AttributeType.POSITION, this.posAttrib);
       gl.uniform4fv(this.colLoc, this.col);
 

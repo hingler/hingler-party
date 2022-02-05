@@ -12,6 +12,7 @@ import { ShaderEnv } from "../gl/ShaderEnv";
 import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
 import { DummyGPUTimer, GPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
+import { GLContext } from "../gl/internal/glcontext/GLContext";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -58,6 +59,8 @@ export class EngineContext implements GameContext {
   private varMap: Map<string, any>;
   private shaderCache: ShaderEnv;
   private windowListener: () => void;
+
+  private glWrap: GLContext;
 
   debugger: boolean;
   webglVersion: number;
@@ -116,12 +119,13 @@ export class EngineContext implements GameContext {
     
     if (init instanceof EngineContext) {
       this.glContext = init.glContext;
+      this.glWrap = init.glWrap;
       this.canvas = init.canvas;
       this.webglVersion = init.webglVersion;
       this.extensionList = init.extensionList;
       this.gpuTimer = init.gpuTimer;
 
-      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
+      this.loader = new FileLoader(this, opts ? opts.useServiceWorker : true);
       this.debug = init.debug;
     } else {
       this.canvas = init;
@@ -145,10 +149,12 @@ export class EngineContext implements GameContext {
         } else {
           this.setupWebGL1(init);
         }
+
+        this.glWrap = new GLContext(this.glContext);
       }
       
       console.log(`Using WebGL Version ${this.webglVersion}`);
-      this.loader = new FileLoader(this.glContext, opts ? opts.useServiceWorker : true);
+      this.loader = new FileLoader(this, opts ? opts.useServiceWorker : true);
       this.debug = new DebugDisplay(this);
     }
 
@@ -262,6 +268,10 @@ export class EngineContext implements GameContext {
 
   getGLContext() {
     return this.glContext;
+  }
+
+  getGL() {
+    return this.glWrap;
   }
 
   getScreenDims() {

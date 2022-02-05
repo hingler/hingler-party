@@ -7,12 +7,15 @@ export class GLTFTexture extends Texture {
 
   private tex: WebGLTexture;
   private gl: WebGLRenderingContext;
+  private ctx: GameContext;
   private img: HTMLImageElement;
   private sampler: Sampler;
 
-  constructor(gl: WebGLRenderingContext, buf: ArrayBuffer, sampler: Sampler, mime: string) {
+  constructor(ctx: GameContext, buf: ArrayBuffer, sampler: Sampler, mime: string) {
     super();
-    this.gl = gl;
+    this.gl = ctx.getGLContext();
+    this.ctx = ctx;
+
     // https://gist.github.com/candycode/f18ae1767b2b0aba568e
     let urlCreator = window.URL || window.webkitURL;
     let url = urlCreator.createObjectURL(new Blob([buf], {type: mime}));
@@ -29,7 +32,7 @@ export class GLTFTexture extends Texture {
   }
 
   setSamplingMode(mode: SamplingMode) {
-    return this.handleTextureSampling(this.tex, this.gl, mode);
+    return this.handleTextureSampling(this.tex, this.ctx, mode);
   }
 
   getTextureFormat() {
@@ -45,13 +48,12 @@ export class GLTFTexture extends Texture {
 
     
     if (this.tex !== null) {
-      gl.activeTexture(gl.TEXTURE0 + index);
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.uniform1i(location, index);
+      const wrap = this.ctx.getGL();
+      wrap.bindTexture(this.tex, gl.TEXTURE_2D, location);
     }
   }
 
   private loadTexture() {
-    [this.dims_, this.tex] = Texture.createTextureFromImage(this.gl, this.img, this.sampler);
+    [this.dims_, this.tex] = Texture.createTextureFromImage(this.ctx, this.img, this.sampler);
   }
 }

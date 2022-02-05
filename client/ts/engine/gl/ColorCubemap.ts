@@ -32,7 +32,9 @@ export class ColorCubemap implements Cubemap {
     }
     this.dims = dim;
 
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
+    const wrap = ctx.getGL();
+
+    gl.activeTexture(wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP));
 
     // lule
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
@@ -56,7 +58,8 @@ export class ColorCubemap implements Cubemap {
     // "lazy texture initialization on level 0"
     // no idea what this means but i assume it has something to do with the crash before load
     const gl = this.ctx.getGLContext();
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
+    const wrap = this.ctx.getGL();
+    gl.activeTexture(wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP));
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
@@ -81,8 +84,10 @@ export class ColorCubemap implements Cubemap {
       return;
     }
 
+    const wrap = this.ctx.getGL();
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
+    gl.activeTexture(wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP));
     gl.framebufferTexture2D(gl.FRAMEBUFFER, targ, face, this.cube, mip);
   }
 
@@ -94,9 +99,8 @@ export class ColorCubemap implements Cubemap {
       throw Error(err);
     }
 
-    gl.activeTexture(gl.TEXTURE0 + index);
-    gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.cube);
-    gl.uniform1i(location, index);
+    const wrap = this.ctx.getGL();
+    wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP, location);
   }
 
   bindCubemap(location?: number, index?: number) {
@@ -115,8 +119,7 @@ export class ColorCubemap implements Cubemap {
       slot = gl.TEXTURE0 + index;
     }
 
-    gl.activeTexture(slot);
-    gl.bindTexture(loc, this.cube);
+    gl.activeTexture(this.ctx.getGL().bindTexture(this.cube, loc));
   }
 
   getTextureFormat() {

@@ -71,8 +71,8 @@ export class ProceduralTextureBase {
 
       gl.viewport(0, 0, this.dims[0], this.dims[1]);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       this.assignUniforms();
 
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);

@@ -101,7 +101,8 @@ export abstract class TextureDisplay {
     }
     
     if (this.prog !== null && this.tex !== null) {
-      gl.useProgram(this.prog);
+      const wrap = this.ctx.getGL();
+      wrap.useProgram(this.prog);
       this.prepareUniforms(this.prog);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);

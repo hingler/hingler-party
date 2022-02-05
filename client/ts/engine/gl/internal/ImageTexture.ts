@@ -1,4 +1,5 @@
 import { Task } from "../../../../../ts/util/task/Task";
+import { GameContext } from "../../GameContext";
 import { SamplingMode, Texture, TextureFormat } from "../Texture";
 
 export class ImageTexture extends Texture {
@@ -6,15 +7,17 @@ export class ImageTexture extends Texture {
 
   private tex: WebGLTexture;
   private gl: WebGLRenderingContext;
+  private ctx: GameContext;
   private img: HTMLImageElement;
 
   private loadTask: Task<void>;
 
   // todo: create an interface for readonly textures
   // share w other components where necessaryt :D
-  constructor(gl: WebGLRenderingContext, href: string) {
+  constructor(ctx: GameContext, href: string) {
     super();
-    this.gl = gl;
+    this.gl = ctx.getGLContext();
+    this.ctx = ctx;
     this.img = new Image();
     this.img.src = href;
     this.tex = null;
@@ -38,14 +41,13 @@ export class ImageTexture extends Texture {
 
     
     if (this.tex !== null) {
-      gl.activeTexture(gl.TEXTURE0 + index);
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.uniform1i(location, index);
+      const wrap = this.ctx.getGL();
+      wrap.bindTexture(this.tex, gl.TEXTURE_2D, location);
     }
   }
 
   setSamplingMode(mode: SamplingMode) {
-    return this.handleTextureSampling(this.tex, this.gl, mode);
+    return this.handleTextureSampling(this.tex, this.ctx, mode);
   }
 
   getTextureFormat() {
@@ -57,7 +59,7 @@ export class ImageTexture extends Texture {
   }
 
   private loadTexture() {
-    [this.dims_, this.tex] = Texture.createTextureFromImage(this.gl, this.img);
+    [this.dims_, this.tex] = Texture.createTextureFromImage(this.ctx, this.img);
     this.loadTask.resolve();
   }
 }

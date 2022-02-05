@@ -98,8 +98,9 @@ export class MatteMaterial implements Material {
 
   drawMaterial(model: Model) {
     let gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     if (this.prog !== null) {
-      gl.useProgram(this.prog);
+      wrap.useProgram(this.prog);
       let normalMat = mat3.create();
       mat3.fromMat4(normalMat, this.modelMat);
       mat3.invert(normalMat, normalMat);
