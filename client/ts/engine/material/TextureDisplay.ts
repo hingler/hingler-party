@@ -38,6 +38,7 @@ export abstract class TextureDisplay {
     }
 
     let gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     this.prog = null;
     let shaderTask = new Task<WebGLProgram>();
     new ShaderProgramBuilder(ctx)
@@ -50,7 +51,7 @@ export abstract class TextureDisplay {
     this.shaderFuture = shaderTask.getFuture();
 
     this.buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
   }
 
@@ -105,7 +106,7 @@ export abstract class TextureDisplay {
       wrap.useProgram(this.prog);
       this.prepareUniforms(this.prog);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+      wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
       
       gl.vertexAttribPointer(this.attribs.pos, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.attribs.pos);

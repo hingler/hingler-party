@@ -60,19 +60,21 @@ export class CubemapToDiffuseIBLDisplay implements CubemapCoords {
       skybox: gl.getUniformLocation(res, "skybox")
     };
 
+    const wrap = this.ctx.getGL();
+
     this.buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
   }
 
   draw() {
     if (this.prog !== null && this.tex !== null) {
       const gl = this.ctx.getGLContext();
+      const wrap = this.ctx.getGL();
       const prog = this.prog;
   
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-      const wrap = this.ctx.getGL();
+      wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
       wrap.useProgram(prog);
       gl.uniform3fv(this.unifs.center, this.center);
       gl.uniform3fv(this.unifs.right, this.right);

@@ -75,7 +75,7 @@ export class ProceduralTextureBase {
       wrap.useProgram(this.prog);
       this.assignUniforms();
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+      wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
       gl.vertexAttribPointer(this.pos, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.pos);
       gl.drawArrays(gl.TRIANGLES, 0, 6);

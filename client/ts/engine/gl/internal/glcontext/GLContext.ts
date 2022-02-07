@@ -8,6 +8,9 @@ export class GLContext implements GLContextI {
   private programMap : Map<WebGLProgram, UniformMap>;
   private textureMap : LRUMap<WebGLTexture, number>;
 
+  // store currently bound webgl buffer
+  private bufferMap : Map<number, WebGLBuffer>;
+
   private boundProgram : WebGLProgram;
   private activeUniformList : UniformMap;
 
@@ -19,6 +22,7 @@ export class GLContext implements GLContextI {
     this.gl = gl;
     this.activeUniformList = null;
     this.programMap = new Map();
+    this.bufferMap = new Map();
     
     const texmax = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
     
@@ -57,17 +61,14 @@ export class GLContext implements GLContextI {
   bindTexture(tex: WebGLTexture, target: number, loc?: WebGLUniformLocation) {
     let res = -1;
     if (this.textureMap.has(tex)) {
-      // tex is already active
       res = this.textureMap.get(tex);
       this.textureMap.insert(tex, res);
     } else {
       if (this.textureMap.size < this.texCapacity) {
-        // texcache is not full, texture is not inside
         const index = this.textureMap.size;
         this.textureMap.insert(tex, index);
         res = index;
       } else {
-        // texcache is full, texture is not inside
         const swap = this.textureMap.evict();
         this.textureMap.insert(tex, swap);
         res = swap;
@@ -79,10 +80,22 @@ export class GLContext implements GLContextI {
     }
 
     if (loc !== undefined) {
-      this.gl.uniform1i(loc, res);
+      this.activeUniformList.uniform1i(loc, res);
     }
 
     return this.gl.TEXTURE0 + res;
+  }
+
+  bindBuffer(targ: number, buf: WebGLBuffer) {
+    if (this.bufferMap.has(targ)) {
+      if (this.bufferMap.get(targ) === buf) {
+        return;
+      }
+    }
+
+    const gl = this.gl;
+    gl.bindBuffer(targ, buf);
+    this.bufferMap.set(targ, buf);
   }
 
   clearTexBinds() {
