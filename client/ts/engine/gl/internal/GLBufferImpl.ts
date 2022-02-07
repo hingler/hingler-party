@@ -21,7 +21,7 @@ export class GLBufferImpl implements GLBuffer {
   target: BufferTarget;
 
   glBufferSize: number;
-  dirty: boolean;
+  version: number;
 
   dataMode: number;
 
@@ -44,7 +44,7 @@ export class GLBufferImpl implements GLBuffer {
     this.glBuf = gl.createBuffer();
     this.target = BufferTarget.UNBOUND;
 
-    this.dirty = true;
+    this.version = this.buf.versionnum;
     this.glBufferSize = -1;
 
     if (dataMode === undefined) {
@@ -72,14 +72,14 @@ export class GLBufferImpl implements GLBuffer {
 
     gl.bindBuffer(targ, this.glBuf);
     const buf = this.buf.arrayBuffer();
-    if (this.dirty && this.glBufferSize < buf.byteLength) {
+    if (this.version !== this.buf.versionnum && this.glBufferSize < buf.byteLength) {
       gl.bufferData(targ, buf, this.dataMode);
       this.glBufferSize = buf.byteLength;
-    } else if (this.dirty) {
+    } else if (this.version !== this.buf.versionnum) {
       gl.bufferSubData(targ, 0, buf);
     }
 
-    this.dirty = false;
+    this.version = this.buf.versionnum;
   }
   
   bindToVertexAttribute(location: number, components: number, type: number, normalize: boolean, stride: number, offset: number) {
