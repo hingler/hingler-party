@@ -562,6 +562,48 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniformMatrix4fv(PBRMaterialImpl.locs.vpMat, false, this.vpMat);
       gl.uniformMatrix3fv(PBRMaterialImpl.locs.normalMat, false, normalMat);
 
+      let useSkyboxMain = false;
+      if (this.skyboxes.length > 0) {
+        const skybox = this.skyboxes[0];
+        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
+          skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
+          skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular, 9);
+          skybox.brdf.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
+          gl.uniform1f(PBRMaterialImpl.locs.specSize, skybox.specular.dims);
+          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, skybox.intensity);
+          gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 1);
+          useSkyboxMain = true;
+        }
+      }
+    
+      if (!useSkyboxMain) {
+        this.placeholderCube.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
+        this.placeholderCubeSpec.bindToUniform(PBRMaterialImpl.locs.specular, 9);
+        this.placeholderBRDF.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
+        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, 0.0);
+        gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 0);
+      }
+
+      let useSkyboxSub = false;
+      if (this.skyboxes.length > 1) {
+        const skybox = this.skyboxes[1];
+        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
+          skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
+          skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
+          gl.uniform1f(PBRMaterialImpl.locs.specSize_l, skybox.specular.dims);
+          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, skybox.intensity);
+          gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 1);
+          useSkyboxSub = true;
+        }
+      }
+
+      if (!useSkyboxSub) {
+        this.placeholderCubeSub.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
+        this.placeholderCubeSpecSub.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
+        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, 0.0);
+        gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 0);
+      }
+
       let shadowSpot = 0;
       let noShadowSpot = 0;
       if (this.spot) {
@@ -635,48 +677,6 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       gl.uniform4fv(PBRMaterialImpl.locs.emissionFactor, this.emissionFactor);
 
       gl.uniform1i(PBRMaterialImpl.locs.useAttribute, 0);
-      
-      let useSkyboxMain = false;
-      if (this.skyboxes.length > 0) {
-        const skybox = this.skyboxes[0];
-        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
-          skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
-          skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular, 9);
-          skybox.brdf.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
-          gl.uniform1f(PBRMaterialImpl.locs.specSize, skybox.specular.dims);
-          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, skybox.intensity);
-          gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 1);
-          useSkyboxMain = true;
-        }
-      }
-    
-      if (!useSkyboxMain) {
-        this.placeholderCube.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
-        this.placeholderCubeSpec.bindToUniform(PBRMaterialImpl.locs.specular, 9);
-        this.placeholderBRDF.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
-        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, 0.0);
-        gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 0);
-      }
-
-      let useSkyboxSub = false;
-      if (this.skyboxes.length > 1) {
-        const skybox = this.skyboxes[1];
-        if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
-          skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
-          skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
-          gl.uniform1f(PBRMaterialImpl.locs.specSize_l, skybox.specular.dims);
-          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, skybox.intensity);
-          gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 1);
-          useSkyboxSub = true;
-        }
-      }
-
-      if (!useSkyboxSub) {
-        this.placeholderCubeSub.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
-        this.placeholderCubeSpecSub.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
-        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, 0.0);
-        gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 0);
-      }
 
       model.bindAttribute(AttributeType.POSITION, PBRMaterialImpl.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, PBRMaterialImpl.attribs.norm);

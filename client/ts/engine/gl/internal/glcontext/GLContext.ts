@@ -59,12 +59,13 @@ export class GLContext implements GLContextI {
     if (this.textureMap.has(tex)) {
       // tex is already active
       res = this.textureMap.get(tex);
+      this.textureMap.insert(tex, res);
     } else {
       if (this.textureMap.size < this.texCapacity) {
-      // texcache is not full, texture is not inside
-      const index = this.textureMap.size;
-      this.textureMap.insert(tex, index);
-      res = index;
+        // texcache is not full, texture is not inside
+        const index = this.textureMap.size;
+        this.textureMap.insert(tex, index);
+        res = index;
       } else {
         // texcache is full, texture is not inside
         const swap = this.textureMap.evict();
@@ -77,7 +78,7 @@ export class GLContext implements GLContextI {
       this.gl.bindTexture(target, tex);
     }
 
-    if (loc) {
+    if (loc !== undefined) {
       this.gl.uniform1i(loc, res);
     }
 

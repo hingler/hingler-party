@@ -33,8 +33,8 @@ export class ColorCubemap implements Cubemap {
     this.dims = dim;
 
     const wrap = ctx.getGL();
-
-    gl.activeTexture(wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP));
+    const ind = wrap.bindTexture(this.cube, gl.TEXTURE_CUBE_MAP);
+    gl.activeTexture(ind);
 
     // lule
     gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
