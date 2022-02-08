@@ -2,7 +2,7 @@
 
 // ignore this for a bit -- i'll have to drop by again and fix it
 
-import { IDGenerator } from "../../../../../ts/util/IDGenerator";
+import { IDGenerator } from "nekogirl-valhalla/object/IDGenerator";
 import { EXT_disjoint_timer_query_webgl2 } from "../../GameContext";
 import { Category, logRender, RenderType } from "../../internal/performanceanalytics";
 

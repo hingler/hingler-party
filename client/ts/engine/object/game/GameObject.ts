@@ -5,7 +5,7 @@ import { RenderContext } from "../../render/RenderContext";
 import { Transformable } from "nekogirl-valhalla/object/Transformable";
 import { Nestable } from "nekogirl-valhalla/object/Nestable";
 import { TransformableBase } from "nekogirl-valhalla/object/TransformableBase";
-import { IDGenerator } from "@hingler-party/ts/util/IDGenerator";
+import { IDGenerator } from "nekogirl-valhalla/object/IDGenerator";
 import { NestableBase } from "nekogirl-valhalla/object/NestableBase";
 import { perf } from "@hingler-party/ts/performance";
 import { logUpdate } from "../../internal/performanceanalytics";
