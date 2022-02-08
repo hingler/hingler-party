@@ -2,12 +2,11 @@ import { GameContext } from "../../GameContext";
 
 import { mat4, vec3, quat, ReadonlyMat4 } from "gl-matrix";
 import { RenderContext } from "../../render/RenderContext";
-import { NestingManager } from "../NestingManager";
-import { Transformable } from "../Transformable";
-import { Nestable } from "../Nestable";
-import { TransformableBase } from "../TransformableBase";
+import { Transformable } from "nekogirl-valhalla/object/Transformable";
+import { Nestable } from "nekogirl-valhalla/object/Nestable";
+import { TransformableBase } from "nekogirl-valhalla/object/TransformableBase";
 import { IDGenerator } from "@hingler-party/ts/util/IDGenerator";
-import { NestableBase } from "../NestableBase";
+import { NestableBase } from "nekogirl-valhalla/object/NestableBase";
 import { perf } from "@hingler-party/ts/performance";
 import { logUpdate } from "../../internal/performanceanalytics";
 import { IComponentProvider } from "../../component/IComponentProvider";

@@ -1,8 +1,8 @@
 import { mat3, mat4, quat, ReadonlyMat3, ReadonlyMat4, ReadonlyQuat, ReadonlyVec3, vec3 } from "gl-matrix";
-import { Nestable } from "../Nestable";
-import { NestableBase } from "../NestableBase";
-import { Transformable } from "../Transformable";
-import { TransformableBase } from "../TransformableBase";
+import { Nestable } from "nekogirl-valhalla/object/Nestable";
+import { NestableBase } from "nekogirl-valhalla/object/NestableBase";
+import { Transformable } from "nekogirl-valhalla/object/Transformable";
+import { TransformableBase } from "nekogirl-valhalla/object/TransformableBase";
 
 // todo: move hierarchal structure into another component?
 // eh, its too diff
