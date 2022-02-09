@@ -21,7 +21,7 @@ export class GLBufferImpl implements GLBuffer {
   target: BufferTarget;
 
   glBufferSize: number;
-  dirty: boolean;
+  version: number;
 
   dataMode: number;
 
@@ -44,7 +44,7 @@ export class GLBufferImpl implements GLBuffer {
     this.glBuf = gl.createBuffer();
     this.target = BufferTarget.UNBOUND;
 
-    this.dirty = true;
+    this.version = this.buf.versionnum;
     this.glBufferSize = -1;
 
     if (dataMode === undefined) {
@@ -70,16 +70,17 @@ export class GLBufferImpl implements GLBuffer {
         break;
     }
 
-    gl.bindBuffer(targ, this.glBuf);
+    const wrap = this.ctx.getGL();
+    wrap.bindBuffer(targ, this.glBuf);
     const buf = this.buf.arrayBuffer();
-    if (this.dirty && this.glBufferSize < buf.byteLength) {
+    if (this.version !== this.buf.versionnum && this.glBufferSize < buf.byteLength) {
       gl.bufferData(targ, buf, this.dataMode);
       this.glBufferSize = buf.byteLength;
-    } else if (this.dirty) {
+    } else if (this.version !== this.buf.versionnum) {
       gl.bufferSubData(targ, 0, buf);
     }
 
-    this.dirty = false;
+    this.version = this.buf.versionnum;
   }
   
   bindToVertexAttribute(location: number, components: number, type: number, normalize: boolean, stride: number, offset: number) {
@@ -91,8 +92,10 @@ export class GLBufferImpl implements GLBuffer {
       throw Error(err);
     }
 
+    const wrap = this.ctx.getGL();
+
     this.bindAndPopulate(BufferTarget.ARRAY_BUFFER);
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.glBuf);
+    wrap.bindBuffer(this.gl.ARRAY_BUFFER, this.glBuf);
     this.gl.vertexAttribPointer(location, components, type, normalize, stride, offset);
     this.gl.enableVertexAttribArray(location);
   }
@@ -245,9 +248,10 @@ export class GLBufferImpl implements GLBuffer {
     this.bindAndPopulate(BufferTarget.ELEMENT_ARRAY_BUFFER);
 
     let gl = this.gl;
+    const wrap = this.ctx.getGL();
     let [glMode, dataType] = this.handleBindingPoints(mode, type);
 
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.glBuf);
+    wrap.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.glBuf);
     this.glDrawElementsInstanced(glMode, count, dataType, offset, primCount);
   }
 

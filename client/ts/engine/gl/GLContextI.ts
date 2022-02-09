@@ -11,6 +11,7 @@ export interface GLContextI {
   uniform1f(loc: WebGLUniformLocation, val: number) : void;
   // bind for textures
   bindTexture(tex: WebGLTexture, target: number, loc?: WebGLUniformLocation) : number;
+  bindBuffer(targ: number, buf: WebGLBuffer) : void;
   // clears all texture binds
   clearTexBinds() : void;
 }

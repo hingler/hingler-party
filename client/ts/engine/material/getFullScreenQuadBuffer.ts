@@ -9,7 +9,8 @@ import { screenCoords } from "./TextureDisplay";
 export function getFullScreenQuadBuffer(ctx: GameContext) {
   const gl = ctx.getGLContext();
   const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  const wrap = ctx.getGL();
+  wrap.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
   return buf;
 }

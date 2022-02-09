@@ -23,8 +23,9 @@ export abstract class PostProcessingFilter {
   constructor(ctx: GameContext) {
     this.ctx = ctx;
     let gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     this.buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
 
     this.name = this.constructor.name;
