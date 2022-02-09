@@ -30,7 +30,7 @@
   "homepage": "https://github.com/jamieboy1337/hingler-online#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "nekogirl-valhalla": "github:jamieboy1337/nekogirl-valhalla",
+    "nekogirl-valhalla": "github:jamieboy1337/nekogirl-valhalla#bufferopt",
     "ws": "^7.4.6"
   },
   "devDependencies": {

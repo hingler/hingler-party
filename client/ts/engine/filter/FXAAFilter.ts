@@ -89,7 +89,7 @@ export class FXAAFilter extends PostProcessingFilter {
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
       src.getColorTexture().bindToUniform(this.lumaTex, 1);
       const buf = this.getScreenBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      wrap.bindBuffer(gl.ARRAY_BUFFER, buf);
 
       gl.vertexAttribPointer(this.lumaPos, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.lumaPos);

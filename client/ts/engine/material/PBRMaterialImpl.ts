@@ -569,9 +569,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
           skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
           skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular, 9);
           skybox.brdf.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
-          gl.uniform1f(PBRMaterialImpl.locs.specSize, skybox.specular.dims);
-          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, skybox.intensity);
-          gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 1);
+          wrap.uniform1f(PBRMaterialImpl.locs.specSize, skybox.specular.dims);
+          wrap.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, skybox.intensity);
+          wrap.uniform1i(PBRMaterialImpl.locs.useIrridance, 1);
           useSkyboxMain = true;
         }
       }
@@ -580,8 +580,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         this.placeholderCube.bindToUniform(PBRMaterialImpl.locs.irridance, 8);
         this.placeholderCubeSpec.bindToUniform(PBRMaterialImpl.locs.specular, 9);
         this.placeholderBRDF.bindToUniform(PBRMaterialImpl.locs.brdf, 10);
-        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, 0.0);
-        gl.uniform1i(PBRMaterialImpl.locs.useIrridance, 0);
+        wrap.uniform1f(PBRMaterialImpl.locs.skyboxIntensity, 0.0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useIrridance, 0);
       }
 
       let useSkyboxSub = false;
@@ -590,9 +590,9 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         if (skybox.irridance !== null && skybox.specular !== null && skybox.brdf !== null) {
           skybox.irridance.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
           skybox.specular.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
-          gl.uniform1f(PBRMaterialImpl.locs.specSize_l, skybox.specular.dims);
-          gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, skybox.intensity);
-          gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 1);
+          wrap.uniform1f(PBRMaterialImpl.locs.specSize_l, skybox.specular.dims);
+          wrap.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, skybox.intensity);
+          wrap.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 1);
           useSkyboxSub = true;
         }
       }
@@ -600,8 +600,8 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       if (!useSkyboxSub) {
         this.placeholderCubeSub.bindToUniform(PBRMaterialImpl.locs.irridance_l, 11);
         this.placeholderCubeSpecSub.bindToUniform(PBRMaterialImpl.locs.specular_l, 12);
-        gl.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, 0.0);
-        gl.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 0);
+        wrap.uniform1f(PBRMaterialImpl.locs.skyboxIntensity_l, 0.0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useIrridance_l, 0);
       }
 
       let shadowSpot = 0;
@@ -623,60 +623,60 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         this.spotPlaceholders[i].bindToUniform(PBRMaterialImpl.spotLightUniforms[i].shadowtex, i + 4);
       }
 
-      gl.uniform1i(PBRMaterialImpl.locs.lightCount, shadowSpot);
-      gl.uniform1i(PBRMaterialImpl.locs.lightCountNoShadow, noShadowSpot);
+      wrap.uniform1i(PBRMaterialImpl.locs.lightCount, shadowSpot);
+      wrap.uniform1i(PBRMaterialImpl.locs.lightCountNoShadow, noShadowSpot);
       gl.uniform3fv(PBRMaterialImpl.locs.cameraPos, this.cameraPos);
 
       if (!this.color) {
         this.placeholder.bindToUniform(PBRMaterialImpl.locs.texAlbedo, 0);
-        gl.uniform1i(PBRMaterialImpl.locs.useAlbedo, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useAlbedo, 0);
       } else {  // this.color instanceof Texture*
         this.color.bindToUniform(PBRMaterialImpl.locs.texAlbedo, 0);
-        gl.uniform1i(PBRMaterialImpl.locs.useAlbedo, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useAlbedo, 1);
       }
       
       gl.uniform4fv(PBRMaterialImpl.locs.albedoDef, this.colorFactor);
 
       if (!this.normal) {
         this.placeholderNorm.bindToUniform(PBRMaterialImpl.locs.texNorm, 1);
-        gl.uniform1i(PBRMaterialImpl.locs.useNorm, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useNorm, 0);
       } else {
         this.normal.bindToUniform(PBRMaterialImpl.locs.texNorm, 1);
-        gl.uniform1i(PBRMaterialImpl.locs.useNorm, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useNorm, 1);
       }
 
       if (!this.metalRough) {
         this.placeholderARM.bindToUniform(PBRMaterialImpl.locs.texMetalRough, 2);
-        gl.uniform1i(PBRMaterialImpl.locs.useRough, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useRough, 0);
       } else {
         this.metalRough.bindToUniform(PBRMaterialImpl.locs.texMetalRough, 2);
-        gl.uniform1i(PBRMaterialImpl.locs.useRough, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useRough, 1);
       }
 
       if (this.emission === null) {
         this.placeholderEmission.bindToUniform(PBRMaterialImpl.locs.texEmission, 3);
-        gl.uniform1i(PBRMaterialImpl.locs.useEmission, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useEmission, 0);
       } else {
         this.emission.bindToUniform(PBRMaterialImpl.locs.texEmission, 3);
-        gl.uniform1i(PBRMaterialImpl.locs.useEmission, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useEmission, 1);
       }
 
       gl.uniform1f(PBRMaterialImpl.locs.parallaxHeightScale, this.heightScale);
 
       if (this.heightMap === null) {
-        gl.uniform1i(PBRMaterialImpl.locs.useParallax, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useParallax, 0);
         this.placeholderParallax.bindToUniform(PBRMaterialImpl.locs.texParallax, 4);
       } else {
-        gl.uniform1i(PBRMaterialImpl.locs.useParallax, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useParallax, 1);
         this.heightMap.bindToUniform(PBRMaterialImpl.locs.texParallax, 4);
       }
       
-      gl.uniform1f(PBRMaterialImpl.locs.roughDef, this.roughFactor);
-      gl.uniform1f(PBRMaterialImpl.locs.metalDef, this.metalFactor);
+      wrap.uniform1f(PBRMaterialImpl.locs.roughDef, this.roughFactor);
+      wrap.uniform1f(PBRMaterialImpl.locs.metalDef, this.metalFactor);
 
       gl.uniform4fv(PBRMaterialImpl.locs.emissionFactor, this.emissionFactor);
 
-      gl.uniform1i(PBRMaterialImpl.locs.useAttribute, 0);
+      wrap.uniform1i(PBRMaterialImpl.locs.useAttribute, 0);
 
       model.bindAttribute(AttributeType.POSITION, PBRMaterialImpl.attribs.pos);
       model.bindAttribute(AttributeType.NORMAL, PBRMaterialImpl.attribs.norm);
@@ -684,7 +684,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
       model.bindAttribute(AttributeType.TANGENT, PBRMaterialImpl.attribs.tan);
 
       if (model.getArmature()) {
-        gl.uniform1i(PBRMaterialImpl.locs.useSkeletalAnimation, 1);
+        wrap.uniform1i(PBRMaterialImpl.locs.useSkeletalAnimation, 1);
 
         const bones = model.getArmature().getJointMatrices();
         const bonesNormal = model.getArmature().getJointNormalMatrices();
@@ -696,7 +696,7 @@ export class PBRMaterialImpl implements Material, PBRMaterial, PBRInstancedMater
         model.bindAttribute(AttributeType.JOINT, PBRMaterialImpl.attribs.joints);
         model.bindAttribute(AttributeType.WEIGHT, PBRMaterialImpl.attribs.weights);
       } else {
-        gl.uniform1i(PBRMaterialImpl.locs.useSkeletalAnimation, 0);
+        wrap.uniform1i(PBRMaterialImpl.locs.useSkeletalAnimation, 0);
         
       }
 

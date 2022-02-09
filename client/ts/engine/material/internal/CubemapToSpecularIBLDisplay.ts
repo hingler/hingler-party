@@ -57,6 +57,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
   private configureProgram(res: WebGLProgram) {
     this.prog = res;
     const gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     this.posLoc = gl.getAttribLocation(res, "aPosition");
     this.unifs = {
       center: gl.getUniformLocation(res, "center"),
@@ -68,7 +69,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
     };
 
     this.buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
   }
 
@@ -76,10 +77,10 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
     if (this.prog !== null && this.tex !== null) {
       const gl = this.ctx.getGLContext();
       const prog = this.prog;
+      const wrap = this.ctx.getGL();
 
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-      const wrap = this.ctx.getGL();
+      wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
       wrap.useProgram(prog);
       gl.uniform3fv(this.unifs.center, this.center);
       gl.uniform3fv(this.unifs.right, this.right);

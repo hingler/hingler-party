@@ -31,20 +31,21 @@ export class BRDFLutDisplay {
 
   private configureProgram(res: WebGLProgram) {
     const gl = this.ctx.getGLContext();
+    const wrap = this.ctx.getGL();
     this.prog = res;
     this.posLoc = gl.getAttribLocation(res, "aPosition");
     this.buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, screenCoords, gl.STATIC_DRAW);
   }
 
   draw() {
     if (this.prog !== null) {
       const gl = this.ctx.getGLContext();
+      const wrap = this.ctx.getGL();
       
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
-      const wrap = this.ctx.getGL();
+      wrap.bindBuffer(gl.ARRAY_BUFFER, this.buf);
       wrap.useProgram(this.prog);
       gl.vertexAttribPointer(this.posLoc, 2, gl.FLOAT, false, 0, 0);
       gl.enableVertexAttribArray(this.posLoc);
