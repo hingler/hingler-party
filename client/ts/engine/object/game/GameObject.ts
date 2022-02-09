@@ -4,7 +4,9 @@ import { mat4, vec3, quat, ReadonlyMat4 } from "gl-matrix";
 import { RenderContext } from "../../render/RenderContext";
 import { Transformable } from "nekogirl-valhalla/object/Transformable";
 import { Nestable } from "nekogirl-valhalla/object/Nestable";
-import { TransformableBase } from "nekogirl-valhalla/object/TransformableBase";
+import { NestableComponent } from "nekogirl-valhalla/object/NestableComponent";
+import { TransformableNestableComponent } from "nekogirl-valhalla/object/TransformableNestableComponent";
+import { TransformableBase, TransformableComponent } from "nekogirl-valhalla/object/TransformableBase";
 import { IDGenerator } from "nekogirl-valhalla/object/IDGenerator";
 import { NestableBase } from "nekogirl-valhalla/object/NestableBase";
 import { perf } from "@hingler-party/ts/performance";
@@ -15,24 +17,25 @@ import { IComponent } from "../../component/IComponent";
 import { ModelComponent } from "../../component/impl/ModelComponent";
 import { ComponentManager } from "../../component/internal/ComponentManager";
 import { AlphaTextureComponent } from "../../component/impl/AlphaTextureComponent";
+import { TransformableNestable } from "nekogirl-valhalla/object/TransformableNestable";
 
 const gen = new IDGenerator();
 
 /**
  * Game object rendered to a lovely 3d world.
  */
-export class GameObject extends NestableBase<GameObject> implements Transformable, Nestable<GameObject>, IComponentProvider {
-  private id_: number;
-  private created: boolean;
-  private context_: GameContext;
-  private name: string;
-  private transform: TransformableBase;
-
-  private transform_cache: mat4;
-
-  private dirty: boolean;
+export class GameObject implements TransformableNestable<GameObject> {
+  private nest : NestableComponent<GameObject>;
+  private transform : TransformableComponent;
+  private nesttransform : TransformableNestableComponent<GameObject>;
 
   private componentList: Map<ComponentType, IComponent>;
+
+  private name: string;
+  private context_: GameContext;
+  private created: boolean;
+
+  private dirty: boolean;
 
   // unfortunately we can't really track destruction of objects
   // our engine will destroy, so we could maintain destruction through that
@@ -40,20 +43,18 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
   // then, we can clear resources by calling methods
   constructor(ctx: GameContext) {
     const id = gen.getNewID();
-    super(id);
+
     this.name = this.constructor.name;
     this.created = false;
-    this.id_ = gen.getNewID();
     this.context_ = ctx;
     this.name = this.constructor.name;
-
-    this.transform = new TransformableBase();
-
-    this.transform_cache = mat4.create();
-    mat4.identity(this.transform_cache);
-
-    this.dirty = true;
     this.componentList = new Map();
+    
+    this.dirty = true;
+    
+    this.nest = new NestableComponent(id, this);
+    this.transform = new TransformableBase();
+    this.nesttransform = new TransformableNestableComponent(this as GameObject);
   }
 
   protected getDebugName() {
@@ -64,18 +65,39 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
     this.name = name;
   }
 
+  getParent() {
+    return this.nest.getParent();
+  }
+
+  getChild(id: number) {
+    return this.nest.getChild(id);
+  }
+
+  getChildren() {
+    return this.nest.getChildren();
+    
+  }
+
+  getId() {
+    return this.nest.getId();
+  }
+
+  setId(id: number) {
+    return this.nest.setId(id);
+  }
+
   getContext() {
     return this.context_;
   }
 
   removeChild(id: number) {
-    const child = super.removeChild(id);
+    const child = this.nest.removeChild(id);
     child.invalidateTransformCache_();
     return child;
   }
 
   addChild(elem: GameObject) {
-    const res = super.addChild(elem);
+    const res = this.nest.addChild(elem.nest);
     elem.invalidateTransformCache_();
     return res;
   }
@@ -92,7 +114,7 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
   protected renderfunc(rc: RenderContext) {
     this.renderMaterial(rc);
     // overtime should round out :)
-    for (let child of this.getChildren()) {
+    for (let child of this.nest.getChildren()) {
       child.renderfunc(rc);
     }
   }
@@ -100,7 +122,7 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
   protected childcallback(cb: (child: GameObject) => void) {
     // this is hopefully fine?
     cb(this);
-    for (let child of this.getChildren()) {
+    for (let child of this.nest.getChildren()) {
       child.childcallback(cb);
     }
   }
@@ -120,7 +142,7 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
     const end = perf.now();
     logUpdate(this.name, end - start);
     
-    for (let child of this.getChildren()) {
+    for (let child of this.nest.getChildren()) {
       child.updatefunc();
     }
   }
@@ -185,36 +207,22 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
   }
 
   getGlobalPosition() {
-    let posLocal = vec3.zero(vec3.create());
-    vec3.transformMat4(posLocal, posLocal, this.getTransformationMatrix());
-    return posLocal;
+    return this.nesttransform.getGlobalPosition();
   }
 
   lookAt(x: number | vec3, y?: number, z?: number) {
-    let dirVector : vec3 = (typeof x === "number" ? vec3.fromValues(x, y, z) : vec3.copy(vec3.create(), x));
-    let pos = this.getGlobalPosition();
-    // account for own offset: vector from camera to dest
-    vec3.sub(dirVector, dirVector, pos);
-    let dir = vec3.create();
-    vec3.normalize(dir, dirVector);
-    let theta = Math.PI + Math.atan2(dir[0], dir[2]);
-    let phi : number;
-    let phi_denom = Math.sqrt(dir[0] * dir[0] + dir[2] * dir[2]);
-    if (phi_denom === 0 || phi_denom === NaN) {
-      phi = 0;
-    } else {
-      phi = Math.atan(dir[1] / phi_denom);
-    }
-
-    this.setRotationEuler(phi * (180 / Math.PI), theta * (180 / Math.PI), 0);
+    this.nesttransform.lookAt(x, y, z);
+    this.invalidateTransformCache_();
   }
 
   private invalidateTransformCache_() {
     // note: lots of redundant action if we do a lot of txs
     // assumption: if a child is already dirty, its children will be dirty as well
+    this.nesttransform.invalidateTransformCache();
+
     if (!this.dirty) {
       this.dirty = true;
-      for (let child of this.getChildren()) {
+      for (let child of this.nest.getChildren()) {
         child.invalidateTransformCache_();
       }
     }
@@ -224,19 +232,8 @@ export class GameObject extends NestableBase<GameObject> implements Transformabl
    * @returns the transformation matrix associated with this GameObject.
    */
   getTransformationMatrix() : ReadonlyMat4 {
-    if (this.dirty) {
-      let res = this.transform_cache;
-      mat4.fromRotationTranslationScale(res, this.getRotation(), this.getPosition(), this.getScale());
-      
-      if (this.getParent() !== null) {
-        mat4.mul(res, this.getParent().getTransformationMatrix(), res);
-      }
-
-      this.transform_cache = res;
-      this.dirty = false;
-    }
-
-    return this.transform_cache;
+    this.dirty = false;
+    return this.nesttransform.getTransformationMatrix();
   }
 
   getComponent(type: ComponentType.MODEL)         : ModelComponent | null;
