@@ -85,7 +85,7 @@ export class CubemapToSpecularIBLDisplay implements CubemapCoords {
       gl.uniform3fv(this.unifs.center, this.center);
       gl.uniform3fv(this.unifs.right, this.right);
       gl.uniform3fv(this.unifs.up, this.up);
-      gl.uniform1f(this.unifs.roughness, this.roughness);
+      wrap.uniform1f(this.unifs.roughness, this.roughness);
       gl.uniform2f(this.unifs.sourceDestRes, this.cubemapRes, this.destRes);
       this.tex.bindToUniform(this.unifs.skybox, 1);
 

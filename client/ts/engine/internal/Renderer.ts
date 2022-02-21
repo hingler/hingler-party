@@ -198,11 +198,11 @@ export class Renderer {
     // shit.cleanBlockList();
 
     for (let light of lights) {
-      // skip until spotlights are definitely working
-      // skip lights which won't contribute to final image
       if (light.intensity < 0.0001) {
         continue;
       }
+
+      // spotlights void skyboxes for some reason
 
       if (this.ctx.mobile) {
         light.setShadows(false);

@@ -44,7 +44,7 @@ export class GLBufferImpl implements GLBuffer {
     this.glBuf = gl.createBuffer();
     this.target = BufferTarget.UNBOUND;
 
-    this.version = this.buf.versionnum;
+    this.version = this.buf.versionnum - 1;
     this.glBufferSize = -1;
 
     if (dataMode === undefined) {
@@ -92,10 +92,7 @@ export class GLBufferImpl implements GLBuffer {
       throw Error(err);
     }
 
-    const wrap = this.ctx.getGL();
-
     this.bindAndPopulate(BufferTarget.ARRAY_BUFFER);
-    wrap.bindBuffer(this.gl.ARRAY_BUFFER, this.glBuf);
     this.gl.vertexAttribPointer(location, components, type, normalize, stride, offset);
     this.gl.enableVertexAttribArray(location);
   }
@@ -233,6 +230,7 @@ export class GLBufferImpl implements GLBuffer {
 
     let gl = this.gl;
     let [glMode, type] = this.handleBindingPoints(mode, dataType);
+
     gl.drawElements(glMode, count, type, offset);
   }
 
@@ -246,12 +244,8 @@ export class GLBufferImpl implements GLBuffer {
     }
 
     this.bindAndPopulate(BufferTarget.ELEMENT_ARRAY_BUFFER);
-
-    let gl = this.gl;
-    const wrap = this.ctx.getGL();
     let [glMode, dataType] = this.handleBindingPoints(mode, type);
 
-    wrap.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.glBuf);
     this.glDrawElementsInstanced(glMode, count, dataType, offset, primCount);
   }
 

@@ -130,8 +130,8 @@ export class MatteMaterial implements Material {
         }
       }
 
-      gl.uniform1i(this.locs.lightCount, shadowSpot);
-      gl.uniform1i(this.locs.lightCountNoShadow, noShadowSpot);
+      wrap.uniform1i(this.locs.lightCount, shadowSpot);
+      wrap.uniform1i(this.locs.lightCountNoShadow, noShadowSpot);
 
       gl.uniform3fv(this.locs.cameraPos, this.cameraPos);
       

@@ -22,8 +22,9 @@ export class FractalPerlinTexture extends ProceduralTextureBase {
 
   assignUniforms() {
     const gl = this.getContext().getGLContext();
+    const wrap = this.getContext().getGL();
     const octave = Math.round(Math.max(this.octaves, 2));
-    gl.uniform1i(this.octaveLoc, octave);
-    gl.uniform1f(this.scaleLoc, this.scale);
+    wrap.uniform1i(this.octaveLoc, octave);
+    wrap.uniform1f(this.scaleLoc, this.scale);
   }
 }

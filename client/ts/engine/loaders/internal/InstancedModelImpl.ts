@@ -122,7 +122,7 @@ export class InstancedModelImpl implements InstancedModel {
       }
   
       this.materials.clear();
-      this.boundMaterial = null;
+      this.materials.set(this.boundMaterial, 0);
     }
   }
   
@@ -137,7 +137,7 @@ export class InstancedModelImpl implements InstancedModel {
   drawInstanced() {
     let cur = this.materials.get(this.boundMaterial);
     if (cur === undefined) {
-      cur = -1;
+      cur = 0;
     }
 
     this.materials.set(this.boundMaterial, ++cur);
@@ -146,7 +146,7 @@ export class InstancedModelImpl implements InstancedModel {
   drawManyInstanced(count: number) {
     let cur = this.materials.get(this.boundMaterial);
     if (cur === undefined) {
-      cur = -1;
+      cur = 0;
     }
 
     this.materials.set(this.boundMaterial, cur + count);
