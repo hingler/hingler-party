@@ -51,7 +51,7 @@ export interface GLTFScene {
    * @param model - either the name of the model, or the index associated with it.
    * @returns a new PBRModel.
    */
-  getPBRModel(model: string) : PBRModel;
+  getPBRModel(model: string | number) : PBRModel;
 
   /**
    * Creates an instance factory, which can be used to distribute and configure multiple instances

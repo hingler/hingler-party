@@ -79,9 +79,9 @@ export class PositionMaterial implements Material {
         model.bindAttribute(AttributeType.JOINT, this.jointAttribute);
         model.bindAttribute(AttributeType.WEIGHT, this.weightAttribute);
 
-        gl.uniform1i(this.locs.useSkeletalAnimation, 1);
+        wrap.uniform1i(this.locs.useSkeletalAnimation, 1);
       } else {
-        gl.uniform1i(this.locs.useSkeletalAnimation, 0);
+        wrap.uniform1i(this.locs.useSkeletalAnimation, 0);
       }
 
       model.draw();

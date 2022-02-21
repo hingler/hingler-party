@@ -28,11 +28,14 @@ export class InstancedModelImpl implements InstancedModel {
   private ctx: GameContext;
   private model: ModelImpl;
   private instances: Map<number, BufferRecord>;
-  private instanceCount: number;
-  private mat: InstancedMaterial;
   // map numbers to buffer indices
   private enabledAttributes: Set<number>;
   private attributeToBuffer: Map<number, number>;
+
+  // map materials to the number of instances they've drawn
+  private materials: Map<InstancedMaterial, number>;
+
+  private boundMaterial : InstancedMaterial;
 
   name: string;
 
@@ -42,10 +45,10 @@ export class InstancedModelImpl implements InstancedModel {
     this.model = model;
     this.ctx = ctx;
     this.instances = new Map();
-    this.instanceCount = 0;
     this.enabledAttributes = new Set();
     this.attributeToBuffer = new Map();
-    this.mat = null;
+    this.materials = new Map();
+    this.boundMaterial = null;
   }
 
   getArmature() {
@@ -53,8 +56,7 @@ export class InstancedModelImpl implements InstancedModel {
   }
 
   setInstancedMaterial(material: InstancedMaterial) {
-    this.mat = material;
-    this.logname = `${this.name}.${this.mat.constructor.name}`;
+    this.boundMaterial = material;
   }
 
   getReadOnlyBuffer(index: number) : GLBufferReadOnly {
@@ -67,7 +69,7 @@ export class InstancedModelImpl implements InstancedModel {
   }
 
   clearInstances() {
-    this.instanceCount = 0;
+    this.materials.clear();
     for (let record of this.instances.values()) {
       record.offset = 0;
     }
@@ -76,58 +78,52 @@ export class InstancedModelImpl implements InstancedModel {
     this.attributeToBuffer = new Map();
   }
 
-  /**
-   * renders all currently stored instances to the screen.
-   */
-  flush(rc: RenderContext) {
+  private drawMat(rc: RenderContext, mat: InstancedMaterial, instanceCount: number) {
+    this.logname = `${this.name}.${mat.constructor.name}`;
     const timer = this.ctx.getGPUTimer();
     const id = timer.startQuery();
-    if (this.instanceCount > 0) {
-      if (this.mat !== null) {
-        // TODO: instead of just passing the instance count and the model,
-        // pass the render context as well!
-        try {
-          this.mat.prepareAttributes(this, this.instanceCount, rc);
-          this.model.drawInstanced(this.instanceCount);
-          this.mat.cleanUpAttributes();
-        } catch (e) {
-          console.debug("Skipped draw due to caught error: " + e);
-          console.debug(e);
-        } finally {
-          let gl = this.ctx.getGLContext(); 
-          if (this.instances.size > 0) {
-            for (let attrib of this.enabledAttributes) {
-              let bufIndex = this.attributeToBuffer.get(attrib);
-              let buf = this.instances.get(bufIndex);
-              buf.buf.disableInstancedVertexAttribute(attrib);
-            }
-          }
-          
-          this.enabledAttributes = new Set();
-          this.attributeToBuffer = new Map();
+
+    try {
+      mat.prepareAttributes(this, instanceCount, rc);
+      this.model.drawInstanced(instanceCount);
+      mat.cleanUpAttributes();
+    } catch (e) {
+      console.debug("Skipped draw due to caught error: " + e);
+      console.debug(e);
+    } finally {
+      let gl = this.ctx.getGLContext(); 
+      const disabledAttribs : Array<number> = [];
+      if (this.instances.size > 0) {
+        for (let attrib of this.enabledAttributes) {
+          let bufIndex = this.attributeToBuffer.get(attrib);
+          let buf = this.instances.get(bufIndex);
+          buf.buf.disableInstancedVertexAttribute(attrib);
+          // reset used buffers
+          buf.offset = 0;
+          disabledAttribs.push(attrib);
         }
-        
+
+        // disable any attribs which were used
+        for (let attrib of disabledAttribs) {
+          this.enabledAttributes.delete(attrib);
+          gl.disableVertexAttribArray(attrib);
+        }
       }
-
-      
     }
     
-    this.instanceCount = 0;
-    // clean up instance attribs
-    let gl = this.ctx.getGLContext();
-    for (let attrib of this.enabledAttributes) {
-      gl.disableVertexAttribArray(attrib);
-    }
-    
-    for (let record of this.instances.values()) {
-      record.offset = 0;
-    }
+    timer.stopQueryAndLog(id, this.logname, rc.getRenderPass() === RenderPass.SHADOW ? RenderType.SHADOW : RenderType.FINAL);
 
-    this.enabledAttributes = new Set();
-    this.attributeToBuffer = new Map();
-    let matname = (this.mat ? this.mat.constructor.name : "UnknownMaterial");
-    // logRender(`InstancedModel:${matname}`, end - start);
-    timer.stopQueryAndLog(id, `InstancedModel.${this.model.name}.${matname}`, rc.getRenderPass() === RenderPass.SHADOW ? RenderType.SHADOW : RenderType.FINAL);
+  }
+
+  flush(rc: RenderContext) {
+    if (this.materials.size > 0) {
+      for (let mat of this.materials) {
+        this.drawMat(rc, mat[0], mat[1]);
+      }
+  
+      this.materials.clear();
+      this.materials.set(this.boundMaterial, 0);
+    }
   }
   
   bindAttribute(at: AttributeType, location: number) {
@@ -139,11 +135,21 @@ export class InstancedModelImpl implements InstancedModel {
   }
 
   drawInstanced() {
-    this.instanceCount++;
+    let cur = this.materials.get(this.boundMaterial);
+    if (cur === undefined) {
+      cur = 0;
+    }
+
+    this.materials.set(this.boundMaterial, ++cur);
   }
 
   drawManyInstanced(count: number) {
-    this.instanceCount += count;
+    let cur = this.materials.get(this.boundMaterial);
+    if (cur === undefined) {
+      cur = 0;
+    }
+
+    this.materials.set(this.boundMaterial, cur + count);
   }
 
   appendInstanceData(index: number, data: number | Array<number> | Float32Array | ReadonlyMat3 | ReadonlyMat4, ...args: Array<number>) {
@@ -166,6 +172,7 @@ export class InstancedModelImpl implements InstancedModel {
     }
 
     if (args !== undefined) {
+      // accept any number of valid data args, iterate over in a priv
       for (let arg of args) {
         buf.buf.setFloat32(buf.offset, arg, true);
         buf.offset += 4;
