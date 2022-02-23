@@ -201,6 +201,14 @@ class BufferStub implements GLBuffer {
     return new Float32Array();
   }
 
+  getRegionAsFloat32Array(offset: number, length: number): Float32Array {
+    return null;
+  }
+
+  getRegionAsUint16Array(offset: number, length: number): Uint16Array {
+    return null;
+  }
+
   setFloatArray(offset: number, arr: ArrayLike<number>, littleEndian?: boolean) : void {
     //
   }

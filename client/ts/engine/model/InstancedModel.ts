@@ -27,6 +27,8 @@ export interface InstancedModel extends Model {
    */
   clearInstances() : void;
 
+  getBoundMaterial() : InstancedMaterial;
+
   // don't worry about matrices, etc. we can consider this to be the low level ver
   // set it up so that we can handle matrices
 

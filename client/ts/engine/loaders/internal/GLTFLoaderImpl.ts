@@ -31,7 +31,7 @@ export class GLTFLoaderImpl implements GLTFLoader {
   private gl: WebGLRenderingContext;
   private sceneCache: Map<string, GLTFScene>;
   private scenesLoading: Map<string, Promise<GLTFScene>>;
-  private instancedModels: Set<InstancedModelImpl>;
+  private instancedModels: Set<InstancedModel>;
   private ctx: EngineContext;
 
   constructor(loader: FileLoader, ctx: EngineContext) {
@@ -54,7 +54,7 @@ export class GLTFLoaderImpl implements GLTFLoader {
    * todo: handling duplicates from multiple scenes? it shouldnt be a problem
    * if we implement scene switching we'll dump loader contents and spin up a new context
    */
-  registerInstancedModel(model: InstancedModelImpl) {
+  registerInstancedModel(model: InstancedModel) {
     this.instancedModels.add(model);
   }
 

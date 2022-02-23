@@ -1,6 +1,7 @@
 import { ComponentType } from "../ComponentType";
 import { IComponent } from "../IComponent";
 import { AlphaTextureComponent } from "../impl/AlphaTextureComponent";
+import { InstancedModelComponent } from "../impl/InstancedModelComponent";
 import { ModelComponent } from "../impl/ModelComponent";
 
 export class ComponentManager {
@@ -10,6 +11,10 @@ export class ComponentManager {
         return new ModelComponent();
       case ComponentType.ALPHATEXTURE:
         return new AlphaTextureComponent();
+      case ComponentType.INSTANCEDMODEL:
+        return new InstancedModelComponent();
+      default:
+        throw Error(`Could not fetch component of type ${type}`);
     }
   }
 }

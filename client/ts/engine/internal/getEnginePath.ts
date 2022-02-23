@@ -6,5 +6,5 @@ export function getEnginePath(relPath: string) {
   if (prefix.charAt(prefix.length - 1) !== '/') {
     prefix = prefix + '/';
   }
-  return `${prefix}../`;
+  return `${prefix}../../${relPath}`;
 }

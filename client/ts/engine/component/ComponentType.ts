@@ -1,4 +1,5 @@
 export enum ComponentType {
   MODEL = "model",
-  ALPHATEXTURE = "alphatexture"
+  ALPHATEXTURE = "alphatexture",
+  INSTANCEDMODEL = "instancedmodel"
 }

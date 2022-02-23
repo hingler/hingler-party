@@ -3,6 +3,7 @@ import { GLContextI } from "./gl/GLContextI";
 import { GPUTimer, SharedGPUTimer } from "./gl/internal/SharedGPUTimer";
 import { FileLoader } from "./loaders/FileLoader";
 import { GLTFLoader } from "./loaders/GLTFLoader";
+import { InstancedModel } from "./model/InstancedModel";
 import type { Scene } from "./object/scene/Scene";
 import { SceneSwap } from "./object/scene/SceneSwap";
 
@@ -83,6 +84,8 @@ export interface GameContext {
    * @returns a GLContext which mirrors GL state.
    */
   getGL() : GLContextI;
+
+  registerInstancedModel(model: InstancedModel) : void;
 
   /**
    * @returns the XY size of the window, in pixels

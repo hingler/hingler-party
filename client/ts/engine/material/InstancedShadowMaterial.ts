@@ -8,6 +8,8 @@ import { InstancedModel } from "../model/InstancedModel";
 import { RenderContext } from "../render/RenderContext";
 import { InstancedMaterial } from "./InstancedMaterial";
 
+export const SHADOW_MODEL_MAT_INDEX = -2;
+
 export class InstancedShadowMaterial implements InstancedMaterial {
   private modelMatIndex: number;
   private ctx: GameContext;

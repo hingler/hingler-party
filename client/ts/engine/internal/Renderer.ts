@@ -323,6 +323,21 @@ export class Renderer {
     // - grab it, draw its contents (instancedmodel + instancedposmat)
     // note that we lose drawing order if we do this. that's probably for the best?
 
+    // drawing instanced models as deferred
+    // instanced models currently contain their material
+    // that way, we can draw said material later on
+
+    // the issue is that we're kinda stuck with that
+    // it's unwieldy to swap out the material a whole bunch of times, potentially.
+    // - use an instanced model component, which meets a simple spec (model matrix only)
+    // - in our renderer its a bit more OK to come up with a workaround
+    //    - ex. we could keep our material here, prep some data buffer in the instance, and draw it here
+    // todo: support a workflow for merging model data
+    //       - relative matrix transforms -- just trs is probably fine
+
+    // todo2: save some time by detecting transform modifications?
+    // (also i dont have to worry about this yet because i dont use it lol)
+
 
     // draw skybox
 
