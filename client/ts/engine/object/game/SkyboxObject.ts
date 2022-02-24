@@ -186,11 +186,11 @@ export class SkyboxObject extends GameObject {
 
     specMat.cubemapRes = cube.dims;
     
-    const mipLevels = 5;
+    const mipLevels = 6;
     let dim = specBuffer.dim;
 
     let targ = specBuffer;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < mipLevels; i++) {
       specMat.destRes = dim;
       specMat.roughness = i / (mipLevels - 1);
 

@@ -18,7 +18,7 @@
   #define SHADER_QUALITY 2
 #endif
 
-#define MAX_REFLECTION_LOD 4.0
+#define MAX_REFLECTION_LOD 5.0
 
 float distributionGGX(float, float);
 vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness);
@@ -61,20 +61,24 @@ vec3 importanceSampleGGX(vec2 Xi, vec3 N, float roughness, mat3 TBN) {
     vec3 R = reflect(-V, N);
 
     float lod = roughness * MAX_REFLECTION_LOD;
-    #ifdef GL_EXT_shader_texture_lod
-      vec3 specSample = TEXTURECUBELOD(specCube, R, lod).rgb;
+    #if (WEBGL_VERSION == 1)
+      #ifdef GL_EXT_shader_texture_lod
+        vec3 specSample = TEXTURECUBELOD(specCube, R, lod).rgb;
+      #else
+        // mipmap lookup from OGL 4.6 spec
+        vec3 Rx = dFdx(R) * specRes;
+        vec3 Ry = dFdy(R) * specRes;
+        float dRx = dot(Rx, Rx);
+        float dRy = dot(Ry, Ry);
+        float dMaxSquared = max(dRx, dRy);
+        float mipGuess = 0.5 * log2(dMaxSquared);
+        // lod is desired mip
+        // mipguess is estimated current mipmap level
+        // lod - mipguess should mimic textureCubeLod behavior
+        vec3 specSample = TEXTURECUBE(specCube, R, lod - mipGuess).rgb;
+      #endif
     #else
-      // mipmap lookup from OGL 4.6 spec
-      vec3 Rx = dFdx(R) * specRes;
-      vec3 Ry = dFdy(R) * specRes;
-      float dRx = dot(Rx, Rx);
-      float dRy = dot(Ry, Ry);
-      float dMaxSquared = max(dRx, dRy);
-      float mipGuess = 0.5 * log2(dMaxSquared);
-      // lod is desired mip
-      // mipguess is estimated current mipmap level
-      // lod - mipguess should mimic textureCubeLod behavior
-      vec3 specSample = TEXTURECUBE(specCube, R, lod - mipGuess).rgb;
+      vec3 specSample = textureLod(specCube, R, lod).rgb;
     #endif
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
