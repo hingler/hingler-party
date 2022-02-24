@@ -22,6 +22,8 @@ import { ModelImpl, ModelInstance } from "./ModelImpl";
 import { PBRModelImpl } from "./PBRModelImpl";
 import { AnimationManager } from "../../animation/AnimationManager";
 import { GLTFAnimationBuilder } from "../../animation/GLTFAnimationBuilder";
+import { PBRInstanceObject } from "../../object/game/PBRInstanceObject";
+import { PBRInstancedMaterial } from "../../material/PBRInstancedMaterial";
 
 // todo: holy shit this needs cleanup
 
@@ -196,7 +198,6 @@ export class GLTFSceneImpl implements GLTFScene {
     // create the instanced model
     let model = this.getModel(name) as ModelImpl;
     let instModel = new InstancedModelImpl(this.ctx, model);
-    this.ctx.getGLTFLoader().registerInstancedModel(instModel);
     return instModel;
     // put it somewhere in the engine
     // the renderer will pick it up and flush it
@@ -373,15 +374,9 @@ export class GLTFSceneImpl implements GLTFScene {
     return res;
   }
 
-
-  getPBRInstanceFactory(init: string | number) {
-    // need multiple instances and materials
+  private getObjectAsInstancedModels(init: string | number) : [Array<InstancedModelImpl>, Array<PBRInstancedMaterial>] {
     let meshID = this.lookupMeshID(init);
     let [models, materials] = [this.getInstancesAsModels(meshID), this.getPBRMaterials(meshID)];
-
-    const armature = this.getArmature(init);
-
-    // queue these up under the meshID
     let modelsInstanced = models.map((model) => {
       let inst = new InstancedModelImpl(this.ctx, model);
       if (typeof init === "string") {
@@ -391,10 +386,24 @@ export class GLTFSceneImpl implements GLTFScene {
         model.name = (this.getMeshName(meshID));
       }
       
-      this.ctx.getGLTFLoader().registerInstancedModel(inst);
       return inst; 
     });
 
+    return [ modelsInstanced, materials ];
+  }
+
+  getPBRInstanceObject(init: string | number) {
+    const [ modelsInstanced, materials ] = this.getObjectAsInstancedModels(init);
+    const armature = this.getArmature(init);
+
+    return new PBRInstanceObject(this.ctx, modelsInstanced, materials);
+  }
+
+
+  getPBRInstanceFactory(init: string | number) {
+    // need multiple instances and materials
+    const [ modelsInstanced, materials ] = this.getObjectAsInstancedModels(init);
+    const armature = this.getArmature(init);
 
     return new PBRInstanceFactory(this.ctx, modelsInstanced, materials);
   }

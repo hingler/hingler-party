@@ -181,6 +181,14 @@ class BufferStub implements GLBuffer {
   drawElementsInstanced(count: number) {
     
   }
+
+  getRegionAsFloat32Array(offset: number, length: number): Float32Array {
+    return null;
+  }
+
+  getRegionAsUint16Array(offset: number, length: number): Uint16Array {
+    return null;
+  }
 }
 
 const INDEX_DATA = new Int16Array([

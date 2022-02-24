@@ -1,3 +1,5 @@
+import { IReadOnlyBuffer } from "nekogirl-valhalla/buffer/IReadOnlyBuffer";
+import { IReadWriteBuffer } from "nekogirl-valhalla/buffer/IReadWriteBuffer";
 import { DataType } from "nekogirl-valhalla/model/DataType";
 
 export enum BufferTarget {
@@ -12,7 +14,7 @@ export enum DrawMode {
   POINTS
 };
 
-export interface GLBufferReadOnly {
+export interface GLBufferReadOnly extends IReadOnlyBuffer {
   // DATAVIEW WRAPPERS
   getInt8(offset: number) : number;
   getUint8(offset: number) : number;
@@ -30,7 +32,7 @@ export interface GLBufferReadOnly {
   size() : number;
 }
 
-export interface GLBuffer extends GLBufferReadOnly {
+export interface GLBuffer extends GLBufferReadOnly, IReadWriteBuffer<GLBuffer> {
   /**
    * Wrapper for VertexAttribPointer. Binds this buffer as an ARRAY_BUFFER
    *   and reads from its contents.

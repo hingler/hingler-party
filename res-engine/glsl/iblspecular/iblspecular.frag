@@ -57,9 +57,9 @@ void main() {
     float D = distributionGGX(NdotH, roughness);
     // pdf iirc is D * ndoth / 4.0 * hdotv but since N = V = R we can remove the dot mul
     
-    float pdf = (D) + 0.0001;
+    float pdf = (D * NdotH / (4.0 * NdotH)) + 0.0001;
     // 4.0 * PI, factor 4.0 our of PDF and out of saTexel to reduce a couple ops :)
-    float saTexel = PI / (6.0 * sourceDestRes.x * sourceDestRes.x);
+    float saTexel = 4.0 * PI / (6.0 * sourceDestRes.x * sourceDestRes.x);
     float saSample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
     // need texturelod here :(
     // i'll just use bias here!

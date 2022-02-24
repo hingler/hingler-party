@@ -1,6 +1,6 @@
 import { GameContext } from "../../GameContext";
 
-import { mat4, vec3, quat, ReadonlyMat4 } from "gl-matrix";
+import { mat4, vec3, quat, ReadonlyMat4, ReadonlyVec3, ReadonlyQuat } from "gl-matrix";
 import { RenderContext } from "../../render/RenderContext";
 import { Transformable } from "nekogirl-valhalla/object/Transformable";
 import { Nestable } from "nekogirl-valhalla/object/Nestable";
@@ -18,6 +18,7 @@ import { ModelComponent } from "../../component/impl/ModelComponent";
 import { ComponentManager } from "../../component/internal/ComponentManager";
 import { AlphaTextureComponent } from "../../component/impl/AlphaTextureComponent";
 import { TransformableNestable } from "nekogirl-valhalla/object/TransformableNestable";
+import { InstancedModelComponent } from "../../component/impl/InstancedModelComponent";
 
 const gen = new IDGenerator();
 
@@ -174,12 +175,12 @@ export class GameObject implements TransformableNestable<GameObject> {
    * @param y - if valid: y rotation.
    * @param z - if valid: z rotation.
    */
-  setRotationEuler(x: number | vec3, y?: number, z?: number) {
+  setRotationEuler(x: number | ReadonlyVec3, y?: number, z?: number) {
     this.transform.setRotationEuler(x, y, z);
     this.invalidateTransformCache_();
   }
 
-  setRotationQuat(x: number | quat, y?: number, z?: number, w?: number) {
+  setRotationQuat(x: number | ReadonlyQuat, y?: number, z?: number, w?: number) {
     this.transform.setRotationQuat(x, y, z, w);
     this.invalidateTransformCache_();
   }
@@ -190,7 +191,7 @@ export class GameObject implements TransformableNestable<GameObject> {
    * @param y - if valid: y scale.
    * @param z - if valid: z scale.
    */
-  setScale(x: number | vec3, y?: number, z?: number) {
+  setScale(x: number | ReadonlyVec3, y?: number, z?: number) {
     this.transform.setScale(x, y, z);
     this.invalidateTransformCache_();
   }
@@ -201,7 +202,7 @@ export class GameObject implements TransformableNestable<GameObject> {
    * @param y - y coordinate, if valid.
    * @param z - z coordinate, if valid. 
    */
-  setPosition(x: number | vec3, y?: number, z?: number) {
+  setPosition(x: number | ReadonlyVec3, y?: number, z?: number) {
     this.transform.setPosition(x, y, z);
     this.invalidateTransformCache_();
   }
@@ -238,6 +239,7 @@ export class GameObject implements TransformableNestable<GameObject> {
 
   getComponent(type: ComponentType.MODEL)         : ModelComponent | null;
   getComponent(type: ComponentType.ALPHATEXTURE)  : AlphaTextureComponent | null;
+  getComponent(type: ComponentType.INSTANCEDMODEL): InstancedModelComponent | null;
   getComponent<T extends IComponent>(type: ComponentType) {
     if (this.componentList.has(type)) {
       return this.componentList.get(type) as T;
@@ -248,6 +250,7 @@ export class GameObject implements TransformableNestable<GameObject> {
   
   addComponent(type: ComponentType.MODEL)        : ModelComponent | null;
   addComponent(type: ComponentType.ALPHATEXTURE) : AlphaTextureComponent | null;
+  addComponent(type: ComponentType.INSTANCEDMODEL): InstancedModelComponent | null;
   addComponent<T extends IComponent>(type: ComponentType) {
     if (this.componentList.has(type)) {
       return this.componentList.get(type) as T;

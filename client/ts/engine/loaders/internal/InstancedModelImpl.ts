@@ -49,6 +49,8 @@ export class InstancedModelImpl implements InstancedModel {
     this.attributeToBuffer = new Map();
     this.materials = new Map();
     this.boundMaterial = null;
+
+    this.ctx.registerInstancedModel(this);
   }
 
   getArmature() {
@@ -57,6 +59,10 @@ export class InstancedModelImpl implements InstancedModel {
 
   setInstancedMaterial(material: InstancedMaterial) {
     this.boundMaterial = material;
+  }
+
+  getBoundMaterial() {
+    return this.boundMaterial;
   }
 
   getReadOnlyBuffer(index: number) : GLBufferReadOnly {
@@ -82,6 +88,10 @@ export class InstancedModelImpl implements InstancedModel {
     this.logname = `${this.name}.${mat.constructor.name}`;
     const timer = this.ctx.getGPUTimer();
     const id = timer.startQuery();
+    let gl = this.ctx.getGLContext(); 
+
+    // todo: remove :3
+    gl.disable(gl.CULL_FACE);
 
     try {
       mat.prepareAttributes(this, instanceCount, rc);
@@ -91,7 +101,7 @@ export class InstancedModelImpl implements InstancedModel {
       console.debug("Skipped draw due to caught error: " + e);
       console.debug(e);
     } finally {
-      let gl = this.ctx.getGLContext(); 
+      gl.enable(gl.CULL_FACE);
       const disabledAttribs : Array<number> = [];
       if (this.instances.size > 0) {
         for (let attrib of this.enabledAttributes) {

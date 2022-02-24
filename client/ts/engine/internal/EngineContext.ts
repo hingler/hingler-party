@@ -13,6 +13,7 @@ import { clearPerf } from "./performanceanalytics";
 import { DebugDisplay } from "./DebugDisplay";
 import { DummyGPUTimer, GPUTimer, GPUTimerInternal, QueryManagerWebGL2, SharedGPUTimer } from "../gl/internal/SharedGPUTimer";
 import { GLContext } from "../gl/internal/glcontext/GLContext";
+import { InstancedModel } from "../model/InstancedModel";
 
 // short list from https://webgl2fundamentals.org/webgl/lessons/webgl1-to-webgl2.html
 const WEBGL2_NATIVE_EXTENSIONS = [
@@ -272,6 +273,10 @@ export class EngineContext implements GameContext {
 
   getGL() {
     return this.glWrap;
+  }
+
+  registerInstancedModel(model: InstancedModel) {
+    this.gltfLoader.registerInstancedModel(model);
   }
 
   getScreenDims() {

@@ -1,3 +1,4 @@
+import { InstancedModel } from "../model/InstancedModel";
 import { Texture } from "./Texture";
 
 /**
