@@ -7,6 +7,7 @@ import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { logRender, RenderType } from "../../internal/performanceanalytics";
 import { InstancedMaterial } from "../../material/InstancedMaterial";
 import { InstancedModel } from "../../model/InstancedModel";
+import { Model } from "../../model/Model";
 import { RenderContext, RenderPass } from "../../render/RenderContext";
 import { ModelImpl } from "./ModelImpl";
 
@@ -26,7 +27,7 @@ interface AttributeInfo {
 
 export class InstancedModelImpl implements InstancedModel {
   private ctx: GameContext;
-  private model: ModelImpl;
+  private model: Model;
   private instances: Map<number, BufferRecord>;
   // map numbers to buffer indices
   private enabledAttributes: Set<number>;
@@ -41,7 +42,7 @@ export class InstancedModelImpl implements InstancedModel {
 
   private logname: string;
 
-  constructor(ctx: GameContext, model: ModelImpl) {
+  constructor(ctx: GameContext, model: Model) {
     this.model = model;
     this.ctx = ctx;
     this.instances = new Map();

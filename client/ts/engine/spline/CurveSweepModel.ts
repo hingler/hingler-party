@@ -290,6 +290,12 @@ export class CurveSweepModel extends Model {
     this.model = new ModelImpl([{ positions: positionAtt, normals: normalAtt, tangents: tangentAtt, texcoords: texcoordAtt, indices: index }]);
   }
 
+  drawInstanced(count: number) {
+    // the only caveat on curvesweepmodel is that we need to keep it up to date
+    // otherwise we'd do it differently
+    this.model.drawInstanced(count);
+  }
+
   private getBitangents() {
     const sweep = this.sweep;
 

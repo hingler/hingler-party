@@ -46,4 +46,11 @@ export abstract class Model implements DrawOnlyModel {
    * @returns The armature manager associated with this model, if one exists.
    */
   abstract getArmature() : ArmatureManager;
+
+  /**
+   * Draws a specified number of instances.
+   * InstancedModel is preferred for setting up instance attributes.
+   * @param count - number of instances to draw.
+   */
+  abstract drawInstanced(count: number) : void;
 }

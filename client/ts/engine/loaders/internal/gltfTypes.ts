@@ -20,7 +20,7 @@ export interface Buffer {
   byteLength: number
 }
 
-export interface GLTFNode {
+export interface GLTFNode extends GLTFNodeReadOnly {
   name?: string,
   rotation?: [number, number, number, number],
   translation?: [number, number, number],
@@ -28,6 +28,16 @@ export interface GLTFNode {
   mesh?: number,
   skin?: number,
   children?: Array<number>
+}
+
+export interface GLTFNodeReadOnly {
+  readonly name?: string,
+  readonly rotation?: [number, number, number, number],
+  readonly translation?: [number, number, number],
+  readonly scale?: [number, number, number],
+  readonly mesh?: number,
+  readonly skin?: number,
+  readonly children?: Array<number>
 }
 
 export interface Primitive {

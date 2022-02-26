@@ -5,6 +5,8 @@ import { Model } from "../model/Model";
 import { PBRInstanceFactory } from "../model/PBRInstanceFactory";
 import { PBRModel } from "../model/PBRModel";
 import { GameObject } from "../object/game/GameObject";
+import { PBRInstanceObject } from "../object/game/PBRInstanceObject";
+import { GLTFNodeReadOnly } from "./internal/gltfTypes";
 
 /**
  * Represents the data contained inside a GLTF file
@@ -37,6 +39,11 @@ export interface GLTFScene {
   getAnimationData(animationName: string) : AnimationManager;
 
   /**
+   * @returns an iterator which returns each node contained in this scene.
+   */
+  nodes() : IterableIterator<GLTFNodeReadOnly>;
+
+  /**
    * Returns a new InstancedModel.
    * 
    * Instanced models consume materials which then draw said instanced models onto the screen.
@@ -45,6 +52,8 @@ export interface GLTFScene {
    * @param name 
    */
   getInstancedModel(name: string) : InstancedModel;
+
+  getPBRInstanceObject(init: string | number) : PBRInstanceObject;
 
   /**
    * 
