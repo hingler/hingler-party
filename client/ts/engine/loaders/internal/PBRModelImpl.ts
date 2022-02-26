@@ -62,6 +62,12 @@ export class PBRModelImpl extends PBRModel {
     }
   }
 
+  drawInstanced(count: number) {
+    for (let model of this.instances) {
+      model.drawInstanced(count);
+    }
+  }
+
   drawPBR(modelMatrix: ReadonlyMat4, rc: RenderContext) {
     if (rc.getRenderPass() === RenderPass.SHADOW) {
       return this.drawPBRShadow(modelMatrix, rc);

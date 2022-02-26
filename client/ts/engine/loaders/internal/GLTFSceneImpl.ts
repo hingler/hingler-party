@@ -16,7 +16,7 @@ import { GamePBRModel } from "../../object/game/GamePBRModel";
 import { ArmatureManager } from "../../object/armature/ArmatureManager";
 import { GLTFScene } from "../GLTFScene";
 import { ArmatureBuilder } from "./ArmatureBuilder";
-import { GLTFJson, ImageSchema, Material, Mesh, GLTFNode, Primitive, TextureSchema } from "./gltfTypes";
+import { GLTFJson, ImageSchema, Material, Mesh, GLTFNode, Primitive, TextureSchema, GLTFNodeReadOnly } from "./gltfTypes";
 import { InstancedModelImpl } from "./InstancedModelImpl";
 import { ModelImpl, ModelInstance } from "./ModelImpl";
 import { PBRModelImpl } from "./PBRModelImpl";
@@ -24,6 +24,7 @@ import { AnimationManager } from "../../animation/AnimationManager";
 import { GLTFAnimationBuilder } from "../../animation/GLTFAnimationBuilder";
 import { PBRInstanceObject } from "../../object/game/PBRInstanceObject";
 import { PBRInstancedMaterial } from "../../material/PBRInstancedMaterial";
+import { GLTFNodeIterator } from "./iterator/GLTFNodeIterator";
 
 // todo: holy shit this needs cleanup
 
@@ -122,6 +123,10 @@ export class GLTFSceneImpl implements GLTFScene {
 
       return null;
     }
+  }
+
+  nodes() : IterableIterator<GLTFNodeReadOnly> {
+    return new GLTFNodeIterator(this.data.nodes);
   }
 
   getModel(name: string | number) : Model {

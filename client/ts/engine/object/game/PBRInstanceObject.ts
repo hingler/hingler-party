@@ -86,4 +86,11 @@ export class PBRInstanceObject extends GameObject {
       console.warn("instanced modal draw skipped, no model provided")
     }
   }
+
+  /**
+   * @returns a new instance representing the same base object.
+   */
+  copy() {
+    return new PBRInstanceObject(this.getContext(), this.getComponent(ComponentType.INSTANCEDMODEL).model, this.mat);
+  }
 }
