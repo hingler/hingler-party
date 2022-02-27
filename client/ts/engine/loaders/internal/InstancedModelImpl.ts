@@ -91,9 +91,6 @@ export class InstancedModelImpl implements InstancedModel {
     const id = timer.startQuery();
     let gl = this.ctx.getGLContext(); 
 
-    // todo: remove :3
-    gl.disable(gl.CULL_FACE);
-
     try {
       mat.prepareAttributes(this, instanceCount, rc);
       this.model.drawInstanced(instanceCount);
@@ -102,7 +99,6 @@ export class InstancedModelImpl implements InstancedModel {
       console.debug("Skipped draw due to caught error: " + e);
       console.debug(e);
     } finally {
-      gl.enable(gl.CULL_FACE);
       const disabledAttribs : Array<number> = [];
       if (this.instances.size > 0) {
         for (let attrib of this.enabledAttributes) {
