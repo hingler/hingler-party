@@ -9,7 +9,7 @@ import { TransformableNestableComponent } from "nekogirl-valhalla/object/Transfo
 import { TransformableBase, TransformableComponent } from "nekogirl-valhalla/object/TransformableBase";
 import { IDGenerator } from "nekogirl-valhalla/object/IDGenerator";
 import { NestableBase } from "nekogirl-valhalla/object/NestableBase";
-import { perf } from "@hingler-party/ts/performance";
+import { perf } from "../../../../../ts/performance";
 import { logUpdate } from "../../internal/performanceanalytics";
 import { IComponentProvider } from "../../component/IComponentProvider";
 import { ComponentType } from "../../component/ComponentType";

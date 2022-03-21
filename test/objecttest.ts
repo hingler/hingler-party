@@ -1,4 +1,4 @@
-import { ArmatureNode } from "@hingler-party/client/ts/engine/object/armature/ArmatureNode";
+import { ArmatureNode } from "../client/ts/engine/object/armature/ArmatureNode";
 import { Transformable } from "nekogirl-valhalla/object/Transformable";
 import { expect } from "chai";
 import { mat4, quat, vec3 } from "gl-matrix";

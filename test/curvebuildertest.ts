@@ -1,4 +1,4 @@
-import { SegmentedCurveBuilder } from "@hingler-party/client/ts/engine/loaders/internal/SegmentedCurveBuilder";
+import { SegmentedCurveBuilder } from "../client/ts/engine/loaders/internal/SegmentedCurveBuilder";
 import { expect } from "chai";
 import { vec3 } from "gl-matrix";
 

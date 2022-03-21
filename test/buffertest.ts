@@ -1,3 +1,4 @@
+import { GLContext } from "@hingler-party/client/ts/engine/gl/internal/glcontext/GLContext";
 import { assert, expect } from "chai";
 import { DataType } from "nekogirl-valhalla/model/DataType";
 import { GameContext } from "../client/ts/engine/GameContext";
@@ -27,11 +28,21 @@ const ctxstub = new Proxy({} as GameContext, {
   }
 });
 
+const wrapStub = new Proxy({} as GLContext, {
+  get: function(target, prop, receiver) {
+    return (..._: any) => 1;
+  }
+});
+
 function getCTXStub(gl: WebGLRenderingContext) {
   const ctxstub = new Proxy({} as GameContext, {
     get: function(target, prop, receiver) {
       if (prop === "getGLContext") {
         return (...temp: any) => gl;
+      }
+
+      else if (prop === "getGL") {
+        return (...temp: any) => wrapStub
       }
   
       else {
@@ -92,7 +103,8 @@ describe("GLBuffer", function() {
       }
     })
 
-    let glbuf = new GLBufferImpl(ctxstub, buf);
+    const ctxStub = getCTXStub(glProxy);
+    let glbuf = new GLBufferImpl(ctxStub, buf);
     glbuf.bindToVertexAttribute(0, 2, DataType.FLOAT, false, 0, 0);
     assert.throw(() => glbuf.drawElements(0, 1, DataType.UNSIGNED_SHORT)); 
   });

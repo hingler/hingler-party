@@ -1,4 +1,4 @@
-import { perf } from "@hingler-party/ts/performance";
+import { perf } from "../../../../ts/performance";
 import { Future } from "@hingler-party/ts/util/task/Future";
 import { FXAAFilter } from "../filter/FXAAFilter";
 import { GameContext } from "../GameContext";
