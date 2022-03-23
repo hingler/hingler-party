@@ -24,18 +24,6 @@ export class Ray {
    * @returns a new ray which is transformed to the collider's local space. 
    */
   transformToColliderSpace(collider: Collider) : Ray {
-    // lots of garbage -- output var might be good?
-    // caveat1: colliders receive world space rays
-    //  - conduct the TF on a collider-instanced var?
-    //    - add'l object space per collider (24 bytes minimum)
-    //  - use a static to facilitate the TF? (single threaded)
-    //    - a bit of an anti pattern
-    //  - implement a local/global raycast?
-    //    - confusing interface
-    //  - pass transforms to a universal functional impl when performing lots of raycasts?
-    //    - might be good -- take the performance-optimal route internally
-    //    - plus: we can reuse the function
-    // world -> object
 
     // optimize later -- this is OK for now :)
     const inverseTransform = collider.getTransformInverse();
