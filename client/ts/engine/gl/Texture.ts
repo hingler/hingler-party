@@ -1,5 +1,5 @@
 import { GameContext } from "../GameContext";
-import { Sampler } from "../loaders/internal/gltfTypes";
+import { GLTFSampler } from "../loaders/internal/gltfTypes";
 
 export enum TextureFormat {
   RGBA,
@@ -103,7 +103,7 @@ export abstract class Texture {
     }
   }
 
-  protected static createTextureFromImage(ctx: GameContext, img: HTMLImageElement, sampler?: Sampler) : [[number, number], WebGLTexture] {
+  protected static createTextureFromImage(ctx: GameContext, img: HTMLImageElement, sampler?: GLTFSampler) : [[number, number], WebGLTexture] {
     if (!sampler) {
       sampler = {};
     }

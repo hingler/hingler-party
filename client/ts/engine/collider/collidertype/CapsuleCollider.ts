@@ -77,6 +77,9 @@ export class CapsuleCollider implements Collider {
       }
 
       // project line onto normal plane to get dist
+
+      // concern: when we truncate our line we miss cases where the closest point to the ray could be origin -> line
+      // consider this caveat too
       line_projectOntoNormalPlane(outputLine, localLine, localRay);
     } else {
       // use capsule line as is

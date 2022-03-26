@@ -61,7 +61,7 @@ export interface Mesh {
 }
 
 // TODO: handling defaults?
-export interface Sampler {
+export interface GLTFSampler {
   magFilter?: number,
   minFilter?: number,
   wrapS?: number,
@@ -161,7 +161,7 @@ export interface GLTFJson {
   materials?: Array<Material>,
   meshes?: Array<Mesh>,
   nodes?: Array<GLTFNode>,
-  samplers?: Array<Sampler>,
+  samplers?: Array<GLTFSampler>,
   skins?: Array<GLTFSkin>,
   textures?: Array<TextureSchema>
 };

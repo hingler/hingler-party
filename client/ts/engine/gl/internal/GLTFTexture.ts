@@ -1,5 +1,5 @@
 import { GameContext } from "../../GameContext";
-import { Sampler } from "../../loaders/internal/gltfTypes";
+import { GLTFSampler } from "../../loaders/internal/gltfTypes";
 import { SamplingMode, Texture, TextureFormat } from "../Texture";
 
 export class GLTFTexture extends Texture {
@@ -9,9 +9,9 @@ export class GLTFTexture extends Texture {
   private gl: WebGLRenderingContext;
   private ctx: GameContext;
   private img: HTMLImageElement;
-  private sampler: Sampler;
+  private sampler: GLTFSampler;
 
-  constructor(ctx: GameContext, buf: ArrayBuffer, sampler: Sampler, mime: string) {
+  constructor(ctx: GameContext, buf: ArrayBuffer, sampler: GLTFSampler, mime: string) {
     super();
     this.gl = ctx.getGLContext();
     this.ctx = ctx;
