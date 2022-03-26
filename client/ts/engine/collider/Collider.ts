@@ -1,5 +1,4 @@
 import { Transformable } from "nekogirl-valhalla/object/Transformable";
-import { Collision } from "./Collision";
 import { Ray } from "./Ray";
 
 import { ReadonlyVec3, ReadonlyMat4, ReadonlyMat3 } from "gl-matrix";
