@@ -1,7 +1,7 @@
 import { DataType } from "nekogirl-valhalla/model/DataType";
 import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLIndex } from "../GLIndex";
-import { DrawMode, GLBuffer } from "./GLBuffer";
+import { DrawMode, GLBuffer, GLBufferReadOnly } from "./GLBuffer";
 
 class IndexIterator implements Iterator<number> {
   accessFunc: (offset: number, littleEndian?: boolean) => number;
@@ -34,7 +34,7 @@ class IndexIterator implements Iterator<number> {
 }
 
 export class GLIndexImpl implements GLIndex {
-  readonly buffer: GLBuffer;
+  readonly buffer: GLBufferReadOnly;
   readonly offset: number;
   readonly type: number;
   readonly count: number;
@@ -43,7 +43,7 @@ export class GLIndexImpl implements GLIndex {
 
   private accessFunc: (offset: number, littleEndian?: boolean) => number;
 
-  static createFromValues(buffer: GLBuffer, type: number, count: number, offset: number) {
+  static createFromValues(buffer: GLBufferReadOnly, type: number, count: number, offset: number) {
     const acc : Accessor = {
       bufferView: -1,
       componentType: type,
@@ -78,7 +78,7 @@ export class GLIndexImpl implements GLIndex {
     }
   }
 
-  constructor(buffer: GLBuffer, accessor: Accessor, view: BufferView) {
+  constructor(buffer: GLBufferReadOnly, accessor: Accessor, view: BufferView) {
     this.buffer = buffer;
     this.type = accessor.componentType;
     if (accessor.type !== "SCALAR") {

@@ -1,4 +1,4 @@
-import { GLBuffer } from "../gl/internal/GLBuffer";
+import { GLBuffer, GLBufferReadOnly } from "../gl/internal/GLBuffer";
 import { GLTFAccessorType, GLTFAnimation, GLTFAnimationChannel, GLTFJson, GLTFSamplerInterpolation, GLTFTargetPathType } from "../loaders/internal/gltfTypes";
 import { vec3, quat } from "gl-matrix";
 import { LinearVectorSampler } from "nekogirl-valhalla/animation/samplers/LinearVectorSampler";
@@ -7,7 +7,7 @@ import { AnimationSampler } from "nekogirl-valhalla/animation/AnimationSampler";
 import { GLTFAnimationManager } from "./internal/GLTFAnimationManager";
 
 export class GLTFAnimationBuilder {
-  static buildAnimationManager(data: GLTFJson, anim: GLTFAnimation, buffers: Array<GLBuffer>) {
+  static buildAnimationManager(data: GLTFJson, anim: GLTFAnimation, buffers: Array<GLBufferReadOnly>) {
     const transformSamplers = new Map<number, AnimationSampler<vec3>>();
     const rotationSamplers = new Map<number, AnimationSampler<quat>>();
     const scaleSamplers = new Map<number, AnimationSampler<vec3>>();
@@ -48,7 +48,7 @@ export class GLTFAnimationBuilder {
   }
 
   
-  private static convertChannelToSampler(data: GLTFJson, anim: GLTFAnimation, channel: GLTFAnimationChannel, buffers: Array<GLBuffer>) {
+  private static convertChannelToSampler(data: GLTFJson, anim: GLTFAnimation, channel: GLTFAnimationChannel, buffers: Array<GLBufferReadOnly>) {
     const samplerIndex = channel.sampler;
     
     
@@ -96,8 +96,8 @@ export class GLTFAnimationBuilder {
     }
   }
 
-  private static getBufferFromSamplerParameter(data: GLTFJson, accessorIndex: number, buffers: Array<GLBuffer>) : 
-    [GLBuffer, number, number, number, GLTFAccessorType] {
+  private static getBufferFromSamplerParameter(data: GLTFJson, accessorIndex: number, buffers: Array<GLBufferReadOnly>) : 
+    [GLBufferReadOnly, number, number, number, GLTFAccessorType] {
     if (!data.accessors) {
       const err = "No accessors present on GLTF file!";
       throw Error(err);
@@ -146,7 +146,7 @@ export class GLTFAnimationBuilder {
     }
   }
 
-  private static createLinearSamplerVec3(bufIn: GLBuffer, offsetIn: number, strideIn: number, bufOut: GLBuffer, offsetOut: number, strideOut: number, count: number) {
+  private static createLinearSamplerVec3(bufIn: GLBufferReadOnly, offsetIn: number, strideIn: number, bufOut: GLBufferReadOnly, offsetOut: number, strideOut: number, count: number) {
     const output = new LinearVectorSampler<vec3>();
     for (let i = 0; i < count; i++) {
       const sampleTime = bufIn.getFloat32(offsetIn + strideIn * i, true);
@@ -157,7 +157,7 @@ export class GLTFAnimationBuilder {
     return output;
   }
 
-  private static createLinearSamplerQuat(bufIn: GLBuffer, offsetIn: number, strideIn: number, bufOut: GLBuffer, offsetOut: number, strideOut: number, count: number) {
+  private static createLinearSamplerQuat(bufIn: GLBufferReadOnly, offsetIn: number, strideIn: number, bufOut: GLBufferReadOnly, offsetOut: number, strideOut: number, count: number) {
     const output = new LinearQuatSampler();
     for (let i = 0; i < count; i++) {
       const sampleTime = bufIn.getFloat32(offsetIn + strideIn * i, true);

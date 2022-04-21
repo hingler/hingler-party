@@ -1,5 +1,5 @@
 import { mat4, ReadonlyMat4 } from "gl-matrix";
-import { GLBuffer } from "../../gl/internal/GLBuffer";
+import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
 import { ArmatureNode } from "../../object/armature/ArmatureNode";
 import { ArmatureManager } from "../../object/armature/ArmatureManager";
 import { GLTFJson, GLTFNode, GLTFSkin } from "./gltfTypes";
@@ -8,7 +8,7 @@ import { GameContext } from "../../GameContext";
 export class ArmatureBuilder {
   // gltf data, skin index -> armaturenode
   // gltf data, skin index -> (unknown armature wrapper)
-  static skinToArmature(data: GLTFJson, skinIndex: number, buffers: Array<GLBuffer>, ctx: GameContext) {
+  static skinToArmature(data: GLTFJson, skinIndex: number, buffers: Array<GLBufferReadOnly>, ctx: GameContext) {
     if (!data.skins) {
       // no skins to fetch
       console.warn(`No skins present in this GLTF file.`);
@@ -73,7 +73,7 @@ export class ArmatureBuilder {
     return nodeArray;
   }
 
-  private static getInverseBindMatrices(data: GLTFJson, skin: GLTFSkin, buffers: Array<GLBuffer>) {
+  private static getInverseBindMatrices(data: GLTFJson, skin: GLTFSkin, buffers: Array<GLBufferReadOnly>) {
     // should probably throw instead of returning null
     if (!data.buffers || !data.bufferViews || !data.accessors) {
       // mystery mode

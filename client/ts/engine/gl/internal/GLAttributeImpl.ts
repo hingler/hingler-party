@@ -1,6 +1,6 @@
 import { Accessor, BufferView, GLTFAccessorType } from "../../loaders/internal/gltfTypes";
 import { GLAttribute } from "../GLAttribute";
-import { BufferTarget, GLBuffer } from "./GLBuffer";
+import { BufferTarget, GLBuffer, GLBufferReadOnly } from "./GLBuffer";
 import { DataType } from "nekogirl-valhalla/model/DataType";
 
 // type informs what information we're returning
@@ -8,7 +8,7 @@ import { DataType } from "nekogirl-valhalla/model/DataType";
 
 interface AttributeIterator<U> extends Iterator<U> {
   readFunc: (offset: number, littleEndian?: boolean) => number,
-  buffer: GLBuffer,
+  buffer: GLBufferReadOnly,
   offset: number,
   stride: number,
   elem: number,
@@ -26,7 +26,7 @@ interface AttributeIterator<U> extends Iterator<U> {
 // internal implementation of glattribute.
 // engine specifies fields before casting to proper attr format and returning
 export class GLAttributeImpl implements GLAttribute {
-  buffer: GLBuffer;
+  buffer: GLBufferReadOnly;
   readonly comps: number;
   readonly type: number;
   readonly offset: number;
@@ -47,7 +47,7 @@ export class GLAttributeImpl implements GLAttribute {
    * @param offset - offset between components and start of buffer
    * @param stride - stride between individual components.
    */
-  static createFromValues(buffer: GLBuffer, components: number, type: number, num: number, offset?: number, stride?: number) {
+  static createFromValues(buffer: GLBufferReadOnly, components: number, type: number, num: number, offset?: number, stride?: number) {
     let typeString : GLTFAccessorType;
     switch (components) {
       case 1:
@@ -83,7 +83,7 @@ export class GLAttributeImpl implements GLAttribute {
     return new GLAttributeImpl(buffer, b, a);
   }
 
-  constructor(buffer: GLBuffer, view: BufferView, accessor: Accessor) {
+  constructor(buffer: GLBufferReadOnly, view: BufferView, accessor: Accessor) {
     this.buffer = buffer;
     switch (accessor.type) {
       case GLTFAccessorType.SCALAR:

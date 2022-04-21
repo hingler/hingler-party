@@ -1,7 +1,7 @@
 import { quat, vec2, vec3, vec4 } from "gl-matrix";
 import { GLAttribute } from "../../gl/GLAttribute";
 import { GLAttributeImpl } from "../../gl/internal/GLAttributeImpl";
-import { GLBuffer } from "../../gl/internal/GLBuffer";
+import { GLBuffer, GLBufferReadOnly } from "../../gl/internal/GLBuffer";
 import { GLBufferImpl } from "../../gl/internal/GLBufferImpl";
 import { GLIndexImpl } from "../../gl/internal/GLIndexImpl";
 import { GLTFTexture } from "../../gl/internal/GLTFTexture";
@@ -485,7 +485,7 @@ export class GLTFSceneImpl implements GLTFScene {
     return inst;
   }
 
-  private createAttributeFromJSON(data: GLTFJson, buffers: Array<GLBuffer>, accessor: number) {
+  private createAttributeFromJSON(data: GLTFJson, buffers: Array<GLBufferReadOnly>, accessor: number) {
     if (accessor === undefined) {
       return null;
     }
